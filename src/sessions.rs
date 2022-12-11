@@ -1,30 +1,53 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, Context};
+#[derive(Debug, PartialEq, Eq)]
+pub struct Session {
+    pub key: String,
+    pub name: String,
+    pub path: PathBuf,
+}
 
-#[derive(Debug, PartialEq)]
-struct Session {
-    key: String,
-    name: String,
-    path: PathBuf,
+#[derive(Debug, PartialEq, Eq)]
+pub enum SessionParseError {
+    EmptyLine,
+    NameError,
+    PathError,
 }
 
 impl TryFrom<String> for Session {
-    type Error = anyhow::Error;
+    type Error = SessionParseError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let mut columns = value.split_whitespace();
 
-        let key: String = columns.next().context("Failed to parse key")?.into();
-        let name: String = columns.next().context("Failed to parse name")?.into();
+        let key = columns.next().ok_or(SessionParseError::EmptyLine)?.into();
+        let name = columns.next().ok_or(SessionParseError::NameError)?.into();
+
         let path: PathBuf = columns.collect::<Vec<_>>().join(" ").into();
 
         if path.as_os_str().is_empty() {
-            bail!("Failed to parse path");
+            return Err(SessionParseError::PathError);
         }
 
         Ok(Self { key, name, path })
     }
+}
+
+pub fn from_config<T: AsRef<str>>(data: T) -> Result<Vec<Session>, SessionParseError> {
+    let mut sessions = vec![];
+
+    for (i, line) in data.as_ref().lines().enumerate() {
+        match line.to_owned().try_into() {
+            Ok(session) => sessions.push(session),
+            Err(SessionParseError::EmptyLine) => continue,
+            Err(e) => {
+                eprintln!("Failed to parse line {}: \"{}\"", i, line);
+                return Err(e);
+            }
+        }
+    }
+
+    Ok(sessions)
 }
 
 #[cfg(test)]
@@ -91,40 +114,74 @@ mod tests {
         );
     }
 
+    type SessionResult = Result<Session, SessionParseError>;
+
     #[test]
     fn test_errors_on_missing_key() {
         let line = "".to_string();
-        let result: anyhow::Result<Session> = line.try_into();
-        let error_msg = format!("{}", result.unwrap_err());
+        let result: SessionResult = line.try_into();
 
-        assert_eq!(error_msg, "Failed to parse key");
+        assert_eq!(result, Err(SessionParseError::EmptyLine));
     }
 
     #[test]
     fn test_errors_on_missing_session_name() {
         let line = "d".to_string();
-        let result: anyhow::Result<Session> = line.try_into();
-        let error_msg = format!("{}", result.unwrap_err());
+        let result: SessionResult = line.try_into();
 
-        assert_eq!(error_msg, "Failed to parse name");
+        assert_eq!(result, Err(SessionParseError::NameError));
     }
 
     #[test]
     fn test_errors_on_missing_session_path() {
         let line = "d dotfiles".to_string();
-        let result: anyhow::Result<Session> = line.try_into();
-        let error_msg = format!("{}", result.unwrap_err());
+        let result: SessionResult = line.try_into();
 
-        assert_eq!(error_msg, "Failed to parse path");
+        assert_eq!(result, Err(SessionParseError::PathError));
     }
 
-    fn settings_data() -> String {
+    fn raw_sessions_data() -> String {
         r#"
-            d dotfiles ~/.dotfiles
-            k muxi ~/Sites/rust/muxi/
-            Space tmux ~/Sites/rust/tmux/
-            M-n notes ~/Library/Mobile Documents/com~apple~CloudDocs/notes
-            "#
+        d dotfiles ~/.dotfiles
+        k muxi ~/Sites/rust/muxi/
+        Space tmux ~/Sites/tmux/
+        M-n notes ~/Library/Mobile Documents/com~apple~CloudDocs/notes
+        "#
         .to_string()
+    }
+
+    fn expected_sessions_data() -> Vec<Session> {
+        vec![
+            Session {
+                key: "d".into(),
+                name: "dotfiles".into(),
+                path: "~/.dotfiles".into(),
+            },
+            Session {
+                key: "k".into(),
+                name: "muxi".into(),
+                path: "~/Sites/rust/muxi/".into(),
+            },
+            Session {
+                key: "Space".into(),
+                name: "tmux".into(),
+                path: "~/Sites/tmux/".into(),
+            },
+            Session {
+                key: "M-n".into(),
+                name: "notes".into(),
+                path: "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
+            },
+        ]
+    }
+
+    #[test]
+    fn test_from_config() {
+        let expected_sessions = expected_sessions_data();
+
+        let config = raw_sessions_data();
+        let sessions = from_config(config).unwrap();
+
+        assert_eq!(expected_sessions, sessions);
     }
 }
