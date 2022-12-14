@@ -24,8 +24,6 @@ impl Config {
     pub fn new() -> Result<Self, ConfigError> {
         let path = Self::path_from_env();
 
-        Self::create_config_folder(&path)?;
-
         let sessions_data = Self::read_or_create_sessions_file(&path)?;
         let sessions = sessions::from_config(sessions_data)?;
 
@@ -58,26 +56,27 @@ impl Config {
     }
 
     #[cfg(not(test))]
-    fn create_config_folder<P: AsRef<Path>>(path: P) -> Result<(), ConfigError> {
+    fn read_or_create_sessions_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
+        use std::fs::OpenOptions;
+        use std::io::{BufReader, Read};
+
         std::fs::create_dir_all(&path)?;
 
-        Ok(())
-    }
+        let sessions_file = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .open(path.as_ref().join("sessions.muxi"))?;
 
-    #[cfg(not(test))]
-    fn read_or_create_sessions_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
-        let sessions_path = path.as_ref().join("sessions.muxi");
-        let sessions_data = std::fs::read_to_string(sessions_path)?;
+        let mut reader = BufReader::new(sessions_file);
+        let mut contents = String::new();
 
-        Ok(sessions_data)
+        reader.read_to_string(&mut contents)?;
+
+        Ok(contents)
     }
 
     // Mocks
-
-    #[cfg(test)]
-    fn create_config_folder<P: AsRef<Path>>(path: P) -> Result<(), ConfigError> {
-        Ok(println!("Create {}", path.as_ref().to_string_lossy()))
-    }
 
     #[cfg(test)]
     #[allow(unused_variables)]
