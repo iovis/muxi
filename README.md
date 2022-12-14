@@ -14,7 +14,7 @@
             tmux_prefix = true          # default `true`
             uppercase_overrides = true  # default `true`
             ```
-        - [ ] Read `$MUXI_CONFIG_PATH/sessions.muxi` (gitignore)
+        - [x] Read `$MUXI_CONFIG_PATH/sessions.muxi` (gitignore)
             - `key session_name path`
             ```
             d dotfiles ~/.dotfiles

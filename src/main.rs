@@ -3,7 +3,10 @@ use crate::config::Config;
 mod config;
 mod sessions;
 
-fn main() {
-    println!("Hello, world!");
-    Config::new();
+fn main() -> anyhow::Result<()> {
+    let config = Config::new()?;
+
+    dbg!(config);
+
+    Ok(())
 }

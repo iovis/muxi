@@ -1,21 +1,35 @@
-// TODO:
-// - Read or create $MUXI_CONFIG_PATH/sessions.muxi
-
-use std::env;
 use std::path::{Path, PathBuf};
+use std::{env, io};
 
+use thiserror::Error;
+
+use crate::sessions::{self, Session, SessionParseError};
+
+#[derive(Debug, Error)]
+pub enum ConfigError {
+    #[error("failed to open sessions file")]
+    MissingSessionsFile(#[from] io::Error),
+    #[error("failed to parse sessions file")]
+    SessionParseError(#[from] SessionParseError),
+}
+
+#[derive(Debug)]
 pub struct Config {
     path: PathBuf,
+    sessions: Vec<Session>,
     // TODO: settings
 }
 
 impl Config {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, ConfigError> {
         let path = Self::path_from_env();
 
-        Self::create_config_folder(&path);
+        Self::create_config_folder(&path)?;
 
-        Self { path }
+        let sessions_data = Self::read_or_create_sessions_file(&path)?;
+        let sessions = sessions::from_config(sessions_data)?;
+
+        Ok(Self { path, sessions })
     }
 
     fn path_from_env() -> PathBuf {
@@ -44,13 +58,40 @@ impl Config {
     }
 
     #[cfg(not(test))]
-    fn create_config_folder<P: AsRef<Path>>(path: P) {
-        std::fs::create_dir_all(&path).expect("Couldn't create settings path");
+    fn create_config_folder<P: AsRef<Path>>(path: P) -> Result<(), ConfigError> {
+        std::fs::create_dir_all(&path)?;
+
+        Ok(())
+    }
+
+    #[cfg(not(test))]
+    fn read_or_create_sessions_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
+        let sessions_path = path.as_ref().join("sessions.muxi");
+        let sessions_data = std::fs::read_to_string(sessions_path)?;
+
+        Ok(sessions_data)
+    }
+
+    // Mocks
+
+    #[cfg(test)]
+    fn create_config_folder<P: AsRef<Path>>(path: P) -> Result<(), ConfigError> {
+        Ok(println!("Create {}", path.as_ref().to_string_lossy()))
     }
 
     #[cfg(test)]
-    fn create_config_folder<P: AsRef<Path>>(path: P) {
-        println!("Create {}", path.as_ref().to_string_lossy());
+    #[allow(unused_variables)]
+    fn read_or_create_sessions_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
+        let sessions_data = r#"
+            d dotfiles ~/.dotfiles
+
+            k muxi ~/Sites/rust/muxi/
+            Space tmux ~/Sites/tmux/
+            M-n notes ~/Library/Mobile Documents/com~apple~CloudDocs/notes
+        "#
+        .to_string();
+
+        Ok(sessions_data)
     }
 }
 
@@ -64,7 +105,7 @@ mod tests {
         env::set_var("MUXI_CONFIG_PATH", "~/my/path");
         let home_dir = PathBuf::from(env::var("HOME").unwrap());
 
-        let config = Config::new();
+        let config = Config::new().unwrap();
 
         assert_eq!(config.path, home_dir.join("my/path"));
     }
@@ -74,7 +115,7 @@ mod tests {
         env::set_var("XDG_CONFIG_HOME", "~/xdg/path");
         let home_dir = PathBuf::from(env::var("HOME").unwrap());
 
-        let config = Config::new();
+        let config = Config::new().unwrap();
 
         assert_eq!(config.path, home_dir.join("xdg/path/muxi/"));
     }
@@ -83,8 +124,41 @@ mod tests {
     fn test_path_fallback() {
         let home_dir = PathBuf::from(env::var("HOME").unwrap());
 
-        let config = Config::new();
+        let config = Config::new().unwrap();
 
         assert_eq!(config.path, home_dir.join(".config/muxi/"));
+    }
+
+    fn expected_sessions_data() -> Vec<Session> {
+        vec![
+            Session {
+                key: "d".into(),
+                name: "dotfiles".into(),
+                path: "~/.dotfiles".into(),
+            },
+            Session {
+                key: "k".into(),
+                name: "muxi".into(),
+                path: "~/Sites/rust/muxi/".into(),
+            },
+            Session {
+                key: "Space".into(),
+                name: "tmux".into(),
+                path: "~/Sites/tmux/".into(),
+            },
+            Session {
+                key: "M-n".into(),
+                name: "notes".into(),
+                path: "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
+            },
+        ]
+    }
+
+    #[test]
+    fn test_sessions() {
+        let expected_sessions = expected_sessions_data();
+        let config = Config::new().unwrap();
+
+        assert_eq!(config.sessions, expected_sessions);
     }
 }
