@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use thiserror::Error;
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Session {
     pub key: String,
@@ -7,26 +9,31 @@ pub struct Session {
     pub path: PathBuf,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Error)]
 pub enum SessionParseError {
+    #[error("empty line")]
     EmptyLine,
-    NameError,
-    PathError,
+    #[error("missing session name")]
+    MissingName,
+    #[error("missing session path")]
+    MissingPath,
 }
 
 impl TryFrom<String> for Session {
     type Error = SessionParseError;
 
+    // TODO: Allow comments with '#'
+    // TODO: Use `nom`?
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let mut columns = value.split_whitespace();
 
         let key = columns.next().ok_or(SessionParseError::EmptyLine)?.into();
-        let name = columns.next().ok_or(SessionParseError::NameError)?.into();
+        let name = columns.next().ok_or(SessionParseError::MissingName)?.into();
 
         let path: PathBuf = columns.collect::<Vec<_>>().join(" ").into();
 
         if path.as_os_str().is_empty() {
-            return Err(SessionParseError::PathError);
+            return Err(SessionParseError::MissingPath);
         }
 
         Ok(Self { key, name, path })
@@ -129,7 +136,7 @@ mod tests {
         let line = "d".to_string();
         let result: SessionResult = line.try_into();
 
-        assert_eq!(result, Err(SessionParseError::NameError));
+        assert_eq!(result, Err(SessionParseError::MissingName));
     }
 
     #[test]
@@ -137,7 +144,7 @@ mod tests {
         let line = "d dotfiles".to_string();
         let result: SessionResult = line.try_into();
 
-        assert_eq!(result, Err(SessionParseError::PathError));
+        assert_eq!(result, Err(SessionParseError::MissingPath));
     }
 
     fn raw_sessions_data() -> String {
