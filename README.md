@@ -28,6 +28,7 @@ if "type muxi" {
             muxi_prefix = 'g'           # no default
             tmux_prefix = true          # default `true`
             uppercase_overrides = true  # default `true`
+            default_bindings = true     # default `true`
             ```
         - [x] Read `$MUXI_CONFIG_PATH/sessions.muxi` (gitignore)
             - `key session_name path`
@@ -47,6 +48,9 @@ if "type muxi" {
                 - `else` `tmux bind -n <settings.prefix> switch-client -T muxi`
             - [x] Bookmarks
                 - `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
+            - [ ] `if default_bindings`
+                - [x] Quick edit
+                    - `# bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi edit"`
             - [ ] `if uppercase_overrides`
                 - Should I define bindings for all letters?
                 - `tmux bind -T muxi <key.upper> run -b "muxi set <key>"`
@@ -70,7 +74,6 @@ if "type muxi" {
         - [ ] Reload
     - [x] `edit`
         - [x] `$EDITOR $MUXI_CONFIG_PATH/sessions.toml && muxi init`
-        - `# bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi edit"`
         - [x] Reload
     - [ ] popup switcher?
         - fzf-tmux or custom (dialoguer, requestty)?

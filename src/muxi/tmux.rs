@@ -32,6 +32,7 @@ impl Tmux {
     pub fn bind_sessions(&self, sessions: &[Session]) -> TmuxResult<()> {
         self.clear_table()?;
         self.bind_table_prefix()?;
+        self.default_bindings()?;
 
         for session in sessions {
             self.bind_session(session)?;
@@ -66,6 +67,35 @@ impl Tmux {
             .arg("switch-client")
             .arg("-T")
             .arg("muxi")
+            .output()?;
+
+        if output.status.success() {
+            Ok(())
+        } else {
+            Err(TmuxError::BindKey(
+                String::from_utf8_lossy(&output.stderr).trim().to_string(),
+            ))
+        }
+    }
+
+    fn default_bindings(&self) -> TmuxResult<()> {
+        // bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi edit"
+        let output = Command::new("tmux")
+            .arg("bind")
+            .arg("-T")
+            .arg("muxi")
+            .arg("e")
+            .arg("popup")
+            .arg("-w")
+            .arg("80%")
+            .arg("-h")
+            .arg("80%")
+            .arg("-b")
+            .arg("rounded")
+            .arg("-T")
+            .arg(" muxi ")
+            .arg("-E")
+            .arg("muxi edit")
             .output()?;
 
         if output.status.success() {
