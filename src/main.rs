@@ -9,5 +9,6 @@ fn main() -> anyhow::Result<()> {
 
     match args.command {
         Commands::Init => muxi::init(),
+        Commands::Edit => muxi::edit(),
     }
 }

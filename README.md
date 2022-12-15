@@ -18,7 +18,7 @@ if "type muxi" {
 ## TODO
 
 - [ ] Create `muxi` command
-    - [ ] `init`
+    - [x] `init`
         - [x] Set `$MUXI_CONFIG_PATH` if not exists
             - `$XDG_CONFIG_HOME/muxi/`
             - Create folder if it doesn't exist
@@ -68,10 +68,10 @@ if "type muxi" {
         - [ ] Delete <key>
         - Update `sessions.muxi`
         - [ ] Reload
-    - [ ] `edit`
-        - [ ] `$EDITOR $MUXI_CONFIG_PATH/sessions.toml && muxi init`
+    - [x] `edit`
+        - [x] `$EDITOR $MUXI_CONFIG_PATH/sessions.toml && muxi init`
         - `# bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi edit"`
-        - [ ] Reload
+        - [x] Reload
     - [ ] popup switcher?
         - fzf-tmux or custom (dialoguer, requestty)?
         - bindings
