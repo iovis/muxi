@@ -16,7 +16,7 @@ pub enum ConfigError {
 #[derive(Debug)]
 pub struct Config {
     path: PathBuf,
-    sessions: Vec<Session>,
+    pub sessions: Vec<Session>,
     // TODO: settings
 }
 

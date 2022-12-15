@@ -1,10 +1,25 @@
 # Muxi
 
+## Install
+Clone the repo and run:
+```sh
+cargo install --path .
+```
+
+## Configuration
+
+In your tmux configuration:
+```tmux
+if "type muxi" {
+  run -b "muxi init"
+}
+```
+
 ## TODO
 
 - [ ] Create `muxi` command
     - [ ] `init`
-        - [ ] Set `$MUXI_CONFIG_PATH` if not exists
+        - [x] Set `$MUXI_CONFIG_PATH` if not exists
             - `$XDG_CONFIG_HOME/muxi/`
             - Create folder if it doesn't exist
         - [ ] Read `$MUXI_CONFIG_PATH/settings.toml`
@@ -22,18 +37,21 @@
             Space tmux ~/Sites/rust/tmux/
             M-n notes ~/Library/Mobile Documents/com~apple~CloudDocs/notes (note spaces)
             ```
-        - [ ] Set bindings
-            - [ ] Clear table
+            - [ ] Maybe support comments with `#`?
+                - Should I use [nom](https://docs.rs/nom/latest/nom/) for this?
+        - [x] Set bindings
+            - [x] Clear table
                 - `tmux unbind -aq -T muxi`
-            - [ ] Muxi table prefix
+            - [x] Muxi table prefix
                 - `if settings.tmux_prefix` `tmux bind <settings.prefix> switch-client -T muxi`
                 - `else` `tmux bind -n <settings.prefix> switch-client -T muxi`
-            - [ ] Bookmarks
+            - [x] Bookmarks
                 - `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
             - [ ] `if uppercase_overrides`
                 - Should I define bindings for all letters?
                 - `tmux bind -T muxi <key.upper> run -b "muxi set <key>"`
-    - [ ] `go <name>`
+                - Append to `sessions.muxi`
+    - [ ] `go <name>`?
         - [ ] If not in list, display error
             - `tmux display "#{session} doesn't exist"`
         - [ ] If in list
@@ -43,12 +61,15 @@
     - [ ] `set <key>`
         - [ ] Set <key> to current session name and current session path
             - Optional `--name` and `--path`?
+            - Update `sessions.muxi`
         - [ ] Reload
     - [ ] `del <key>`
         - [ ] Delete <key>
+        - Update `sessions.muxi`
         - [ ] Reload
     - [ ] `edit`
-        - [ ] `$EDITOR $MUXI_CONFIG_PATH/sessions.toml`
+        - [ ] `$EDITOR $MUXI_CONFIG_PATH/sessions.toml && muxi init`
+        - `# bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi edit"`
         - [ ] Reload
     - [ ] popup switcher?
         - fzf-tmux or custom (dialoguer, requestty)?
