@@ -26,7 +26,7 @@ impl Config {
         Self { path }
     }
 
-    pub fn sessions(&self) -> Result<Vec<Session>, ConfigError>  {
+    pub fn sessions(&self) -> Result<Vec<Session>, ConfigError> {
         let sessions_data = self.read_or_create_sessions_file()?;
         let sessions = sessions::from_config(sessions_data)?;
 
@@ -103,27 +103,31 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
+
+    fn with_env<F: FnOnce(PathBuf)>(name: &str, value: &str, test: F) {
+        let home_dir = PathBuf::from(env::var("HOME").unwrap());
+        env::set_var(name, value);
+
+        test(home_dir);
+
+        env::remove_var(name);
+    }
 
     #[test]
     fn test_path_muxi_env_set() {
-        env::set_var("MUXI_CONFIG_PATH", "~/my/path");
-        let home_dir = PathBuf::from(env::var("HOME").unwrap());
-
-        let config = Config::new();
-
-        assert_eq!(config.path, home_dir.join("my/path"));
+        with_env("MUXI_CONFIG_PATH", "~/my/path", |home_dir: PathBuf| {
+            let config = Config::new();
+            assert_eq!(config.path, home_dir.join("my/path"));
+        })
     }
 
     #[test]
     fn test_path_xdg_home_env_set() {
-        env::set_var("XDG_CONFIG_HOME", "~/xdg/path");
-        let home_dir = PathBuf::from(env::var("HOME").unwrap());
-
-        let config = Config::new();
-
-        assert_eq!(config.path, home_dir.join("xdg/path/muxi/"));
+        with_env("XDG_CONFIG_HOME", "~/xdg/path", |home_dir: PathBuf| {
+            let config = Config::new();
+            assert_eq!(config.path, home_dir.join("xdg/path/muxi/"));
+        })
     }
 
     #[test]
