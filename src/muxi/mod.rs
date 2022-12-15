@@ -9,10 +9,11 @@ use self::config::Config;
 use self::tmux::Tmux;
 
 pub fn init() -> anyhow::Result<()> {
-    let config = Config::new()?;
+    let config = Config::new();
+    let sessions = config.sessions()?;
     let tmux = Tmux::new()?;
 
-    tmux.bind_sessions(&config.sessions)?;
+    tmux.bind_sessions(&sessions)?;
 
     Ok(())
 }

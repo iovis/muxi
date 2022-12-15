@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{env, io};
 
 use thiserror::Error;
@@ -16,18 +16,25 @@ pub enum ConfigError {
 #[derive(Debug)]
 pub struct Config {
     pub path: PathBuf,
-    pub sessions: Vec<Session>,
     // TODO: settings
 }
 
 impl Config {
-    pub fn new() -> Result<Self, ConfigError> {
+    pub fn new() -> Self {
         let path = Self::path_from_env();
 
-        let sessions_data = Self::read_or_create_sessions_file(&path)?;
+        Self { path }
+    }
+
+    pub fn sessions(&self) -> Result<Vec<Session>, ConfigError>  {
+        let sessions_data = self.read_or_create_sessions_file()?;
         let sessions = sessions::from_config(sessions_data)?;
 
-        Ok(Self { path, sessions })
+        Ok(sessions)
+    }
+
+    pub fn sessions_path(&self) -> PathBuf {
+        self.path.join("sessions.muxi")
     }
 
     fn path_from_env() -> PathBuf {
@@ -56,17 +63,17 @@ impl Config {
     }
 
     #[cfg(not(test))]
-    fn read_or_create_sessions_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
+    fn read_or_create_sessions_file(&self) -> Result<String, ConfigError> {
         use std::fs::OpenOptions;
         use std::io::{BufReader, Read};
 
-        std::fs::create_dir_all(&path)?;
+        std::fs::create_dir_all(&self.path)?;
 
         let sessions_file = OpenOptions::new()
             .create(true)
             .read(true)
             .write(true)
-            .open(path.as_ref().join("sessions.muxi"))?;
+            .open(self.sessions_path())?;
 
         let mut reader = BufReader::new(sessions_file);
         let mut contents = String::new();
@@ -80,7 +87,7 @@ impl Config {
 
     #[cfg(test)]
     #[allow(unused_variables)]
-    fn read_or_create_sessions_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
+    fn read_or_create_sessions_file(&self) -> Result<String, ConfigError> {
         let sessions_data = r#"
             d dotfiles ~/.dotfiles
 
@@ -104,7 +111,7 @@ mod tests {
         env::set_var("MUXI_CONFIG_PATH", "~/my/path");
         let home_dir = PathBuf::from(env::var("HOME").unwrap());
 
-        let config = Config::new().unwrap();
+        let config = Config::new();
 
         assert_eq!(config.path, home_dir.join("my/path"));
     }
@@ -114,7 +121,7 @@ mod tests {
         env::set_var("XDG_CONFIG_HOME", "~/xdg/path");
         let home_dir = PathBuf::from(env::var("HOME").unwrap());
 
-        let config = Config::new().unwrap();
+        let config = Config::new();
 
         assert_eq!(config.path, home_dir.join("xdg/path/muxi/"));
     }
@@ -123,7 +130,7 @@ mod tests {
     fn test_path_fallback() {
         let home_dir = PathBuf::from(env::var("HOME").unwrap());
 
-        let config = Config::new().unwrap();
+        let config = Config::new();
 
         assert_eq!(config.path, home_dir.join(".config/muxi/"));
     }
@@ -156,8 +163,8 @@ mod tests {
     #[test]
     fn test_sessions() {
         let expected_sessions = expected_sessions_data();
-        let config = Config::new().unwrap();
+        let sessions = Config::new().sessions().unwrap();
 
-        assert_eq!(config.sessions, expected_sessions);
+        assert_eq!(sessions, expected_sessions);
     }
 }
