@@ -1,3 +1,6 @@
+mod cli;
+pub use cli::*;
+
 mod config;
 mod sessions;
 mod tmux;
