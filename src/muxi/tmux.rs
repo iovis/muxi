@@ -3,7 +3,7 @@ use std::process::Command;
 
 use thiserror::Error;
 
-use crate::sessions::Session;
+use super::sessions::Session;
 
 type TmuxResult<T> = Result<T, TmuxError>;
 

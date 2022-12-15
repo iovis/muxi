@@ -3,7 +3,7 @@ use std::{env, io};
 
 use thiserror::Error;
 
-use crate::sessions::{self, Session, SessionParseError};
+use super::sessions::{self, Session, SessionParseError};
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
