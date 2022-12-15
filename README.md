@@ -1,5 +1,7 @@
 # Muxi
 
+Create dynamic shortcuts for your tmux sessions!
+
 ## Install
 ```sh
 cargo install muxi
