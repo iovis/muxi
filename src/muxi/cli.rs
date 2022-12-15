@@ -5,11 +5,11 @@ use clap::{Parser, Subcommand};
 #[command(version, about, long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Command,
 }
 
 #[derive(Debug, Subcommand)]
-pub enum Commands {
+pub enum Command {
     Init,
     Edit,
 }
