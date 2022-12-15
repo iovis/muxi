@@ -8,4 +8,4 @@ install:
 	cargo install --path .
 
 publish: test
-	echo 'publishing!'
+	cargo publish
