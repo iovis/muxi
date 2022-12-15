@@ -1,9 +1,8 @@
 # Muxi
 
 ## Install
-Clone the repo and run:
 ```sh
-cargo install --path .
+cargo install muxi
 ```
 
 ## Configuration
