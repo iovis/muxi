@@ -2,8 +2,13 @@
 name = "muxi"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["David Marchante <davidmarchan@gmail.com>"]
+description = "Create bookmarks for your tmux sessions on the fly! 🚀"
+license = "MIT"
+readme = "README.md"
+keywords = ["tmux", "cli"]
+categories = ["command-line-utilities"]
+repository = "https://github.com/iovis/muxi"
 
 [dependencies]
 anyhow = "1.0.66"
