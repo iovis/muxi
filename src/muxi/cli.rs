@@ -12,4 +12,5 @@ pub struct Cli {
 pub enum Command {
     Init,
     Edit,
+    List,
 }

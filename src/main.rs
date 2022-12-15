@@ -11,5 +11,6 @@ fn main() -> anyhow::Result<()> {
     match args.command {
         cli::Command::Init => commands::init(),
         cli::Command::Edit => commands::edit(),
+        cli::Command::List => commands::list(),
     }
 }

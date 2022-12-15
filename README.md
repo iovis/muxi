@@ -17,7 +17,7 @@ if "type muxi" {
 
 ## TODO
 
-- [ ] Create `muxi` command
+- [x] Create `muxi` command
     - [x] `init`
         - [x] Set `$MUXI_CONFIG_PATH` if not exists
             - `$XDG_CONFIG_HOME/muxi/`
@@ -55,7 +55,7 @@ if "type muxi" {
                 - Should I define bindings for all letters?
                 - `tmux bind -T muxi <key.upper> run -b "muxi set <key>"`
                 - Append to `sessions.muxi`
-    - [ ] `list`
+    - [x] `list`
     - [ ] `go <name>`?
         - [ ] If not in list, display error
             - `tmux display "#{session} doesn't exist"`
