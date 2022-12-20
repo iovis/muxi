@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 #[command(name = "muxi")]
@@ -10,6 +10,17 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    Sessions(Sessions),
+}
+
+#[derive(Debug, Args)]
+pub struct Sessions {
+    #[command(subcommand)]
+    pub command: Option<SessionCommands>,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum SessionCommands {
     Init,
     Edit,
     List,

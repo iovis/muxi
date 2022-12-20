@@ -79,7 +79,7 @@ impl Tmux {
     }
 
     fn default_bindings(&self) -> TmuxResult<()> {
-        // bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi edit"
+        // bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi sessions edit"
         let output = Command::new("tmux")
             .arg("bind")
             .arg("-T")
@@ -95,7 +95,7 @@ impl Tmux {
             .arg("-T")
             .arg(" muxi ")
             .arg("-E")
-            .arg("muxi edit")
+            .arg("muxi sessions edit")
             .output()?;
 
         if output.status.success() {
