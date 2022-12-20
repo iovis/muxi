@@ -3,6 +3,7 @@ use std::{env, io};
 
 use thiserror::Error;
 
+use super::path::expand_tilde;
 use super::sessions::{self, Session, SessionParseError};
 
 #[derive(Debug, Error)]
@@ -46,20 +47,7 @@ impl Config {
             PathBuf::from("~/.config/muxi/")
         };
 
-        Self::handle_tilde_in_path(path)
-    }
-
-    fn handle_tilde_in_path(path: PathBuf) -> PathBuf {
-        if !path.starts_with("~") {
-            return path;
-        }
-
-        let path = path.strip_prefix("~").unwrap();
-
-        let home_str = env::var("HOME").expect("$HOME is not defined");
-        let home = PathBuf::from(home_str);
-
-        home.join(path)
+        expand_tilde(path)
     }
 
     #[cfg(not(test))]
@@ -106,7 +94,7 @@ mod tests {
     use super::*;
 
     fn with_env<F: FnOnce(PathBuf)>(name: &str, value: &str, test: F) {
-        let home_dir = PathBuf::from(env::var("HOME").unwrap());
+        let home_dir = dirs::home_dir().unwrap();
         env::set_var(name, value);
 
         test(home_dir);
@@ -132,7 +120,7 @@ mod tests {
 
     #[test]
     fn test_path_fallback() {
-        let home_dir = PathBuf::from(env::var("HOME").unwrap());
+        let home_dir = dirs::home_dir().unwrap();
 
         let config = Config::new();
 
@@ -140,26 +128,28 @@ mod tests {
     }
 
     fn expected_sessions_data() -> Vec<Session> {
+        let home_dir = dirs::home_dir().unwrap();
+
         vec![
             Session {
                 key: "d".into(),
                 name: "dotfiles".into(),
-                path: "~/.dotfiles".into(),
+                path: home_dir.join(".dotfiles"),
             },
             Session {
                 key: "k".into(),
                 name: "muxi".into(),
-                path: "~/Sites/rust/muxi/".into(),
+                path: home_dir.join("Sites/rust/muxi/"),
             },
             Session {
                 key: "Space".into(),
                 name: "tmux".into(),
-                path: "~/Sites/tmux/".into(),
+                path: home_dir.join("Sites/tmux/"),
             },
             Session {
                 key: "M-n".into(),
                 name: "notes".into(),
-                path: "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
+                path: home_dir.join("Library/Mobile Documents/com~apple~CloudDocs/notes"),
             },
         ]
     }

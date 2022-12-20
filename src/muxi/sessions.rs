@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use thiserror::Error;
 
+use super::path::expand_tilde;
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Session {
     pub key: String,
@@ -36,6 +38,8 @@ impl TryFrom<String> for Session {
             return Err(SessionParseError::MissingPath);
         }
 
+        let path = expand_tilde(path);
+
         Ok(Self { key, name, path })
     }
 }
@@ -63,6 +67,7 @@ mod tests {
 
     #[test]
     fn test_parses_normal_line() {
+        let home_dir = dirs::home_dir().unwrap();
         let line = "d dotfiles ~/.dotfiles".to_string();
         let session: Session = line.try_into().unwrap();
 
@@ -71,13 +76,14 @@ mod tests {
             Session {
                 key: "d".into(),
                 name: "dotfiles".into(),
-                path: "~/.dotfiles".into(),
+                path: home_dir.join(".dotfiles"),
             }
         );
     }
 
     #[test]
     fn test_parses_line_with_multichar_binding() {
+        let home_dir = dirs::home_dir().unwrap();
         let line = "Space tmux ~/Sites/rust/tmux/".to_string();
         let session: Session = line.try_into().unwrap();
 
@@ -86,13 +92,14 @@ mod tests {
             Session {
                 key: "Space".into(),
                 name: "tmux".into(),
-                path: "~/Sites/rust/tmux/".into(),
+                path: home_dir.join("Sites/rust/tmux/"),
             }
         );
     }
 
     #[test]
     fn test_parses_line_with_multiple_spaces() {
+        let home_dir = dirs::home_dir().unwrap();
         let line = "Space     tmux     ~/Sites/rust/tmux/".to_string();
         let session: Session = line.try_into().unwrap();
 
@@ -101,13 +108,14 @@ mod tests {
             Session {
                 key: "Space".into(),
                 name: "tmux".into(),
-                path: "~/Sites/rust/tmux/".into(),
+                path: home_dir.join("Sites/rust/tmux/"),
             }
         );
     }
 
     #[test]
     fn test_parses_line_with_spaces_in_path() {
+        let home_dir = dirs::home_dir().unwrap();
         let line = "M-n notes ~/Library/Mobile Documents/com~apple~CloudDocs/notes".to_string();
         let session: Session = line.try_into().unwrap();
 
@@ -116,7 +124,7 @@ mod tests {
             Session {
                 key: "M-n".into(),
                 name: "notes".into(),
-                path: "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
+                path: home_dir.join("Library/Mobile Documents/com~apple~CloudDocs/notes"),
             }
         );
     }
@@ -158,26 +166,28 @@ mod tests {
     }
 
     fn expected_sessions_data() -> Vec<Session> {
+        let home_dir = dirs::home_dir().unwrap();
+
         vec![
             Session {
                 key: "d".into(),
                 name: "dotfiles".into(),
-                path: "~/.dotfiles".into(),
+                path: home_dir.join(".dotfiles"),
             },
             Session {
                 key: "k".into(),
                 name: "muxi".into(),
-                path: "~/Sites/rust/muxi/".into(),
+                path: home_dir.join("Sites/rust/muxi/"),
             },
             Session {
                 key: "Space".into(),
                 name: "tmux".into(),
-                path: "~/Sites/tmux/".into(),
+                path: home_dir.join("Sites/tmux/"),
             },
             Session {
                 key: "M-n".into(),
                 name: "notes".into(),
-                path: "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
+                path: home_dir.join("Library/Mobile Documents/com~apple~CloudDocs/notes"),
             },
         ]
     }
