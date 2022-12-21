@@ -3,6 +3,8 @@ use std::path::PathBuf;
 
 use thiserror::Error;
 
+use crate::settings::Settings;
+
 use super::path;
 use super::sessions::{self, Session, SessionParseError};
 
@@ -17,13 +19,15 @@ pub enum MuxiError {
 #[derive(Debug)]
 pub struct Muxi {
     pub path: PathBuf,
+    pub settings: Settings,
 }
 
 impl Muxi {
     pub fn new() -> Self {
         let path = path::muxi_path();
+        let settings = Settings::new().unwrap();
 
-        Self { path }
+        Self { path, settings }
     }
 
     pub fn sessions(&self) -> Result<Vec<Session>, MuxiError> {
