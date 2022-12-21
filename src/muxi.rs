@@ -22,8 +22,7 @@ pub struct Muxi {
 
 impl Muxi {
     pub fn new() -> Self {
-        let path = path::muxi_dir();
-        let settings = Settings::new(&path).unwrap();
+        let settings = Settings::new(&path::settings_file()).unwrap();
 
         Self { settings }
     }
