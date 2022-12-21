@@ -24,6 +24,7 @@ fn main() -> anyhow::Result<()> {
 
             match command {
                 cli::ConfigCommands::List => commands::config::list(),
+                cli::ConfigCommands::Edit => commands::config::edit(),
             }
         }
     }
