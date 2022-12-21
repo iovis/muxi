@@ -23,7 +23,7 @@ if "type muxi" {
         - [x] Set `$MUXI_CONFIG_PATH` if not exists
             - `$XDG_CONFIG_HOME/muxi/`
             - Create folder if it doesn't exist
-        - [ ] Read `$MUXI_CONFIG_PATH/settings.toml`
+        - [x] Read `$MUXI_CONFIG_PATH/settings.toml`
             ```toml
             bindings = true             # default `true`
             muxi_prefix = 'g'           # no default

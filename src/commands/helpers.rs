@@ -3,8 +3,6 @@ use std::process::{Command, Stdio};
 
 use anyhow::bail;
 
-use super::sessions;
-
 pub fn open_editor_for(path: &Path) -> anyhow::Result<()> {
     // Get the value of the $EDITOR environment variable
     let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vim".to_string());
@@ -27,7 +25,7 @@ pub fn open_editor_for(path: &Path) -> anyhow::Result<()> {
 
     // Check the exit status of the editor process
     if status.success() {
-        sessions::init()
+        super::init()
     } else {
         bail!("Edit failed")
     }

@@ -10,6 +10,7 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    Init,
     Config(Config),
     Sessions(Sessions),
 }
@@ -34,7 +35,6 @@ pub struct Sessions {
 
 #[derive(Debug, Subcommand)]
 pub enum SessionCommands {
-    Init,
     Edit,
     List,
 }
