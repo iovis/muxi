@@ -3,6 +3,8 @@ use std::process::Command;
 
 use thiserror::Error;
 
+use crate::settings::Settings;
+
 use super::sessions::Session;
 
 type TmuxResult<T> = Result<T, TmuxError>;
@@ -20,13 +22,15 @@ pub enum TmuxError {
 }
 
 #[derive(Debug)]
-pub struct Tmux {}
+pub struct Tmux {
+    settings: Settings,
+}
 
 impl Tmux {
-    pub fn new() -> TmuxResult<Self> {
+    pub fn new(settings: Settings) -> TmuxResult<Self> {
         std::env::var("TMUX")?;
 
-        Ok(Self {})
+        Ok(Self { settings })
     }
 
     pub fn bind_sessions(&self, sessions: &[Session]) -> TmuxResult<()> {
@@ -61,13 +65,21 @@ impl Tmux {
 
     fn bind_table_prefix(&self) -> TmuxResult<()> {
         // tmux bind <settings.prefix> switch-client -T muxi
-        let output = Command::new("tmux")
-            .arg("bind")
-            .arg("g")
+        let mut command = Command::new("tmux");
+        command.arg("bind");
+
+        // Bind at root table if no tmux prefix
+        if !&self.settings.tmux_prefix {
+            command.arg("-n");
+        }
+
+        command
+            .arg(&self.settings.muxi_prefix)
             .arg("switch-client")
             .arg("-T")
-            .arg("muxi")
-            .output()?;
+            .arg("muxi");
+
+        let output = command.output()?;
 
         if output.status.success() {
             Ok(())
