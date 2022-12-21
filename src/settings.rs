@@ -9,6 +9,7 @@ use serde::Deserialize;
 pub struct Settings {
     pub muxi_prefix: String, // TODO: validate no spaces
     pub tmux_prefix: bool,
+    #[serde(default)]
     pub bindings: HashMap<String, Binding>,
 }
 
