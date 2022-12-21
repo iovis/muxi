@@ -1,12 +1,12 @@
-use crate::muxi::Muxi;
 use crate::path;
+use crate::settings::Settings;
 
 pub fn list() -> anyhow::Result<()> {
-    let config = Muxi::new();
+    let settings = Settings::new(&path::settings_file())?;
 
     println!("Settings");
     println!("========");
-    println!("{}", config.settings);
+    println!("{}", settings);
 
     println!(
         "Change your settings in {}",

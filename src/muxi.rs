@@ -1,10 +1,6 @@
 use std::io;
-
 use thiserror::Error;
 
-use crate::settings::Settings;
-
-use super::path;
 use super::sessions::{self, Session, SessionParseError};
 
 #[derive(Debug, Error)]
@@ -16,15 +12,11 @@ pub enum MuxiError {
 }
 
 #[derive(Debug)]
-pub struct Muxi {
-    pub settings: Settings,
-}
+pub struct Muxi {}
 
 impl Muxi {
     pub fn new() -> Self {
-        let settings = Settings::new(&path::settings_file()).unwrap();
-
-        Self { settings }
+        Self {}
     }
 
     pub fn sessions(&self) -> Result<Vec<Session>, MuxiError> {
@@ -38,6 +30,8 @@ impl Muxi {
     fn read_or_create_sessions_file(&self) -> Result<String, MuxiError> {
         use std::fs::OpenOptions;
         use std::io::{BufReader, Read};
+
+        use super::path;
 
         std::fs::create_dir_all(path::muxi_dir())?;
 
