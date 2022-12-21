@@ -1,8 +1,8 @@
-use crate::muxi::config::Config;
-use crate::muxi::tmux::Tmux;
+use crate::muxi::Tmux;
+use crate::muxi::Muxi;
 
 pub fn init() -> anyhow::Result<()> {
-    let config = Config::new();
+    let config = Muxi::new();
     let sessions = config.sessions()?;
     let tmux = Tmux::new()?;
 

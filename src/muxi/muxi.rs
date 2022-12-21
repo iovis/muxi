@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::io;
+use std::path::PathBuf;
 
 use thiserror::Error;
 
@@ -7,7 +7,7 @@ use super::path;
 use super::sessions::{self, Session, SessionParseError};
 
 #[derive(Debug, Error)]
-pub enum ConfigError {
+pub enum MuxiError {
     #[error("failed to open sessions file")]
     MissingSessionsFile(#[from] io::Error),
     #[error("failed to parse sessions file")]
@@ -15,18 +15,18 @@ pub enum ConfigError {
 }
 
 #[derive(Debug)]
-pub struct Config {
+pub struct Muxi {
     pub path: PathBuf,
 }
 
-impl Config {
+impl Muxi {
     pub fn new() -> Self {
         let path = path::muxi_path();
 
         Self { path }
     }
 
-    pub fn sessions(&self) -> Result<Vec<Session>, ConfigError> {
+    pub fn sessions(&self) -> Result<Vec<Session>, MuxiError> {
         let sessions_data = self.read_or_create_sessions_file()?;
         let sessions = sessions::from_config(sessions_data)?;
 
@@ -38,7 +38,7 @@ impl Config {
     }
 
     #[cfg(not(test))]
-    fn read_or_create_sessions_file(&self) -> Result<String, ConfigError> {
+    fn read_or_create_sessions_file(&self) -> Result<String, MuxiError> {
         use std::fs::OpenOptions;
         use std::io::{BufReader, Read};
 
@@ -62,7 +62,7 @@ impl Config {
 
     #[cfg(test)]
     #[allow(unused_variables)]
-    fn read_or_create_sessions_file(&self) -> Result<String, ConfigError> {
+    fn read_or_create_sessions_file(&self) -> Result<String, MuxiError> {
         let sessions_data = r#"
             d dotfiles ~/.dotfiles
 
@@ -110,7 +110,7 @@ mod tests {
     #[test]
     fn test_sessions() {
         let expected_sessions = expected_sessions_data();
-        let sessions = Config::new().sessions().unwrap();
+        let sessions = Muxi::new().sessions().unwrap();
 
         assert_eq!(sessions, expected_sessions);
     }

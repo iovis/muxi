@@ -1,7 +1,7 @@
-use crate::muxi::config::Config;
+use crate::muxi::Muxi;
 
 pub fn list() -> anyhow::Result<()> {
-    let config = Config::new();
+    let config = Muxi::new();
     let sessions = config.sessions()?;
 
     if sessions.is_empty() {
