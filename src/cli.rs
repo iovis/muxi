@@ -10,7 +10,20 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    Config(Config),
     Sessions(Sessions),
+}
+
+#[derive(Debug, Args)]
+pub struct Config {
+    #[command(subcommand)]
+    pub command: Option<ConfigCommands>,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum ConfigCommands {
+    // Edit,
+    List,
 }
 
 #[derive(Debug, Args)]

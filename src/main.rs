@@ -18,5 +18,13 @@ fn main() -> anyhow::Result<()> {
                 cli::SessionCommands::List => commands::sessions::list(),
             }
         }
+        cli::Command::Config(config_command) => {
+            // Default to `list` if no command given
+            let command = config_command.command.unwrap_or(cli::ConfigCommands::List);
+
+            match command {
+                cli::ConfigCommands::List => commands::config::list(),
+            }
+        }
     }
 }
