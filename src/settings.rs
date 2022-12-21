@@ -13,7 +13,6 @@ pub struct Settings {
 impl Settings {
     pub fn new(path: &Path) -> Result<Self, ConfigError> {
         Config::builder()
-            .set_default("muxi_prefix", "g".to_string())?
             .set_default("tmux_prefix", true)?
             .add_source(File::from(path).required(false))
             .build()?
