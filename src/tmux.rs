@@ -3,7 +3,7 @@ use std::process::Command;
 
 use thiserror::Error;
 
-use crate::muxi::{Session, Sessions};
+use crate::sessions::{Session, Sessions};
 use crate::settings::Settings;
 
 type TmuxResult<T> = Result<T, TmuxError>;
@@ -38,7 +38,7 @@ impl Tmux {
         self.settings_bindings()?;
 
         for (key, session) in sessions {
-            self.bind_session(key, session)?;
+            self.bind_session(key.as_ref(), session)?;
         }
 
         Ok(())

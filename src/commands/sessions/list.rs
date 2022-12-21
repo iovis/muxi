@@ -8,12 +8,10 @@ pub fn list() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let max_width_key = sessions.keys()
-        .map(|key| key.len())
-        .max()
-        .unwrap();
+    let max_width_key = sessions.keys().map(|key| key.as_ref().len()).max().unwrap();
 
-    let max_width_name = sessions.values()
+    let max_width_name = sessions
+        .values()
         .map(|session| session.name.len())
         .max()
         .unwrap();

@@ -15,5 +15,8 @@ anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"] }
 config = "0.13.3"
 dirs = "4.0.0"
+lazy_static = "1.4.0"
+regex = "1.7.0"
 serde = { version = "1.0.151", features = ["derive"] }
 thiserror = "1.0.37"
+toml = "0.5.10"

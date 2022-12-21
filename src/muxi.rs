@@ -1,18 +1,7 @@
-use std::collections::HashMap;
-use std::path::PathBuf;
-
 use config::{Config, ConfigError, File};
-use serde::Deserialize;
 
 use crate::path;
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct Session {
-    pub name: String,
-    pub path: PathBuf,
-}
-
-pub type Sessions = HashMap<String, Session>;
+use crate::sessions::Sessions;
 
 #[derive(Debug)]
 pub struct Muxi {
@@ -45,6 +34,8 @@ impl Muxi {
 mod tests {
     use std::io::Write;
 
+    use crate::sessions::Session;
+
     use super::*;
 
     fn with_config<F: FnOnce()>(config: &str, test: F) {
@@ -67,28 +58,28 @@ mod tests {
     fn expected_sessions() -> Sessions {
         vec![
             (
-                "d".into(),
+                "d".try_into().unwrap(),
                 Session {
                     name: "dotfiles".into(),
                     path: path::expand_tilde("~/.dotfiles".into()),
                 },
             ),
             (
-                "k".into(),
+                "k".try_into().unwrap(),
                 Session {
                     name: "muxi".into(),
                     path: path::expand_tilde("/home/user/muxi/".into()),
                 },
             ),
             (
-                "Space".into(),
+                "Space".try_into().unwrap(),
                 Session {
                     name: "tmux".into(),
                     path: path::expand_tilde("~/Sites/tmux/".into()),
                 },
             ),
             (
-                "M-n".into(),
+                "M-n".try_into().unwrap(),
                 Session {
                     name: "notes".into(),
                     path: path::expand_tilde(
