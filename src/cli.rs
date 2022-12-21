@@ -22,7 +22,6 @@ pub struct Config {
 
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommands {
-    // Edit,
     List,
 }
 

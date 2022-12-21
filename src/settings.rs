@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use config::{Config, ConfigError, File};
 use serde::Deserialize;
 
@@ -19,5 +21,12 @@ impl Settings {
             .add_source(File::from(path).required(false))
             .build()?
             .try_deserialize()
+    }
+}
+
+impl Display for Settings {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "muxi_prefix: {}", self.muxi_prefix)?;
+        writeln!(f, "tmux_prefix: {}", self.tmux_prefix)
     }
 }
