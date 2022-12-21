@@ -36,7 +36,7 @@ impl Tmux {
     pub fn bind_sessions(&self, sessions: &[Session]) -> TmuxResult<()> {
         self.clear_table()?;
         self.bind_table_prefix()?;
-        self.default_bindings()?;
+        self.settings_bindings()?;
 
         for session in sessions {
             self.bind_session(session)?;
@@ -90,29 +90,38 @@ impl Tmux {
         }
     }
 
-    fn default_bindings(&self) -> TmuxResult<()> {
-        // bind -T muxi e popup -w 80% -h 80% -b rounded -E "muxi sessions edit"
-        let output = Command::new("tmux")
-            .arg("bind")
-            .arg("-T")
-            .arg("muxi")
-            .arg("e")
-            .arg("popup")
-            .arg("-b")
-            .arg("rounded")
-            .arg("-T")
-            .arg(" muxi ")
-            .arg("-E")
-            .arg("muxi sessions edit")
-            .output()?;
+    fn settings_bindings(&self) -> TmuxResult<()> {
+        for (key, binding) in &self.settings.bindings {
+            let mut command = Command::new("tmux");
 
-        if output.status.success() {
-            Ok(())
-        } else {
-            Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-            ))
+            command.arg("bind").arg("-T").arg("muxi").arg(key);
+
+            if binding.popup {
+                let command_name = binding.command.split_whitespace().next().unwrap_or("muxi");
+
+                command
+                    .arg("popup")
+                    .arg("-b")
+                    .arg("rounded")
+                    .arg("-T")
+                    .arg(format!(" {command_name} "))
+                    .arg("-E");
+            } else {
+                command.arg("run");
+            }
+
+            command.arg(&binding.command);
+
+            let output = command.output()?;
+
+            if !output.status.success() {
+                return Err(TmuxError::BindKey(
+                    String::from_utf8_lossy(&output.stderr).trim().to_string(),
+                ));
+            }
         }
+
+        Ok(())
     }
 
     fn bind_session(&self, session: &Session) -> TmuxResult<()> {

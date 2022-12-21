@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::path::Path;
 
@@ -8,6 +9,14 @@ use serde::Deserialize;
 pub struct Settings {
     pub muxi_prefix: String, // TODO: validate no spaces
     pub tmux_prefix: bool,
+    pub bindings: HashMap<String, Binding>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Binding {
+    pub command: String,
+    #[serde(default)]
+    pub popup: bool,
 }
 
 impl Settings {
