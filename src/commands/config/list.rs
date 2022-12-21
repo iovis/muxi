@@ -1,4 +1,5 @@
 use crate::muxi::Muxi;
+use crate::path;
 
 pub fn list() -> anyhow::Result<()> {
     let config = Muxi::new();
@@ -9,7 +10,7 @@ pub fn list() -> anyhow::Result<()> {
 
     println!(
         "Change your settings in {}",
-        config.path.join("settings.toml").to_string_lossy()
+        path::settings_file().to_string_lossy()
     );
 
     Ok(())

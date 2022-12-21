@@ -1,5 +1,4 @@
 use std::io;
-use std::path::PathBuf;
 
 use thiserror::Error;
 
@@ -18,16 +17,15 @@ pub enum MuxiError {
 
 #[derive(Debug)]
 pub struct Muxi {
-    pub path: PathBuf,
     pub settings: Settings,
 }
 
 impl Muxi {
     pub fn new() -> Self {
-        let path = path::muxi_path();
-        let settings = Settings::new().unwrap();
+        let path = path::muxi_dir();
+        let settings = Settings::new(&path).unwrap();
 
-        Self { path, settings }
+        Self { settings }
     }
 
     pub fn sessions(&self) -> Result<Vec<Session>, MuxiError> {
@@ -37,22 +35,18 @@ impl Muxi {
         Ok(sessions)
     }
 
-    pub fn sessions_path(&self) -> PathBuf {
-        self.path.join("sessions.muxi")
-    }
-
     #[cfg(not(test))]
     fn read_or_create_sessions_file(&self) -> Result<String, MuxiError> {
         use std::fs::OpenOptions;
         use std::io::{BufReader, Read};
 
-        std::fs::create_dir_all(&self.path)?;
+        std::fs::create_dir_all(path::muxi_dir())?;
 
         let sessions_file = OpenOptions::new()
             .create(true)
             .read(true)
             .write(true)
-            .open(self.sessions_path())?;
+            .open(path::sessions_file())?;
 
         let mut reader = BufReader::new(sessions_file);
         let mut contents = String::new();

@@ -1,9 +1,8 @@
 use std::fmt::Display;
+use std::path::Path;
 
 use config::{Config, ConfigError, File};
 use serde::Deserialize;
-
-use crate::path::muxi_path;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
@@ -12,9 +11,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new() -> Result<Self, ConfigError> {
-        let path = muxi_path().join("settings");
-
+    pub fn new(path: &Path) -> Result<Self, ConfigError> {
         Config::builder()
             .set_default("muxi_prefix", "g".to_string())?
             .set_default("tmux_prefix", true)?

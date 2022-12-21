@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-pub fn muxi_path() -> PathBuf {
+pub fn muxi_dir() -> PathBuf {
     let path = if let Ok(env_path) = std::env::var("MUXI_CONFIG_PATH") {
         PathBuf::from(env_path)
     } else if let Ok(env_path) = std::env::var("XDG_CONFIG_HOME") {
@@ -10,6 +10,14 @@ pub fn muxi_path() -> PathBuf {
     };
 
     expand_tilde(path)
+}
+
+pub fn settings_file() -> PathBuf {
+    muxi_dir().join("settings.toml")
+}
+
+pub fn sessions_file() -> PathBuf {
+    muxi_dir().join("sessions.muxi")
 }
 
 pub fn expand_tilde(path: PathBuf) -> PathBuf {
@@ -39,14 +47,14 @@ mod tests {
     #[test]
     fn test_path_muxi_env_set() {
         with_env("MUXI_CONFIG_PATH", "~/my/path", |home_dir: PathBuf| {
-            assert_eq!(muxi_path(), home_dir.join("my/path"));
+            assert_eq!(muxi_dir(), home_dir.join("my/path"));
         })
     }
 
     #[test]
     fn test_path_xdg_home_env_set() {
         with_env("XDG_CONFIG_HOME", "~/xdg/path", |home_dir: PathBuf| {
-            assert_eq!(muxi_path(), home_dir.join("xdg/path/muxi/"));
+            assert_eq!(muxi_dir(), home_dir.join("xdg/path/muxi/"));
         })
     }
 
@@ -54,7 +62,7 @@ mod tests {
     fn test_path_fallback() {
         let home_dir = dirs::home_dir().unwrap();
 
-        assert_eq!(muxi_path(), home_dir.join(".config/muxi/"));
+        assert_eq!(muxi_dir(), home_dir.join(".config/muxi/"));
     }
 
     #[test]
