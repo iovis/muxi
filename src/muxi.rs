@@ -17,14 +17,10 @@ impl Muxi {
             std::fs::File::create(&sessions_file).unwrap();
         }
 
-        let mut sessions: Sessions = Config::builder()
+        let sessions: Sessions = Config::builder()
             .add_source(File::from(sessions_file).required(true))
             .build()?
             .try_deserialize()?;
-
-        for session in sessions.values_mut() {
-            session.path = path::expand_tilde(session.path.to_path_buf());
-        }
 
         Ok(Self { sessions })
     }

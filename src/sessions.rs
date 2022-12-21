@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 use crate::path;
 
@@ -12,7 +12,18 @@ pub type Sessions = HashMap<TmuxKey, Session>;
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Session {
     pub name: String,
+    #[serde(deserialize_with = "expand_tilde")]
     pub path: PathBuf,
+}
+
+// Thank you ChatGPT
+fn expand_tilde<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: String = Deserialize::deserialize(deserializer)?;
+
+    Ok(path::expand_tilde(s.into()))
 }
 
 #[derive(Debug, Deserialize, Hash, PartialEq, Eq)]
@@ -108,7 +119,7 @@ mod tests {
             TmuxKey::parse("d").unwrap(),
             Session {
                 name: "dotfiles".into(),
-                path: "~/.dotfiles".into(),
+                path: path::expand_tilde("~/.dotfiles".into()),
             },
         );
 
