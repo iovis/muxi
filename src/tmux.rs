@@ -3,9 +3,8 @@ use std::process::Command;
 
 use thiserror::Error;
 
+use crate::muxi::{Session, Sessions};
 use crate::settings::Settings;
-
-use super::sessions::Session;
 
 type TmuxResult<T> = Result<T, TmuxError>;
 
@@ -33,13 +32,13 @@ impl Tmux {
         Ok(Self { settings })
     }
 
-    pub fn bind_sessions(&self, sessions: &[Session]) -> TmuxResult<()> {
+    pub fn bind_sessions(&self, sessions: &Sessions) -> TmuxResult<()> {
         self.clear_table()?;
         self.bind_table_prefix()?;
         self.settings_bindings()?;
 
-        for session in sessions {
-            self.bind_session(session)?;
+        for (key, session) in sessions {
+            self.bind_session(key, session)?;
         }
 
         Ok(())
@@ -124,13 +123,13 @@ impl Tmux {
         Ok(())
     }
 
-    fn bind_session(&self, session: &Session) -> TmuxResult<()> {
+    fn bind_session(&self, key: &str, session: &Session) -> TmuxResult<()> {
         // tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"
         let output = Command::new("tmux")
             .arg("bind")
             .arg("-T")
             .arg("muxi")
-            .arg(&session.key)
+            .arg(key)
             .arg("new-session")
             .arg("-A")
             .arg("-s")

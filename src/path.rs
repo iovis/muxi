@@ -17,7 +17,7 @@ pub fn settings_file() -> PathBuf {
 }
 
 pub fn sessions_file() -> PathBuf {
-    muxi_dir().join("sessions.muxi")
+    muxi_dir().join("sessions.toml")
 }
 
 pub fn expand_tilde(path: PathBuf) -> PathBuf {
