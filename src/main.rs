@@ -1,9 +1,6 @@
 use clap::Parser;
-
-use self::muxi::cli::{self, Cli};
-use self::muxi::commands;
-
-mod muxi;
+use muxi::cli::{self, Cli};
+use muxi::commands;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
