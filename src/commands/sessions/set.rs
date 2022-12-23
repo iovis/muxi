@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
+use crate::commands;
 use crate::muxi::Muxi;
-use crate::sessions::{Session, TmuxKey, self};
-use crate::{tmux, commands};
+use crate::sessions::{Session, self};
+use crate::tmux::{TmuxKey, self};
 
 pub fn set(key: TmuxKey, name: Option<String>, path: Option<PathBuf>) -> anyhow::Result<()> {
     // Get current session name if not given

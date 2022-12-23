@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
 
-use crate::sessions::TmuxKey;
+use crate::tmux::TmuxKey;
 
 #[derive(Debug, Parser)]
 #[command(name = "muxi")]
