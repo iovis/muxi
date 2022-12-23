@@ -4,17 +4,26 @@ use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::path;
 
 pub type Sessions = HashMap<TmuxKey, Session>;
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Session {
     pub name: String,
     #[serde(deserialize_with = "expand_tilde")]
     pub path: PathBuf,
+}
+
+pub fn save(sessions: &Sessions) -> anyhow::Result<()> {
+    let toml = toml_edit::easy::to_string(&sessions)?;
+    let sessions_file = path::sessions_file();
+
+    std::fs::write(sessions_file, toml)?;
+
+    Ok(())
 }
 
 // Thank you ChatGPT
@@ -27,7 +36,7 @@ where
     Ok(path::expand_tilde(s.into()))
 }
 
-#[derive(Debug, Deserialize, Hash, PartialEq, Eq, Clone)]
+#[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone)]
 #[serde(try_from = "String")]
 pub struct TmuxKey(String);
 
