@@ -1,5 +1,7 @@
 use std::io;
+use std::path::PathBuf;
 use std::process::Command;
+use std::string::FromUtf8Error;
 
 use thiserror::Error;
 
@@ -18,6 +20,10 @@ pub enum TmuxError {
     ClearTable(String),
     #[error("Failed to bind key: `{0}`")]
     BindKey(String),
+    #[error("Failed to run tmux command: `{0}`")]
+    Error(String),
+    #[error("Failed to parse tmux output: `{0}`")]
+    ParseError(#[from] FromUtf8Error),
 }
 
 #[derive(Debug)]
@@ -145,5 +151,39 @@ impl Tmux {
                 String::from_utf8_lossy(&output.stderr).trim().to_string(),
             ))
         }
+    }
+}
+
+pub fn current_session_name() -> TmuxResult<String> {
+    // tmux display-message -p '#S'
+    let output = Command::new("tmux")
+        .arg("display-message")
+        .arg("-p")
+        .arg("#S")
+        .output()?;
+
+    if output.status.success() {
+        Ok(String::from_utf8(output.stdout)?.trim().into())
+    } else {
+        Err(TmuxError::Error(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ))
+    }
+}
+
+pub fn current_session_path() -> TmuxResult<PathBuf> {
+    // tmux display-message -p '#{session_path}'
+    let output = Command::new("tmux")
+        .arg("display-message")
+        .arg("-p")
+        .arg("#{session_path}")
+        .output()?;
+
+    if output.status.success() {
+        Ok(String::from_utf8(output.stdout)?.trim().into())
+    } else {
+        Err(TmuxError::Error(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ))
     }
 }
