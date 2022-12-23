@@ -19,7 +19,8 @@ lazy_static = "1.4.0"
 regex = "1.7.0"
 serde = { version = "1.0.151", features = ["derive"] }
 thiserror = "1.0.37"
-toml = "0.5.10"
+toml = { version = "0.5.10", features = ["preserve_order"] }
+toml_edit = { version = "0.15.0", features = ["easy"] }
 
 [profile.release]
 strip = true      # Automatically strip symbols from the binary
