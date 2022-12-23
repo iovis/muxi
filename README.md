@@ -21,6 +21,8 @@ Then provide a `settings.toml` in one of the following locations:
 - `$XDG_CONFIG_HOME/muxi/`
 - `~/.config/muxi/`
 
+Or run `muxi config edit`
+
 ```toml
 muxi_prefix = "g"   # Muxi's table binding, `<prefix>g`
 tmux_prefix = true  # Optional: Use <prefix> to define muxi's table (default: true)
@@ -29,6 +31,13 @@ tmux_prefix = true  # Optional: Use <prefix> to define muxi's table (default: tr
 [bindings]
 e = { popup = true, command = "muxi sessions edit" }  # <prefix>ge => open a tmux popup to edit your sessions file
 l = { command = "muxi sessions list" }  # <prefix>gl => tmux run-shell <command>
+
+M-Space = { command = "tmux switch-client -l" }  # Binding tmux commands
+
+# Quick session bindings (like vim's harpoon)
+J = { command = "muxi sessions set j && tmux display 'bound current session to j'" }
+K = { command = "muxi sessions set k && tmux display 'bound current session to k'" }
+L = { command = "muxi sessions set l && tmux display 'bound current session to l'" }
 ```
 
 ## Sessions
