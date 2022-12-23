@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -26,7 +27,7 @@ where
     Ok(path::expand_tilde(s.into()))
 }
 
-#[derive(Debug, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Hash, PartialEq, Eq, Clone)]
 #[serde(try_from = "String")]
 pub struct TmuxKey(String);
 
@@ -55,6 +56,15 @@ impl TryFrom<&str> for TmuxKey {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::parse(value)
+    }
+}
+
+// For some reason if I do From<String> it conflicts with something
+impl FromStr for TmuxKey {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s)
     }
 }
 

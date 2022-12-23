@@ -1,4 +1,8 @@
+use std::path::PathBuf;
+
 use clap::{Args, Parser, Subcommand};
+
+use crate::sessions::TmuxKey;
 
 #[derive(Debug, Parser)]
 #[command(name = "muxi")]
@@ -37,4 +41,11 @@ pub struct Sessions {
 pub enum SessionCommands {
     Edit,
     List,
+    Set {
+        key: TmuxKey,
+        #[arg(short, long)]
+        name: Option<String>,
+        #[arg(short, long)]
+        path: Option<PathBuf>,
+    },
 }

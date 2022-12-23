@@ -16,6 +16,9 @@ fn main() -> anyhow::Result<()> {
             match command {
                 cli::SessionCommands::Edit => commands::sessions::edit(),
                 cli::SessionCommands::List => commands::sessions::list(),
+                cli::SessionCommands::Set { key, name, path } => {
+                    commands::sessions::set(key, name, path)
+                }
             }
         }
         cli::Command::Config(config_command) => {
