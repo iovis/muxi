@@ -1,7 +1,15 @@
-use config::{Config, ConfigError, File};
+use thiserror::Error;
 
 use crate::path;
 use crate::sessions::Sessions;
+
+#[derive(Debug, Error)]
+pub enum MuxiError {
+    #[error("Error reading your sessions file")]
+    IoError(#[from] std::io::Error),
+    #[error("Error parsing your sessions file")]
+    ParseError(#[from] toml::de::Error),
+}
 
 #[derive(Debug)]
 pub struct Muxi {
@@ -9,18 +17,16 @@ pub struct Muxi {
 }
 
 impl Muxi {
-    pub fn new() -> Result<Self, ConfigError> {
+    pub fn new() -> Result<Self, MuxiError> {
         let sessions_file = path::sessions_file();
 
         if std::fs::metadata(&sessions_file).is_err() {
-            std::fs::create_dir_all(path::muxi_dir()).unwrap();
-            std::fs::File::create(&sessions_file).unwrap();
+            std::fs::create_dir_all(path::muxi_dir())?;
+            std::fs::File::create(&sessions_file)?;
         }
 
-        let sessions: Sessions = Config::builder()
-            .add_source(File::from(sessions_file).required(true))
-            .build()?
-            .try_deserialize()?;
+        let sessions_data = std::fs::read_to_string(sessions_file)?;
+        let sessions = toml::from_str(&sessions_data)?;
 
         Ok(Self { sessions })
     }
