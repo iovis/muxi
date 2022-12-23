@@ -379,6 +379,7 @@ dependencies = [
  "clap",
  "config",
  "dirs",
+ "itertools",
  "lazy_static",
  "regex",
  "serde",

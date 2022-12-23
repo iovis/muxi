@@ -36,7 +36,7 @@ where
     Ok(path::expand_tilde(s.into()))
 }
 
-#[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone)]
+#[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
 #[serde(try_from = "String")]
 pub struct TmuxKey(String);
 

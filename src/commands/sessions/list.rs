@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::muxi::Muxi;
 
 pub fn list() -> anyhow::Result<()> {
@@ -16,7 +18,7 @@ pub fn list() -> anyhow::Result<()> {
         .max()
         .unwrap();
 
-    for (key, session) in sessions {
+    for (key, session) in sessions.iter().sorted_by_key(|key| key.0) {
         println!(
             "[{:<max_width_key$}]: {:<max_width_name$}  ({})",
             key,
