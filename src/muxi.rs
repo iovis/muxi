@@ -34,23 +34,6 @@ mod tests {
 
     use super::*;
 
-    fn with_config<F: FnOnce()>(config: &str, test: F) {
-        // Set $MUXI_CONFIG_PATH to current folder
-        let pwd = std::env::var("PWD").unwrap();
-        std::env::set_var("MUXI_CONFIG_PATH", pwd);
-
-        // Create configuration file
-        let mut file = std::fs::File::create("sessions.toml").unwrap();
-        file.write_all(config.as_bytes()).unwrap();
-
-        // Run the test
-        test();
-
-        // Cleanup
-        std::fs::remove_file("sessions.toml").unwrap();
-        std::env::remove_var("MUXI_CONFIG_PATH");
-    }
-
     fn expected_sessions() -> Sessions {
         vec![
             (
@@ -90,20 +73,28 @@ mod tests {
 
     #[test]
     fn test_normal_sessions() {
+        // Create configuration file
         let config = r#"
             d = { name = "dotfiles", path = "~/.dotfiles" }
-
             k = { name = "muxi", path = "/home/user/muxi/" }
             Space = { name = "tmux", path = "~/Sites/tmux/" }
-
             M-n = { name = "notes", path = "~/Library/Mobile Documents/com~apple~CloudDocs/notes" }
         "#;
 
-        with_config(config, || {
+        let mut file = std::fs::File::create("sessions.toml").unwrap();
+        file.write_all(config.as_bytes()).unwrap();
+
+        // Set $MUXI_CONFIG_PATH to current folder and load config
+        let pwd = std::env::var("PWD").unwrap();
+
+        temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd), || {
             let expected_sessions = expected_sessions();
             let sessions = Muxi::new().unwrap().sessions;
 
+            // Cleanup before test, in case of panic
+            std::fs::remove_file("sessions.toml").unwrap();
+
             assert_eq!(sessions, expected_sessions);
-        })
+        });
     }
 }

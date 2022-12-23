@@ -35,34 +35,40 @@ pub fn expand_tilde(path: PathBuf) -> PathBuf {
 mod tests {
     use super::*;
 
-    fn with_env<F: FnOnce(PathBuf)>(name: &str, value: &str, test: F) {
-        let home_dir = dirs::home_dir().unwrap();
-        std::env::set_var(name, value);
-
-        test(home_dir);
-
-        std::env::remove_var(name);
-    }
-
     #[test]
     fn test_path_muxi_env_set() {
-        with_env("MUXI_CONFIG_PATH", "~/my/path", |home_dir: PathBuf| {
+        temp_env::with_var("MUXI_CONFIG_PATH", Some("~/my/path"), || {
+            let home_dir = dirs::home_dir().unwrap();
             assert_eq!(muxi_dir(), home_dir.join("my/path"));
-        })
+        });
     }
 
     #[test]
     fn test_path_xdg_home_env_set() {
-        with_env("XDG_CONFIG_HOME", "~/xdg/path", |home_dir: PathBuf| {
-            assert_eq!(muxi_dir(), home_dir.join("xdg/path/muxi/"));
-        })
+        temp_env::with_vars(
+            vec![
+                ("MUXI_CONFIG_PATH", None),
+                ("XDG_CONFIG_HOME", Some("~/xdg/path")),
+            ],
+            || {
+                let home_dir = dirs::home_dir().unwrap();
+                assert_eq!(muxi_dir(), home_dir.join("xdg/path/muxi/"));
+            },
+        );
     }
 
     #[test]
     fn test_path_fallback() {
-        let home_dir = dirs::home_dir().unwrap();
-
-        assert_eq!(muxi_dir(), home_dir.join(".config/muxi/"));
+        temp_env::with_vars(
+            vec![
+                ("MUXI_CONFIG_PATH", None::<&str>),
+                ("XDG_CONFIG_HOME", None),
+            ],
+            || {
+                let home_dir = dirs::home_dir().unwrap();
+                assert_eq!(muxi_dir(), home_dir.join(".config/muxi/"));
+            },
+        );
     }
 
     #[test]
