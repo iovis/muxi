@@ -25,19 +25,24 @@ Or run `muxi config edit`
 
 ```toml
 muxi_prefix = "g"   # Muxi's table binding, `<prefix>g`
-tmux_prefix = true  # Optional: Use <prefix> to define muxi's table (default: true)
+tmux_prefix = true  # Optional: Use tmux <prefix> to define muxi's table (default: true)
 
 # Optional bindings to be created on tmux's muxi table
 [bindings]
-e = { popup = true, command = "muxi sessions edit" }  # <prefix>ge => open a tmux popup to edit your sessions file
-l = { command = "muxi sessions list" }  # <prefix>gl => tmux run-shell <command>
+# `popup = true` will run your command on a tmux popup
+e = { popup = true, command = "muxi sessions edit" }    # <prefix>ge => edit your sessions file
+c = { popup = true, command = "muxi config edit" }      # <prefix>gc => edit config
+s = { popup = true, command = "muxi sessions | less" }  # <prefix>gs => list sessions
 
-M-Space = { command = "tmux switch-client -l" }  # Binding tmux commands
+M-Space = { command = "tmux switch-client -l" }  # `tmux run-shell "tmux switch-client -l"`
 
 # Quick session bindings (like vim's harpoon)
 J = { command = "muxi sessions set j && tmux display 'bound current session to j'" }
 K = { command = "muxi sessions set k && tmux display 'bound current session to k'" }
 L = { command = "muxi sessions set l && tmux display 'bound current session to l'" }
+
+[bindings.g]
+command = "tmux send htop Enter" # Make tmux do the hard work for you!
 ```
 
 ## Sessions
