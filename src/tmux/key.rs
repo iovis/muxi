@@ -1,8 +1,6 @@
 use std::str::FromStr;
 
-use regex::Regex;
 use serde::{Deserialize, Serialize};
-use lazy_static::lazy_static;
 
 #[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
 #[serde(try_from = "String")]
@@ -57,41 +55,6 @@ impl AsRef<str> for TmuxKey {
     }
 }
 
-fn is_valid_tmux_key(s: &str) -> bool {
-    // Whatever ChatGPT says
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
-            r"(^[A-Za-z]$)|(^C-[A-Za-z]$)|(^\^[A-Za-z]$)|(^S-[A-Za-z]$)|(^M-[A-Za-z]$)|(^Up$)|(^Down$)|(^Left$)|(^Right$)|(^BSpace$)|(^BTab$)|(^DC$)|(^End$)|(^Enter$)|(^Escape$)|(^F[1-9]$)|(^F1[0-2]$)|(^Home$)|(^IC$)|(^NPage$)|(^PageDown$)|(^PgDn$)|(^PPage$)|(^PageUp$)|(^PgUp$)|(^Space$)|(^Tab$)"
-            )
-            .unwrap();
-    }
-
-    RE.is_match(s)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_is_valid_tmux_key() {
-        let valid_keys = vec![
-            "A", "a", "C-A", "C-a", "^a", "^A", "S-a", "S-A", "M-a", "M-A", "Up", "Down", "Left",
-            "Right", "BSpace", "BTab", "DC", "End", "Enter", "Escape", "F1", "F2",
-        ];
-
-        for key in valid_keys {
-            assert!(is_valid_tmux_key(key), "Expected `{}` to be valid", key);
-        }
-
-        let invalid_keys = vec!["", "C-", "^", "S-", "M-", "F13", "invalid"];
-
-        for key in invalid_keys {
-            assert!(
-                !is_valid_tmux_key(key),
-                "Expected `{}` to not be valid",
-                key
-            );
-        }
-    }
+fn is_valid_tmux_key(_s: &str) -> bool {
+    true
 }
