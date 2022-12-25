@@ -18,8 +18,8 @@ pub enum TmuxError {
     CommandError(#[from] io::Error),
     #[error("Failed to clear muxi table: `{0}`")]
     ClearTable(String),
-    #[error("Failed to bind key: `{0}`")]
-    BindKey(String),
+    #[error("{0}\nin: {1}")]
+    BindKey(String, String),
     #[error("Failed to run tmux command: `{0}`")]
     Error(String),
     #[error("Failed to parse tmux output: `{0}`")]
@@ -79,7 +79,7 @@ impl Tmux {
         }
 
         command
-            .arg(&self.settings.muxi_prefix)
+            .arg(self.settings.muxi_prefix.as_ref())
             .arg("switch-client")
             .arg("-T")
             .arg("muxi");
@@ -91,6 +91,7 @@ impl Tmux {
         } else {
             Err(TmuxError::BindKey(
                 String::from_utf8_lossy(&output.stderr).trim().to_string(),
+                format!("muxi_prefix: {}", self.settings.muxi_prefix),
             ))
         }
     }
@@ -122,6 +123,7 @@ impl Tmux {
             if !output.status.success() {
                 return Err(TmuxError::BindKey(
                     String::from_utf8_lossy(&output.stderr).trim().to_string(),
+                    format!("{} = {:?}", key, binding),
                 ));
             }
         }
@@ -149,6 +151,7 @@ impl Tmux {
         } else {
             Err(TmuxError::BindKey(
                 String::from_utf8_lossy(&output.stderr).trim().to_string(),
+                format!("{} = {:?}", key, session),
             ))
         }
     }
