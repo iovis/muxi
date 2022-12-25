@@ -20,7 +20,7 @@ pub fn list() -> anyhow::Result<()> {
         for (key, binding) in settings.bindings.iter() {
             print!("[{}]: {}", key, binding.command);
 
-            if binding.popup {
+            if binding.has_popup() {
                 print!(" (popup: true)");
             }
 

@@ -21,11 +21,12 @@ thiserror = "1.0.37"
 toml = { version = "0.5.10", features = ["preserve_order"] }
 toml_edit = { version = "0.15.0", features = ["easy"] }
 
+[dev-dependencies]
+temp-env = "0.3.1"
+uuid = { version = "1.2.2", features = ["serde", "v4"] }
+
 [profile.release]
 strip = true      # Automatically strip symbols from the binary
 opt-level = "s"   # Optimize for size
 lto = true        # Enable link time optimization
 codegen-units = 1 # Maximize size reduction optimizations (slower compile time)
-
-[dev-dependencies]
-temp-env = "0.3.1"

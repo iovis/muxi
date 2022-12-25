@@ -6,7 +6,7 @@ use std::string::FromUtf8Error;
 use thiserror::Error;
 
 use crate::sessions::{Session, Sessions};
-use crate::settings::Settings;
+use crate::settings::{Popup, Settings};
 
 type TmuxResult<T> = Result<T, TmuxError>;
 
@@ -100,13 +100,19 @@ impl Tmux {
         for (key, binding) in &self.settings.bindings {
             let mut command = Command::new("tmux");
 
-            command.arg("bind").arg("-T").arg("muxi").arg(key);
+            command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
 
-            if binding.popup {
+            if binding.has_popup() {
+                // TODO: Move to method
                 let command_name = binding.command.split_whitespace().next().unwrap_or("muxi");
 
+                command.arg("popup");
+
+                if let Popup::Options { width, height } = &binding.popup {
+                    command.arg("-w").arg(width).arg("-h").arg(height);
+                }
+
                 command
-                    .arg("popup")
                     .arg("-b")
                     .arg("rounded")
                     .arg("-T")
