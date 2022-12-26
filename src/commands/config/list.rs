@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::path;
 use crate::settings::Settings;
 
@@ -17,7 +19,7 @@ pub fn list() -> anyhow::Result<()> {
         println!("Bindings");
         println!("========");
 
-        for (key, binding) in settings.bindings.iter() {
+        for (key, binding) in settings.bindings.iter().sorted_by_key(|key| key.0) {
             print!("[{}]: {}", key, binding.command);
 
             if binding.popup.is_some() {
