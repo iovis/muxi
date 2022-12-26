@@ -6,7 +6,9 @@ use std::string::FromUtf8Error;
 use thiserror::Error;
 
 use crate::sessions::{Session, Sessions};
-use crate::settings::{PopupOptions, Settings};
+use crate::settings::Settings;
+
+use super::PopupOptions;
 
 type TmuxResult<T> = Result<T, TmuxError>;
 

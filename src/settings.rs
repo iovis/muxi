@@ -5,7 +5,7 @@ use std::path::Path;
 use config::{Config, ConfigError, File};
 use serde::Deserialize;
 
-use crate::tmux::TmuxKey;
+use crate::tmux::{TmuxKey, PopupOptions};
 
 type Bindings = HashMap<TmuxKey, Binding>;
 
@@ -22,18 +22,6 @@ pub struct Binding {
     pub command: String,
     #[serde(default)]
     pub popup: Option<PopupOptions>,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct PopupOptions {
-    #[serde(default = "default_popup_dimension")]
-    pub width: String,
-    #[serde(default = "default_popup_dimension")]
-    pub height: String,
-}
-
-fn default_popup_dimension() -> String {
-    "75%".to_string()
 }
 
 impl Settings {
