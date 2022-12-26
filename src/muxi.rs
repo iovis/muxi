@@ -34,11 +34,38 @@ impl Muxi {
 
 #[cfg(test)]
 mod tests {
+    use std::env::temp_dir;
     use std::io::Write;
+
+    use uuid::Uuid;
 
     use crate::sessions::Session;
 
     use super::*;
+
+    fn with_config<F>(config: &str, test: F)
+    where
+        F: Fn(Sessions) + std::panic::RefUnwindSafe,
+    {
+        // Create tmp folder
+        let pwd = temp_dir().join(Uuid::new_v4().to_string());
+        std::fs::create_dir_all(&pwd).unwrap();
+
+        // Create sessions file
+        let path = pwd.join("sessions.toml");
+        let mut file = std::fs::File::create(&path).unwrap();
+        file.write_all(config.as_bytes()).unwrap();
+
+        // Set $MUXI_CONFIG_PATH to current folder and load config
+        temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd.clone()), || {
+            let muxi = Muxi::new();
+
+            // Cleanup before test, in case of panic
+            std::fs::remove_dir_all(&pwd).unwrap();
+
+            test(muxi.unwrap().sessions);
+        });
+    }
 
     fn expected_sessions() -> Sessions {
         vec![
@@ -79,7 +106,6 @@ mod tests {
 
     #[test]
     fn test_normal_sessions() {
-        // Create configuration file
         let config = r#"
             d = { name = "dotfiles", path = "~/.dotfiles" }
             k = { name = "muxi", path = "/home/user/muxi/" }
@@ -87,19 +113,9 @@ mod tests {
             M-n = { name = "notes", path = "~/Library/Mobile Documents/com~apple~CloudDocs/notes" }
         "#;
 
-        let mut file = std::fs::File::create("sessions.toml").unwrap();
-        file.write_all(config.as_bytes()).unwrap();
+        let expected_sessions = expected_sessions();
 
-        // Set $MUXI_CONFIG_PATH to current folder and load config
-        let pwd = std::env::var("PWD").unwrap();
-
-        temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd), || {
-            let expected_sessions = expected_sessions();
-            let sessions = Muxi::new().unwrap().sessions;
-
-            // Cleanup before test, in case of panic
-            std::fs::remove_file("sessions.toml").unwrap();
-
+        with_config(config, |sessions| {
             assert_eq!(sessions, expected_sessions);
         });
     }
