@@ -20,8 +20,8 @@ pub fn list() -> anyhow::Result<()> {
         for (key, binding) in settings.bindings.iter() {
             print!("[{}]: {}", key, binding.command);
 
-            if binding.has_popup() {
-                print!(" (popup: true)");
+            if binding.popup.is_some() {
+                print!(" (popup)");
             }
 
             println!();

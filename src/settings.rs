@@ -21,26 +21,19 @@ pub struct Settings {
 pub struct Binding {
     pub command: String,
     #[serde(default)]
-    pub popup: Popup,
-}
-
-impl Binding {
-    pub fn has_popup(&self) -> bool {
-        matches!(self.popup, Popup::Bool(true) | Popup::Options { .. })
-    }
+    pub popup: Option<PopupOptions>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
-#[serde(untagged)]
-pub enum Popup {
-    Bool(bool),
-    Options { width: String, height: String }, // TODO: Make Option, add title
+pub struct PopupOptions {
+    #[serde(default = "default_popup_dimension")]
+    pub width: String,
+    #[serde(default = "default_popup_dimension")]
+    pub height: String,
 }
 
-impl Default for Popup {
-    fn default() -> Self {
-        Self::Bool(false)
-    }
+fn default_popup_dimension() -> String {
+    "75%".to_string()
 }
 
 impl Settings {
@@ -133,8 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_binding_normal() {
-        // Create configuration file
+    fn test_parse_binding_no_popup() {
         let config = r#"
             muxi_prefix = "g"
 
@@ -147,7 +139,7 @@ mod tests {
             "j".try_into().unwrap(),
             Binding {
                 command: "tmux switch-client -l".into(),
-                popup: Popup::Bool(false),
+                popup: None,
             },
         );
 
@@ -159,13 +151,12 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_binding_popup_boolean() {
-        // Create configuration file
+    fn test_parse_binding_popup_default_height() {
         let config = r#"
             muxi_prefix = "g"
 
             [bindings]
-            j = { popup = true, command = "muxi sessions edit" }
+            j = { popup = { width = "60%" }, command = "muxi sessions edit" }
         "#;
 
         let mut bindings: Bindings = HashMap::new();
@@ -173,7 +164,38 @@ mod tests {
             "j".try_into().unwrap(),
             Binding {
                 command: "muxi sessions edit".into(),
-                popup: Popup::Bool(true),
+                popup: Some(PopupOptions {
+                    width: "60%".into(),
+                    height: "75%".into(),
+                }),
+            },
+        );
+
+        let expected_settings = default_settings(bindings);
+
+        with_config(config, |settings| {
+            assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_binding_popup_default_all() {
+        let config = r#"
+            muxi_prefix = "g"
+
+            [bindings]
+            j = { popup = {}, command = "muxi sessions edit" }
+        "#;
+
+        let mut bindings: Bindings = HashMap::new();
+        bindings.insert(
+            "j".try_into().unwrap(),
+            Binding {
+                command: "muxi sessions edit".into(),
+                popup: Some(PopupOptions {
+                    width: "75%".into(),
+                    height: "75%".into(),
+                }),
             },
         );
 
@@ -186,12 +208,11 @@ mod tests {
 
     #[test]
     fn test_parse_binding_popup_struct() {
-        // Create configuration file
         let config = r#"
             muxi_prefix = "g"
 
             [bindings.j]
-            popup = { width = "75%", height = "60%"}
+            popup = { width = "75%", height = "60%" }
             command = "muxi sessions edit"
         "#;
 
@@ -200,10 +221,10 @@ mod tests {
             "j".try_into().unwrap(),
             Binding {
                 command: "muxi sessions edit".into(),
-                popup: Popup::Options {
+                popup: Some(PopupOptions {
                     width: "75%".into(),
                     height: "60%".into(),
-                },
+                }),
             },
         );
 

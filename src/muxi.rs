@@ -53,7 +53,7 @@ mod tests {
 
         // Create sessions file
         let path = pwd.join("sessions.toml");
-        let mut file = std::fs::File::create(&path).unwrap();
+        let mut file = std::fs::File::create(path).unwrap();
         file.write_all(config.as_bytes()).unwrap();
 
         // Set $MUXI_CONFIG_PATH to current folder and load config
