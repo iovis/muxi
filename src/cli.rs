@@ -39,8 +39,11 @@ pub struct Sessions {
 
 #[derive(Debug, Subcommand)]
 pub enum SessionCommands {
-    Edit,
     List,
+    Edit,
+    Delete {
+        key: TmuxKey,
+    },
     Set {
         key: TmuxKey,
         #[arg(short, long)]

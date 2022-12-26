@@ -16,6 +16,7 @@ fn main() -> anyhow::Result<()> {
             match command {
                 cli::SessionCommands::Edit => commands::sessions::edit(),
                 cli::SessionCommands::List => commands::sessions::list(),
+                cli::SessionCommands::Delete { key } => commands::sessions::delete(key),
                 cli::SessionCommands::Set { key, name, path } => {
                     commands::sessions::set(key, name, path)
                 }
