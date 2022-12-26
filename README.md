@@ -29,11 +29,14 @@ tmux_prefix = true  # Optional: Use tmux <prefix> to define muxi's table (defaul
 
 # Optional bindings to be created on tmux's muxi table
 [bindings]
-# `popup = true` will run your command on a tmux popup
-e = { popup = true, command = "muxi sessions edit" }    # <prefix>ge => edit your sessions file
-c = { popup = true, command = "muxi config edit" }      # <prefix>gc => edit config
+# <prefix>ge => edit your sessions file
+e = { popup = { title = " sessions " }, command = "muxi sessions edit" }
 
-M-Space = { command = "tmux switch-client -l" }  # `tmux run-shell "tmux switch-client -l"`
+# <prefix>gc => edit config
+c = { popup = { title = " config " }, command = "muxi config edit" }
+
+# `tmux run-shell "tmux switch-client -l"`
+M-Space = { command = "tmux switch-client -l" }
 
 # Quick session bindings (like vim's harpoon)
 J = { command = "muxi sessions set j && tmux display 'bound current session to j'" }
@@ -44,7 +47,11 @@ L = { command = "muxi sessions set l && tmux display 'bound current session to l
 command = "tmux send htop Enter" # Make tmux do the hard work for you!
 
 [bindings.s]
-# Specify options for tmux popup
+# popup = {
+#   title = "optional title",
+#   width = "60%", (default: 75%)
+#   height = "60%", (default: 75%)
+# }
 popup = { width = "75%", height = "60%" }
 command = "muxi sessions | less"
 ```
