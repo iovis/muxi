@@ -153,6 +153,7 @@ mod tests {
             Binding {
                 command: "muxi sessions edit".into(),
                 popup: Some(PopupOptions {
+                    title: None,
                     width: "60%".into(),
                     height: "75%".into(),
                 }),
@@ -181,6 +182,7 @@ mod tests {
             Binding {
                 command: "muxi sessions edit".into(),
                 popup: Some(PopupOptions {
+                    title: None,
                     width: "75%".into(),
                     height: "75%".into(),
                 }),
@@ -200,7 +202,7 @@ mod tests {
             muxi_prefix = "g"
 
             [bindings.j]
-            popup = { width = "75%", height = "60%" }
+            popup = { title = "my title", width = "75%", height = "60%" }
             command = "muxi sessions edit"
         "#;
 
@@ -210,6 +212,7 @@ mod tests {
             Binding {
                 command: "muxi sessions edit".into(),
                 popup: Some(PopupOptions {
+                    title: Some("my title".into()),
                     width: "75%".into(),
                     height: "60%".into(),
                 }),

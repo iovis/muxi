@@ -104,9 +104,12 @@ impl Tmux {
 
             command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
 
-            if let Some(PopupOptions { width, height }) = &binding.popup {
-                let title = binding.command.split_whitespace().next().unwrap_or("muxi");
-
+            if let Some(PopupOptions {
+                title,
+                width,
+                height,
+            }) = &binding.popup
+            {
                 command
                     .arg("popup")
                     .arg("-w")
@@ -115,9 +118,11 @@ impl Tmux {
                     .arg(height)
                     .arg("-b")
                     .arg("rounded")
-                    .arg("-T")
-                    .arg(format!(" {title} "))
                     .arg("-E");
+
+                if let Some(title) = title {
+                    command.arg("-T").arg(title);
+                }
             } else {
                 command.arg("run");
             }
