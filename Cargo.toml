@@ -26,7 +26,4 @@ temp-env = "0.3.1"
 uuid = { version = "1.2.2", features = ["serde", "v4"] }
 
 [profile.release]
-strip = true      # Automatically strip symbols from the binary
-opt-level = "s"   # Optimize for size
-lto = true        # Enable link time optimization
-codegen-units = 1 # Maximize size reduction optimizations (slower compile time)
+# debug = true    # Uncomment to profile with `cargo flamegraph`
