@@ -22,8 +22,6 @@ pub enum TmuxError {
     ClearTable(String),
     #[error("{0}\nin: {1}")]
     BindKey(String, String),
-    #[error("Failed to run tmux command: `{0}`")]
-    Error(String),
     #[error("Failed to parse tmux output: `{0}`")]
     ParseError(#[from] FromUtf8Error),
 }
@@ -168,36 +166,34 @@ impl Tmux {
     }
 }
 
-pub fn current_session_name() -> TmuxResult<String> {
+pub fn current_session_name() -> Option<String> {
     // tmux display-message -p '#S'
     let output = Command::new("tmux")
         .arg("display-message")
         .arg("-p")
         .arg("#S")
-        .output()?;
+        .output()
+        .ok()?;
 
     if output.status.success() {
-        Ok(String::from_utf8(output.stdout)?.trim().into())
+        Some(String::from_utf8(output.stdout).ok()?.trim().into())
     } else {
-        Err(TmuxError::Error(
-            String::from_utf8_lossy(&output.stderr).trim().to_string(),
-        ))
+        None
     }
 }
 
-pub fn current_session_path() -> TmuxResult<PathBuf> {
+pub fn current_session_path() -> Option<PathBuf> {
     // tmux display-message -p '#{session_path}'
     let output = Command::new("tmux")
         .arg("display-message")
         .arg("-p")
         .arg("#{session_path}")
-        .output()?;
+        .output()
+        .ok()?;
 
     if output.status.success() {
-        Ok(String::from_utf8(output.stdout)?.trim().into())
+        Some(String::from_utf8(output.stdout).ok()?.trim().into())
     } else {
-        Err(TmuxError::Error(
-            String::from_utf8_lossy(&output.stderr).trim().to_string(),
-        ))
+        None
     }
 }

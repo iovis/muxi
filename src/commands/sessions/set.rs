@@ -1,24 +1,20 @@
 use std::path::PathBuf;
 
+use anyhow::Context;
+
 use crate::commands;
 use crate::muxi::Muxi;
-use crate::sessions::{Session, self};
-use crate::tmux::{TmuxKey, self};
+use crate::sessions::{self, Session};
+use crate::tmux::{self, TmuxKey};
 
 pub fn set(key: TmuxKey, name: Option<String>, path: Option<PathBuf>) -> anyhow::Result<()> {
-    // Get current session name if not given
-    let name = if let Some(name) = name {
-        name
-    } else {
-        tmux::current_session_name()?
-    };
+    let name = name
+        .or_else(tmux::current_session_name)
+        .context("Couldn't find current session name")?;
 
-    // Get current session path if not given
-    let path = if let Some(path) = path {
-        path
-    } else {
-        tmux::current_session_path()?
-    };
+    let path = path
+        .or_else(tmux::current_session_path)
+        .context("Couldn't find current session path")?;
 
     // Update sessions.toml
     let mut sessions = Muxi::new()?.sessions;
