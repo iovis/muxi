@@ -1,34 +1,30 @@
 use clap::Parser;
-use muxi::cli::{self, Cli};
-use muxi::commands;
+use muxi::cli::{Cli, Command, ConfigCommands, SessionCommands};
+use muxi::commands::{self, config, sessions};
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
     match args.command {
-        cli::Command::Init => commands::init(),
-        cli::Command::Sessions(sessions_command) => {
+        Command::Init => commands::init(),
+        Command::Sessions(sessions_command) => {
             // Default to `list` if no command given
-            let command = sessions_command
-                .command
-                .unwrap_or(cli::SessionCommands::List);
+            let command = sessions_command.command.unwrap_or(SessionCommands::List);
 
             match command {
-                cli::SessionCommands::Edit => commands::sessions::edit(),
-                cli::SessionCommands::List => commands::sessions::list(),
-                cli::SessionCommands::Delete { key } => commands::sessions::delete(key),
-                cli::SessionCommands::Set { key, name, path } => {
-                    commands::sessions::set(key, name, path)
-                }
+                SessionCommands::Edit => sessions::edit(),
+                SessionCommands::List => sessions::list(),
+                SessionCommands::Delete(options) => sessions::delete(options),
+                SessionCommands::Set(options) => sessions::set(options),
             }
         }
-        cli::Command::Config(config_command) => {
+        Command::Config(config_command) => {
             // Default to `list` if no command given
-            let command = config_command.command.unwrap_or(cli::ConfigCommands::List);
+            let command = config_command.command.unwrap_or(ConfigCommands::List);
 
             match command {
-                cli::ConfigCommands::List => commands::config::list(),
-                cli::ConfigCommands::Edit => commands::config::edit(),
+                ConfigCommands::List => config::list(),
+                ConfigCommands::Edit => config::edit(),
             }
         }
     }

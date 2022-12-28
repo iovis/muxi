@@ -1,8 +1,8 @@
+use crate::cli::SessionDeleteOptions;
 use crate::muxi::Muxi;
-use crate::{sessions, commands};
-use crate::tmux::TmuxKey;
+use crate::{commands, sessions};
 
-pub fn delete(key: TmuxKey) -> anyhow::Result<()> {
+pub fn delete(SessionDeleteOptions { key }: SessionDeleteOptions) -> anyhow::Result<()> {
     // Update sessions.toml
     let mut sessions = Muxi::new()?.sessions;
     sessions.remove(&key);

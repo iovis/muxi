@@ -39,16 +39,22 @@ pub struct Sessions {
 
 #[derive(Debug, Subcommand)]
 pub enum SessionCommands {
-    List,
+    Delete(SessionDeleteOptions),
     Edit,
-    Delete {
-        key: TmuxKey,
-    },
-    Set {
-        key: TmuxKey,
-        #[arg(short, long)]
-        name: Option<String>,
-        #[arg(short, long)]
-        path: Option<PathBuf>,
-    },
+    List,
+    Set(SessionSetOptions),
+}
+
+#[derive(Debug, Args)]
+pub struct SessionSetOptions {
+    pub key: TmuxKey,
+    #[arg(short, long)]
+    pub name: Option<String>,
+    #[arg(short, long)]
+    pub path: Option<PathBuf>,
+}
+
+#[derive(Debug, Args)]
+pub struct SessionDeleteOptions {
+    pub key: TmuxKey,
 }

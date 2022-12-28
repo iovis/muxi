@@ -1,13 +1,12 @@
-use std::path::PathBuf;
-
 use anyhow::Context;
 
+use crate::cli::SessionSetOptions;
 use crate::commands;
 use crate::muxi::Muxi;
 use crate::sessions::{self, Session};
-use crate::tmux::{self, TmuxKey};
+use crate::tmux;
 
-pub fn set(key: TmuxKey, name: Option<String>, path: Option<PathBuf>) -> anyhow::Result<()> {
+pub fn set(SessionSetOptions { key, name, path }: SessionSetOptions) -> anyhow::Result<()> {
     let name = name
         .or_else(tmux::current_session_name)
         .context("Couldn't find current session name")?;
