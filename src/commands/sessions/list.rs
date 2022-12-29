@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use owo_colors::OwoColorize;
 
 use crate::muxi::Muxi;
 
@@ -6,7 +7,7 @@ pub fn list() -> anyhow::Result<()> {
     let sessions = Muxi::new()?.sessions;
 
     if sessions.is_empty() {
-        println!("No sessions defined!");
+        println!("{}", "No sessions defined!".red());
         return Ok(());
     }
 
@@ -20,10 +21,10 @@ pub fn list() -> anyhow::Result<()> {
 
     for (key, session) in sessions.iter().sorted_by_key(|key| key.0) {
         println!(
-            "[{:<max_width_key$}]: {:<max_width_name$}  ({})",
-            key,
-            session.name,
-            session.path.display(),
+            "{:<max_width_key$}  {:<max_width_name$}  {}",
+            key.green(),
+            session.name.blue(),
+            session.path.display().dimmed(),
         );
     }
 

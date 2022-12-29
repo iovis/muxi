@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use owo_colors::OwoColorize;
 
 use crate::path;
 use crate::settings::Settings;
@@ -6,24 +7,30 @@ use crate::settings::Settings;
 pub fn list() -> anyhow::Result<()> {
     let settings = Settings::new(&path::settings_file())?;
 
+    // Settings
     println!(
-        "Change your settings in {}\n",
-        path::settings_file().to_string_lossy()
+        "{} {}",
+        "SETTINGS:".yellow(),
+        path::settings_file().to_string_lossy().dimmed()
     );
-
-    println!("Settings");
-    println!("========");
     println!("{}", settings);
 
+    // Bindings
     if !settings.bindings.is_empty() {
-        println!("Bindings");
-        println!("========");
+        println!("{}", "BINDINGS:".yellow());
+
+        let max_width_key = settings
+            .bindings
+            .keys()
+            .map(|key| key.as_ref().len())
+            .max()
+            .unwrap();
 
         for (key, binding) in settings.bindings.iter().sorted_by_key(|key| key.0) {
-            print!("[{}]: {}", key, binding.command);
+            print!("    {:<max_width_key$}  {}", key.green(), binding.command);
 
             if binding.popup.is_some() {
-                print!(" (popup)");
+                print!("{}", " (popup)".yellow());
             }
 
             println!();

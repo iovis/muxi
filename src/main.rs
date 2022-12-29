@@ -3,9 +3,10 @@ use muxi::cli::{Cli, Command, ConfigCommands, SessionCommands};
 use muxi::commands::{self, config, sessions};
 
 fn main() -> anyhow::Result<()> {
-    let args = Cli::parse();
+    let app = Cli::parse();
+    app.color.init(); // TODO: owo-colors need to use `.if_supports_color(Stdout, |text| text.bright_blue())` to use this
 
-    match args.command {
+    match app.command {
         Command::Init => commands::init(),
         Command::Sessions(sessions_command) => {
             // Default to `list` if no command given

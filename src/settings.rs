@@ -3,9 +3,10 @@ use std::fmt::Display;
 use std::path::Path;
 
 use config::{Config, ConfigError, File};
+use owo_colors::OwoColorize;
 use serde::Deserialize;
 
-use crate::tmux::{TmuxKey, PopupOptions};
+use crate::tmux::{PopupOptions, TmuxKey};
 
 type Bindings = HashMap<TmuxKey, Binding>;
 
@@ -36,8 +37,8 @@ impl Settings {
 
 impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "muxi_prefix: {}", self.muxi_prefix)?;
-        writeln!(f, "tmux_prefix: {}", self.tmux_prefix)
+        writeln!(f, "    {} {}", "muxi_prefix:".green(), self.muxi_prefix)?;
+        writeln!(f, "    {} {}", "tmux_prefix:".green(), self.tmux_prefix)
     }
 }
 

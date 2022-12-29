@@ -16,6 +16,7 @@ clap = { version = "4.0.29", features = ["derive"] }
 config = "0.13.3"
 dirs = "4.0.0"
 itertools = "0.10.5"
+owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 serde = { version = "1.0.151", features = ["derive"] }
 thiserror = "1.0.37"
 toml = { version = "0.5.10", features = ["preserve_order"] }
