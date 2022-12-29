@@ -1,8 +1,10 @@
 use clap::Parser;
+use color_eyre::Result;
 use muxi::cli::{Cli, Command, ConfigCommands, SessionCommands};
 use muxi::commands::{self, config, sessions};
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
+    color_eyre::install()?;
     let app = Cli::parse();
     app.color.init(); // TODO: owo-colors need to use `.if_supports_color(Stdout, |text| text.bright_blue())` to use this
 

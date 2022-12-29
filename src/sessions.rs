@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use color_eyre::Result;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::path;
@@ -15,7 +16,7 @@ pub struct Session {
     pub path: PathBuf,
 }
 
-pub fn save(sessions: &Sessions) -> anyhow::Result<()> {
+pub fn save(sessions: &Sessions) -> Result<()> {
     let toml = toml_edit::easy::to_string(&sessions)?;
     let sessions_file = path::sessions_file();
 

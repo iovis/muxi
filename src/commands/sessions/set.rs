@@ -1,4 +1,5 @@
-use anyhow::Context;
+use color_eyre::eyre::ContextCompat;
+use color_eyre::Result;
 
 use crate::cli::SessionSetOptions;
 use crate::commands;
@@ -6,7 +7,7 @@ use crate::muxi::Muxi;
 use crate::sessions::{self, Session};
 use crate::tmux;
 
-pub fn set(SessionSetOptions { key, name, path }: SessionSetOptions) -> anyhow::Result<()> {
+pub fn set(SessionSetOptions { key, name, path }: SessionSetOptions) -> Result<()> {
     let name = name
         .or_else(tmux::current_session_name)
         .context("Couldn't find current session name")?;

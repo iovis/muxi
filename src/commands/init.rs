@@ -1,9 +1,11 @@
+use color_eyre::Result;
+
 use crate::muxi::Muxi;
 use crate::path;
 use crate::settings::Settings;
 use crate::tmux::Tmux;
 
-pub fn init() -> anyhow::Result<()> {
+pub fn init() -> Result<()> {
     let muxi = Muxi::new()?;
 
     let settings = Settings::new(&path::settings_file())?;

@@ -1,10 +1,11 @@
+use color_eyre::Result;
 use itertools::Itertools;
 use owo_colors::OwoColorize;
 
 use crate::path;
 use crate::settings::Settings;
 
-pub fn list() -> anyhow::Result<()> {
+pub fn list() -> Result<()> {
     let settings = Settings::new(&path::settings_file())?;
 
     // Settings

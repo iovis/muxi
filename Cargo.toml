@@ -11,8 +11,8 @@ categories = ["command-line-utilities"]
 repository = "https://github.com/iovis/muxi"
 
 [dependencies]
-anyhow = "1.0.66"
 clap = { version = "4.0.29", features = ["derive"] }
+color-eyre = "0.6.2"
 config = "0.13.3"
 dirs = "4.0.0"
 itertools = "0.10.5"

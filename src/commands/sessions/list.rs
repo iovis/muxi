@@ -1,9 +1,10 @@
+use color_eyre::Result;
 use itertools::Itertools;
 use owo_colors::OwoColorize;
 
 use crate::muxi::Muxi;
 
-pub fn list() -> anyhow::Result<()> {
+pub fn list() -> Result<()> {
     let sessions = Muxi::new()?.sessions;
 
     if sessions.is_empty() {

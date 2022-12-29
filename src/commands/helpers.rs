@@ -1,9 +1,10 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use anyhow::bail;
+use color_eyre::eyre::bail;
+use color_eyre::Result;
 
-pub fn open_editor_for(path: &Path) -> anyhow::Result<()> {
+pub fn open_editor_for(path: &Path) -> Result<()> {
     // Get the value of the $EDITOR environment variable
     let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vim".to_string());
 
