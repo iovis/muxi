@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap_complete::Shell;
 
 use crate::tmux::TmuxKey;
 
@@ -46,6 +47,7 @@ pub enum Command {
     Init,
     Config(Config),
     Sessions(Sessions),
+    Completions { shell: Shell },
 }
 
 #[derive(Debug, Args)]

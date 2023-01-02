@@ -1,4 +1,5 @@
-use clap::Parser;
+use clap::{Parser, CommandFactory};
+use clap_complete::generate;
 use color_eyre::Result;
 use muxi::cli::{Cli, Command, ConfigCommands, SessionCommands};
 use muxi::commands::{self, config, sessions};
@@ -29,6 +30,10 @@ fn main() -> Result<()> {
                 ConfigCommands::List => config::list(),
                 ConfigCommands::Edit => config::edit(),
             }
+        }
+        Command::Completions { shell } => {
+            generate(shell, &mut Cli::command(), "muxi", &mut std::io::stdout().lock());
+            Ok(())
         }
     }
 }

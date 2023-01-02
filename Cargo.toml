@@ -12,6 +12,7 @@ repository = "https://github.com/iovis/muxi"
 
 [dependencies]
 clap = { version = "4.0.29", features = ["derive"] }
+clap_complete = "4.0.7"
 color-eyre = "0.6.2"
 config = "0.13.3"
 dirs = "4.0.0"
