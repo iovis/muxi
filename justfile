@@ -9,3 +9,6 @@ install:
 
 publish: test
 	cargo publish
+
+completions:
+	cargo run -q -- completions zsh > "$ZDOTDIR/completions/_muxi"
