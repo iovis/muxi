@@ -44,9 +44,13 @@ impl ColorWhen {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Register within Tmux and add bindings
     Init,
+    /// See and edit your settings
     Config(Config),
+    /// See and manage your muxi sessions
     Sessions(Sessions),
+    /// Generate completions for your shell
     Completions { shell: Shell },
 }
 
@@ -58,7 +62,9 @@ pub struct Config {
 
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommands {
+    /// Open your editor to change your settings
     Edit,
+    /// See your current settings
     List,
 }
 
@@ -70,22 +76,30 @@ pub struct Sessions {
 
 #[derive(Debug, Subcommand)]
 pub enum SessionCommands {
+    /// Remove binding to a current muxi session
     Delete(SessionDeleteOptions),
+    /// Open your editor to change your muxi sessions
     Edit,
+    /// Print your current muxi sessions
     List,
+    /// Set a binding for a new muxi session
     Set(SessionSetOptions),
 }
 
 #[derive(Debug, Args)]
 pub struct SessionSetOptions {
+    /// Tmux key binding
     pub key: TmuxKey,
     #[arg(short, long)]
+    /// Name of the session (default: current session's name)
     pub name: Option<String>,
     #[arg(short, long)]
+    /// Path of the session (default: current session's path)
     pub path: Option<PathBuf>,
 }
 
 #[derive(Debug, Args)]
 pub struct SessionDeleteOptions {
+    /// Tmux key binding
     pub key: TmuxKey,
 }
