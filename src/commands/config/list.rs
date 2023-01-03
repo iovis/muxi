@@ -14,7 +14,7 @@ pub fn list() -> Result<()> {
         "SETTINGS:".yellow(),
         path::settings_file().to_string_lossy().dimmed()
     );
-    println!("{}", settings);
+    println!("{settings}");
 
     // Bindings
     if !settings.bindings.is_empty() {

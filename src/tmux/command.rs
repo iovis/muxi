@@ -132,7 +132,7 @@ impl Tmux {
             if !output.status.success() {
                 return Err(TmuxError::BindKey(
                     String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                    format!("{} = {:?}", key, binding),
+                    format!("{key} = {binding:?}"),
                 ));
             }
         }
@@ -160,7 +160,7 @@ impl Tmux {
         } else {
             Err(TmuxError::BindKey(
                 String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{} = {:?}", key, session),
+                format!("{key} = {session:?}"),
             ))
         }
     }

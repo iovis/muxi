@@ -13,7 +13,7 @@ impl TmuxKey {
         if is_valid_tmux_key(value) {
             Ok(Self(value.to_string()))
         } else {
-            Err(format!("{} is not a valid tmux binding", value))
+            Err(format!("{value} is not a valid tmux binding"))
         }
     }
 }
