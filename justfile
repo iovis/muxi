@@ -1,14 +1,27 @@
+# set dotenv-load  # Uncomment to load .env
+
+alias i := install
+alias p := publish
+alias t := test
+
+completions_dir := env_var('ZDOTDIR') / "completions/_muxi"
+
+# list recipes
 default:
-  just --list
+  @just --list
 
-test:
-	cargo nextest run
+# Run tests with nextest
+@test:
+  cargo nextest run
 
-install:
-	cargo install --path .
+# Install locally
+@install:
+  cargo install --path .
 
-publish: test
-	cargo publish
+# Publish to creates.io
+@publish: test
+  cargo publish
 
+# Generate and install completions
 completions:
-	cargo run -q -- completions zsh > "$ZDOTDIR/completions/_muxi"
+  cargo run -q -- completions zsh > {{ completions_dir }}
