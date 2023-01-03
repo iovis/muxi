@@ -1,5 +1,6 @@
 # set dotenv-load  # Uncomment to load .env
 
+alias d := docs
 alias i := install
 alias p := publish
 alias t := test
@@ -25,3 +26,7 @@ default:
 # Generate and install completions
 completions:
   cargo run -q -- completions zsh > {{ completions_dir }}
+
+# Compile and open docs for muxi and its dependencies
+@docs:
+  cargo doc --open
