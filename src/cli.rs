@@ -77,17 +77,17 @@ pub struct Sessions {
 #[derive(Debug, Subcommand)]
 pub enum SessionCommands {
     /// Remove binding to a current muxi session
-    Delete(SessionDeleteOptions),
+    Delete(SessionDeleteArgs),
     /// Open your editor to change your muxi sessions
     Edit,
     /// Print your current muxi sessions
     List,
     /// Set a binding for a new muxi session
-    Set(SessionSetOptions),
+    Set(SessionSetArgs),
 }
 
 #[derive(Debug, Args)]
-pub struct SessionSetOptions {
+pub struct SessionSetArgs {
     /// Tmux key binding
     pub key: TmuxKey,
     #[arg(short, long)]
@@ -99,7 +99,7 @@ pub struct SessionSetOptions {
 }
 
 #[derive(Debug, Args)]
-pub struct SessionDeleteOptions {
+pub struct SessionDeleteArgs {
     /// Tmux key binding
     pub key: TmuxKey,
 }
