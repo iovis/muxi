@@ -35,6 +35,9 @@ e = { popup = { title = " sessions " }, command = "muxi sessions edit" }
 # <prefix>gc => edit config
 c = { popup = { title = " config " }, command = "muxi config edit" }
 
+# <prefix>gs => session switcher
+c = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" }
+
 # `tmux run-shell "tmux switch-client -l"`
 M-Space = { command = "tmux switch-client -l" }
 
@@ -46,7 +49,7 @@ L = { command = "muxi sessions set l && tmux display 'bound current session to l
 [bindings.g]
 command = "tmux send htop Enter" # Make tmux do the hard work for you!
 
-[bindings.s]
+[bindings.l]
 # popup = {
 #   title = "optional title",
 #   width = "60%", (default: 75%)
