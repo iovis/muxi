@@ -28,127 +28,128 @@ pub enum TmuxError {
     SwitchError(String, String),
 }
 
-#[derive(Debug)]
-pub struct Tmux {
-    settings: Settings,
+/// Checks if it's run within a tmux session
+#[inline]
+pub fn within_tmux() -> TmuxResult<()> {
+    // TODO: attribute macro?
+    std::env::var("TMUX")?;
+
+    Ok(())
 }
 
-impl Tmux {
-    pub fn new(settings: Settings) -> TmuxResult<Self> {
-        std::env::var("TMUX")?;
+/// Generate all muxi bindings
+pub fn create_muxi_bindings(settings: &Settings, sessions: &Sessions) -> TmuxResult<()> {
+    within_tmux()?;
 
-        Ok(Self { settings })
-    }
+    clear_muxi_table()?;
+    bind_table_prefix(settings)?;
+    settings_bindings(settings)?;
 
-    pub fn bind_sessions(&self, sessions: &Sessions) -> TmuxResult<()> {
-        self.clear_table()?;
-        self.bind_table_prefix()?;
-        self.settings_bindings()?;
+    bind_sessions(sessions)?;
 
-        for (key, session) in sessions {
-            self.bind_session(key.as_ref(), session)?;
-        }
+    Ok(())
+}
 
+/// Runs `tmux unbind -aq -T muxi`
+fn clear_muxi_table() -> TmuxResult<()> {
+    let output = Command::new("tmux")
+        .arg("unbind")
+        .arg("-aq")
+        .arg("-T")
+        .arg("muxi")
+        .output()?;
+
+    if output.status.success() {
         Ok(())
+    } else {
+        Err(TmuxError::ClearTable(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ))
+    }
+}
+
+/// tmux bind <settings.prefix> switch-client -T muxi
+fn bind_table_prefix(settings: &Settings) -> TmuxResult<()> {
+    let mut command = Command::new("tmux");
+    command.arg("bind");
+
+    // Bind at root table if no tmux prefix
+    if !settings.tmux_prefix {
+        command.arg("-n");
     }
 
-    fn clear_table(&self) -> TmuxResult<()> {
-        // tmux unbind -aq -T muxi
-        let output = Command::new("tmux")
-            .arg("unbind")
-            .arg("-aq")
-            .arg("-T")
-            .arg("muxi")
-            .output()?;
+    command
+        .arg(settings.muxi_prefix.as_ref())
+        .arg("switch-client")
+        .arg("-T")
+        .arg("muxi");
 
-        if output.status.success() {
-            Ok(())
-        } else {
-            Err(TmuxError::ClearTable(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-            ))
-        }
+    let output = command.output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(TmuxError::BindKey(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+            format!("muxi_prefix: {}", settings.muxi_prefix),
+        ))
     }
+}
 
-    fn bind_table_prefix(&self) -> TmuxResult<()> {
-        // tmux bind <settings.prefix> switch-client -T muxi
+/// Generates bindings defined in the settings
+fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
+    for (key, binding) in &settings.bindings {
         let mut command = Command::new("tmux");
-        command.arg("bind");
 
-        // Bind at root table if no tmux prefix
-        if !&self.settings.tmux_prefix {
-            command.arg("-n");
+        command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
+
+        if let Some(Popup {
+            title,
+            width,
+            height,
+        }) = &binding.popup
+        {
+            command
+                .arg("popup")
+                .arg("-w")
+                .arg(width)
+                .arg("-h")
+                .arg(height)
+                .arg("-b")
+                .arg("rounded")
+                .arg("-E");
+
+            if let Some(title) = title {
+                command.arg("-T").arg(title);
+            }
+        } else {
+            command.arg("run");
         }
 
-        command
-            .arg(self.settings.muxi_prefix.as_ref())
-            .arg("switch-client")
-            .arg("-T")
-            .arg("muxi");
+        command.arg(&binding.command);
 
         let output = command.output()?;
 
-        if output.status.success() {
-            Ok(())
-        } else {
-            Err(TmuxError::BindKey(
+        if !output.status.success() {
+            return Err(TmuxError::BindKey(
                 String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("muxi_prefix: {}", self.settings.muxi_prefix),
-            ))
+                format!("{key} = {binding:?}"),
+            ));
         }
     }
 
-    fn settings_bindings(&self) -> TmuxResult<()> {
-        for (key, binding) in &self.settings.bindings {
-            let mut command = Command::new("tmux");
+    Ok(())
+}
 
-            command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
-
-            if let Some(Popup {
-                title,
-                width,
-                height,
-            }) = &binding.popup
-            {
-                command
-                    .arg("popup")
-                    .arg("-w")
-                    .arg(width)
-                    .arg("-h")
-                    .arg(height)
-                    .arg("-b")
-                    .arg("rounded")
-                    .arg("-E");
-
-                if let Some(title) = title {
-                    command.arg("-T").arg(title);
-                }
-            } else {
-                command.arg("run");
-            }
-
-            command.arg(&binding.command);
-
-            let output = command.output()?;
-
-            if !output.status.success() {
-                return Err(TmuxError::BindKey(
-                    String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                    format!("{key} = {binding:?}"),
-                ));
-            }
-        }
-
-        Ok(())
-    }
-
-    fn bind_session(&self, key: &str, session: &Session) -> TmuxResult<()> {
-        // tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"
+/// Generates bindings for all the muxi sessions
+/// Equivalent to: `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
+fn bind_sessions(sessions: &Sessions) -> TmuxResult<()> {
+    for (key, session) in sessions {
         let output = Command::new("tmux")
             .arg("bind")
             .arg("-T")
             .arg("muxi")
-            .arg(key)
+            .arg(key.as_ref())
             .arg("new-session")
             .arg("-A")
             .arg("-s")
@@ -157,19 +158,20 @@ impl Tmux {
             .arg(&session.path)
             .output()?;
 
-        if output.status.success() {
-            Ok(())
-        } else {
-            Err(TmuxError::BindKey(
+        if !output.status.success() {
+            return Err(TmuxError::BindKey(
                 String::from_utf8_lossy(&output.stderr).trim().to_string(),
                 format!("{key} = {session:?}"),
-            ))
+            ));
         }
     }
+
+    Ok(())
 }
 
+/// Captures de current session's name
+/// Equivalent to: `tmux display-message -p '#S'`
 pub fn current_session_name() -> Option<String> {
-    // tmux display-message -p '#S'
     let output = Command::new("tmux")
         .arg("display-message")
         .arg("-p")
@@ -184,8 +186,9 @@ pub fn current_session_name() -> Option<String> {
     }
 }
 
+/// Captures de current session's path
+/// Equivalent to: `tmux display-message -p '#{session_path}'`
 pub fn current_session_path() -> Option<PathBuf> {
-    // tmux display-message -p '#{session_path}'
     let output = Command::new("tmux")
         .arg("display-message")
         .arg("-p")
@@ -200,7 +203,8 @@ pub fn current_session_path() -> Option<PathBuf> {
     }
 }
 
-/// Check if tmux session exists
+/// Check if a tmux session exists
+/// Equivalent to: `tmux has-session -t <session_name>`
 pub fn has_session(session: &Session) -> bool {
     let output = Command::new("tmux")
         .arg("has-session")
@@ -216,6 +220,7 @@ pub fn has_session(session: &Session) -> bool {
 }
 
 /// Create tmux session
+/// Equivalent to: `tmux new-session -d -s <session_name> -c <session_path>`
 pub fn create_session(session: &Session) -> bool {
     let output = Command::new("tmux")
         .arg("new-session")
@@ -234,6 +239,7 @@ pub fn create_session(session: &Session) -> bool {
 }
 
 /// Switch to tmux session
+/// Equivalent to: `tmux switch-client -t <session_name>`
 pub fn switch_to(session: &Session) -> TmuxResult<()> {
     let output = Command::new("tmux")
         .arg("switch-client")

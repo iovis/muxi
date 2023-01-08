@@ -3,15 +3,13 @@ use color_eyre::Result;
 use crate::muxi::Muxi;
 use crate::path;
 use crate::settings::Settings;
-use crate::tmux::Tmux;
+use crate::tmux;
 
 pub fn init() -> Result<()> {
     let muxi = Muxi::new()?;
-
     let settings = Settings::new(&path::settings_file())?;
-    let tmux = Tmux::new(settings)?;
 
-    tmux.bind_sessions(&muxi.sessions)?;
+    tmux::create_muxi_bindings(&settings, &muxi.sessions)?;
 
     Ok(())
 }
