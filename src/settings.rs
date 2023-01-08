@@ -6,7 +6,7 @@ use config::{Config, ConfigError, File};
 use owo_colors::OwoColorize;
 use serde::Deserialize;
 
-use crate::tmux::{PopupOptions, TmuxKey};
+use crate::tmux::{TmuxKey, Popup};
 
 type Bindings = HashMap<TmuxKey, Binding>;
 
@@ -22,7 +22,7 @@ pub struct Settings {
 pub struct Binding {
     pub command: String,
     #[serde(default)]
-    pub popup: Option<PopupOptions>,
+    pub popup: Option<Popup>,
 }
 
 impl Settings {
@@ -153,7 +153,7 @@ mod tests {
             "j".try_into().unwrap(),
             Binding {
                 command: "muxi sessions edit".into(),
-                popup: Some(PopupOptions {
+                popup: Some(Popup {
                     title: None,
                     width: "60%".into(),
                     height: "75%".into(),
@@ -182,7 +182,7 @@ mod tests {
             "j".try_into().unwrap(),
             Binding {
                 command: "muxi sessions edit".into(),
-                popup: Some(PopupOptions {
+                popup: Some(Popup {
                     title: None,
                     width: "75%".into(),
                     height: "75%".into(),
@@ -212,7 +212,7 @@ mod tests {
             "j".try_into().unwrap(),
             Binding {
                 command: "muxi sessions edit".into(),
-                popup: Some(PopupOptions {
+                popup: Some(Popup {
                     title: Some("my title".into()),
                     width: "75%".into(),
                     height: "60%".into(),

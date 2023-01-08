@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct PopupOptions {
+pub struct Popup {
     pub title: Option<String>,
     #[serde(default = "default_popup_dimension")]
     pub width: String,

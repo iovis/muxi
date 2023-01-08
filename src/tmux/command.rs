@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::sessions::{Session, Sessions};
 use crate::settings::Settings;
 
-use super::PopupOptions;
+use super::Popup;
 
 type TmuxResult<T> = Result<T, TmuxError>;
 
@@ -102,7 +102,7 @@ impl Tmux {
 
             command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
 
-            if let Some(PopupOptions {
+            if let Some(Popup {
                 title,
                 width,
                 height,
