@@ -20,6 +20,7 @@ fn main() -> Result<()> {
                 SessionCommands::List => sessions::list(),
                 SessionCommands::Delete(options) => sessions::delete(options),
                 SessionCommands::Set(options) => sessions::set(options),
+                SessionCommands::Switch(options) => sessions::switch(options),
             }
         }
         Command::Config(config_command) => {

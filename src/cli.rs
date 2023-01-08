@@ -84,6 +84,8 @@ pub enum SessionCommands {
     List,
     /// Set a binding for a new muxi session
     Set(SessionSetArgs),
+    /// Go to session
+    Switch(SessionSwitchArgs),
 }
 
 #[derive(Debug, Args)]
@@ -100,6 +102,12 @@ pub struct SessionSetArgs {
 
 #[derive(Debug, Args)]
 pub struct SessionDeleteArgs {
+    /// Tmux key binding
+    pub key: Key,
+}
+
+#[derive(Debug, Args)]
+pub struct SessionSwitchArgs {
     /// Tmux key binding
     pub key: Key,
 }
