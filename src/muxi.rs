@@ -4,7 +4,7 @@ use crate::path;
 use crate::sessions::Sessions;
 
 #[derive(Debug, Error)]
-pub enum MuxiError {
+pub enum Error {
     #[error("Error reading your sessions file")]
     IoError(#[from] std::io::Error),
     #[error("Error parsing your sessions file")]
@@ -17,7 +17,7 @@ pub struct Muxi {
 }
 
 impl Muxi {
-    pub fn new() -> Result<Self, MuxiError> {
+    pub fn new() -> Result<Self, Error> {
         let sessions_file = path::sessions_file();
 
         if std::fs::metadata(&sessions_file).is_err() {
