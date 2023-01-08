@@ -15,6 +15,7 @@ clap = { version = "4.0.29", features = ["derive"] }
 clap_complete = "4.0.7"
 color-eyre = "0.6.2"
 config = "0.13.3"
+dialoguer = "0.10.2"
 dirs = "4.0.0"
 itertools = "0.10.5"
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }

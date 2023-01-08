@@ -1,8 +1,8 @@
 use color_eyre::Result;
-use itertools::Itertools;
 use owo_colors::OwoColorize;
 
 use crate::muxi::Muxi;
+use crate::sessions::sessions_for_display;
 
 pub fn list() -> Result<()> {
     let sessions = Muxi::new()?.sessions;
@@ -12,21 +12,8 @@ pub fn list() -> Result<()> {
         return Ok(());
     }
 
-    let max_width_key = sessions.keys().map(|key| key.as_ref().len()).max().unwrap();
-
-    let max_width_name = sessions
-        .values()
-        .map(|session| session.name.len())
-        .max()
-        .unwrap();
-
-    for (key, session) in sessions.iter().sorted_by_key(|key| key.0) {
-        println!(
-            "{:<max_width_key$}  {:<max_width_name$}  {}",
-            key.green(),
-            session.name.blue(),
-            session.path.display().dimmed(),
-        );
+    for session in sessions_for_display(&sessions) {
+        println!("{session}");
     }
 
     Ok(())

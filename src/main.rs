@@ -20,7 +20,14 @@ fn main() -> Result<()> {
                 SessionCommands::List => sessions::list(),
                 SessionCommands::Delete(options) => sessions::delete(options),
                 SessionCommands::Set(options) => sessions::set(options),
-                SessionCommands::Switch(options) => sessions::switch(options),
+                SessionCommands::Switch { key, interactive } => {
+                    if interactive {
+                        sessions::picker()
+                    } else {
+                        // Clap will validate that key exists
+                        sessions::switch(&key.unwrap())
+                    }
+                }
             }
         }
         Command::Config(config_command) => {

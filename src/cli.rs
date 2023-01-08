@@ -11,6 +11,7 @@ use crate::tmux::Key;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+
     #[arg(
         long,
         global = true,
@@ -46,10 +47,13 @@ impl ColorWhen {
 pub enum Command {
     /// Register within Tmux and add bindings
     Init,
+
     /// See and edit your settings
     Config(Config),
+
     /// See and manage your muxi sessions
     Sessions(Sessions),
+
     /// Generate completions for your shell
     Completions { shell: Shell },
 }
@@ -64,6 +68,7 @@ pub struct Config {
 pub enum ConfigCommands {
     /// Open your editor to change your settings
     Edit,
+
     /// See your current settings
     List,
 }
@@ -78,36 +83,44 @@ pub struct Sessions {
 pub enum SessionCommands {
     /// Remove binding to a current muxi session
     Delete(SessionDeleteArgs),
+
     /// Open your editor to change your muxi sessions
     Edit,
+
     /// Print your current muxi sessions
     List,
+
     /// Set a binding for a new muxi session
     Set(SessionSetArgs),
+
     /// Go to session
-    Switch(SessionSwitchArgs),
+    Switch {
+        /// Tmux key binding
+        #[arg(required_unless_present = "interactive")]
+        key: Option<Key>,
+
+        /// Choose session from a list
+        #[arg(short, long, exclusive = true)]
+        interactive: bool,
+    },
 }
 
 #[derive(Debug, Args)]
 pub struct SessionSetArgs {
     /// Tmux key binding
     pub key: Key,
-    #[arg(short, long)]
+
     /// Name of the session (default: current session's name)
-    pub name: Option<String>,
     #[arg(short, long)]
+    pub name: Option<String>,
+
     /// Path of the session (default: current session's path)
+    #[arg(short, long)]
     pub path: Option<PathBuf>,
 }
 
 #[derive(Debug, Args)]
 pub struct SessionDeleteArgs {
-    /// Tmux key binding
-    pub key: Key,
-}
-
-#[derive(Debug, Args)]
-pub struct SessionSwitchArgs {
     /// Tmux key binding
     pub key: Key,
 }

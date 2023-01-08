@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use color_eyre::Result;
+use itertools::Itertools;
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::path;
@@ -9,7 +11,7 @@ use crate::tmux::Key;
 
 pub type Sessions = HashMap<Key, Session>;
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Session {
     pub name: String,
     #[serde(deserialize_with = "expand_tilde")]
@@ -23,6 +25,29 @@ pub fn save(sessions: &Sessions) -> Result<()> {
     std::fs::write(sessions_file, toml)?;
 
     Ok(())
+}
+
+pub(crate) fn sessions_for_display(sessions: &Sessions) -> Vec<String> {
+    let max_width_key = sessions.keys().map(|key| key.as_ref().len()).max().unwrap();
+
+    let max_width_name = sessions
+        .values()
+        .map(|session| session.name.len())
+        .max()
+        .unwrap();
+
+    let mut sessions_list: Vec<String> = Vec::with_capacity(sessions.len());
+
+    for (key, session) in sessions.iter().sorted_by_key(|key| key.0) {
+        sessions_list.push(format!(
+            "{:<max_width_key$}  {:<max_width_name$}  {}",
+            key.green(),
+            session.name.blue(),
+            session.path.display().dimmed(),
+        ));
+    }
+
+    sessions_list
 }
 
 // Thank you ChatGPT
