@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
 #[serde(try_from = "String")]
-pub struct TmuxKey(String);
+pub struct Key(String);
 
-impl TmuxKey {
+impl Key {
     pub fn parse<T: AsRef<str>>(value: T) -> Result<Self, String> {
         let value = value.as_ref();
 
@@ -18,7 +18,7 @@ impl TmuxKey {
     }
 }
 
-impl TryFrom<String> for TmuxKey {
+impl TryFrom<String> for Key {
     type Error = String;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
@@ -26,7 +26,7 @@ impl TryFrom<String> for TmuxKey {
     }
 }
 
-impl TryFrom<&str> for TmuxKey {
+impl TryFrom<&str> for Key {
     type Error = String;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -35,7 +35,7 @@ impl TryFrom<&str> for TmuxKey {
 }
 
 // For some reason if I do From<String> it conflicts with something
-impl FromStr for TmuxKey {
+impl FromStr for Key {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -43,13 +43,13 @@ impl FromStr for TmuxKey {
     }
 }
 
-impl std::fmt::Display for TmuxKey {
+impl std::fmt::Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl AsRef<str> for TmuxKey {
+impl AsRef<str> for Key {
     fn as_ref(&self) -> &str {
         &self.0
     }

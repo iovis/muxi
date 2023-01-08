@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::Shell;
 
-use crate::tmux::TmuxKey;
+use crate::tmux::Key;
 
 #[derive(Debug, Parser)]
 #[command(name = "muxi")]
@@ -89,7 +89,7 @@ pub enum SessionCommands {
 #[derive(Debug, Args)]
 pub struct SessionSetArgs {
     /// Tmux key binding
-    pub key: TmuxKey,
+    pub key: Key,
     #[arg(short, long)]
     /// Name of the session (default: current session's name)
     pub name: Option<String>,
@@ -101,5 +101,5 @@ pub struct SessionSetArgs {
 #[derive(Debug, Args)]
 pub struct SessionDeleteArgs {
     /// Tmux key binding
-    pub key: TmuxKey,
+    pub key: Key,
 }

@@ -5,9 +5,9 @@ use color_eyre::Result;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::path;
-use crate::tmux::TmuxKey;
+use crate::tmux::Key;
 
-pub type Sessions = HashMap<TmuxKey, Session>;
+pub type Sessions = HashMap<Key, Session>;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Session {
@@ -47,7 +47,7 @@ mod tests {
 
         let mut expected: Sessions = HashMap::new();
         expected.insert(
-            TmuxKey::parse("d").unwrap(),
+            Key::parse("d").unwrap(),
             Session {
                 name: "dotfiles".into(),
                 path: path::expand_tilde("~/.dotfiles".into()),

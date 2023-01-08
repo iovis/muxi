@@ -6,13 +6,13 @@ use config::{Config, ConfigError, File};
 use owo_colors::OwoColorize;
 use serde::Deserialize;
 
-use crate::tmux::{TmuxKey, Popup};
+use crate::tmux::{Key, Popup};
 
-type Bindings = HashMap<TmuxKey, Binding>;
+type Bindings = HashMap<Key, Binding>;
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Settings {
-    pub muxi_prefix: TmuxKey,
+    pub muxi_prefix: Key,
     pub tmux_prefix: bool,
     #[serde(default)]
     pub bindings: Bindings,
