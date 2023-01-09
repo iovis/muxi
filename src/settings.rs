@@ -14,6 +14,7 @@ type Bindings = HashMap<Key, Binding>;
 pub struct Settings {
     pub muxi_prefix: Key,
     pub tmux_prefix: bool,
+    pub uppercase_overrides: bool,
     #[serde(default)]
     pub bindings: Bindings,
 }
@@ -29,6 +30,7 @@ impl Settings {
     pub fn new(path: &Path) -> Result<Self, ConfigError> {
         Config::builder()
             .set_default("tmux_prefix", true)?
+            .set_default("uppercase_overrides", false)?
             .add_source(File::from(path).required(false))
             .build()?
             .try_deserialize()
@@ -38,7 +40,13 @@ impl Settings {
 impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "    {} {}", "muxi_prefix:".green(), self.muxi_prefix)?;
-        writeln!(f, "    {} {}", "tmux_prefix:".green(), self.tmux_prefix)
+        writeln!(f, "    {} {}", "tmux_prefix:".green(), self.tmux_prefix)?;
+        writeln!(
+            f,
+            "    {} {}",
+            "uppercase_overrides:".green(),
+            self.uppercase_overrides
+        )
     }
 }
 
@@ -79,6 +87,7 @@ mod tests {
         Settings {
             tmux_prefix: true,
             muxi_prefix: "g".try_into().unwrap(),
+            uppercase_overrides: false,
             bindings,
         }
     }
@@ -106,6 +115,7 @@ mod tests {
         let expected_settings = Settings {
             tmux_prefix: false,
             muxi_prefix: "M-Space".try_into().unwrap(),
+            uppercase_overrides: false,
             bindings: HashMap::new(),
         };
 
