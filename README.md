@@ -24,10 +24,16 @@ Then provide a `settings.toml` in one of the following locations:
 Or run `muxi config edit`
 
 ```toml
-muxi_prefix = "g"   # Muxi's table binding, `<prefix>g`
-tmux_prefix = true  # Optional: Use tmux <prefix> to define muxi's table (default: true)
+# Muxi's table binding, `<prefix>g`
+muxi_prefix = "g"
 
-# Optional bindings to be created on tmux's muxi table
+# Optional: Use tmux <prefix> to define muxi's table (default: true)
+tmux_prefix = true
+
+# Optional: Uppercase letters will set the current session (default: false)
+uppercase_overrides = false
+
+# Optional bindings to be created on tmux's muxi table (Examples shown)
 [bindings]
 # <prefix>ge => edit your sessions file
 e = { popup = { title = " sessions " }, command = "muxi sessions edit" }
@@ -40,11 +46,6 @@ c = { popup = { title = " muxi " }, command = "muxi sessions switch --interactiv
 
 # `tmux run-shell "tmux switch-client -l"`
 M-Space = { command = "tmux switch-client -l" }
-
-# Quick session bindings (like vim's harpoon)
-J = { command = "muxi sessions set j && tmux display 'bound current session to j'" }
-K = { command = "muxi sessions set k && tmux display 'bound current session to k'" }
-L = { command = "muxi sessions set l && tmux display 'bound current session to l'" }
 
 [bindings.g]
 command = "tmux send htop Enter" # Make tmux do the hard work for you!
