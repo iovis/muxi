@@ -102,9 +102,9 @@ fn bind_table_prefix(settings: &Settings) -> TmuxResult<()> {
 
 /// Generates bindings defined in the settings
 fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
-    for (key, binding) in &settings.bindings {
-        let mut command = Command::new("tmux");
+    let mut command = Command::new("tmux");
 
+    for (key, binding) in &settings.bindings {
         command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
 
         if let Some(Popup {
@@ -130,16 +130,16 @@ fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
             command.arg("run");
         }
 
-        command.arg(&binding.command);
+        command.arg(&binding.command).arg(";");
+    }
 
-        let output = command.output()?;
+    let output = command.output()?;
 
-        if !output.status.success() {
-            return Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{key} = {binding:?}"),
-            ));
-        }
+    if !output.status.success() {
+        return Err(TmuxError::BindKey(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+            "error creating settings bindings".to_string(),
+        ));
     }
 
     Ok(())
