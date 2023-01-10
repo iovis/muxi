@@ -176,6 +176,8 @@ fn bind_sessions(sessions: &Sessions) -> TmuxResult<()> {
 /// Generates uppercase overrides
 /// Equivalent to: `tmux bind -T muxi <uppercase_letter> run-shell "muxi sessions set j && tmux display 'bound current session to j'"`
 fn bind_uppercase_overrides() -> TmuxResult<()> {
+    let mut tmux_command = Command::new("tmux");
+
     for key in 'A'..='Z' {
         let command = format!(
             "muxi sessions set {} && tmux display 'bound current session to {}'",
@@ -183,21 +185,23 @@ fn bind_uppercase_overrides() -> TmuxResult<()> {
             key.to_lowercase()
         );
 
-        let output = Command::new("tmux")
+        tmux_command
             .arg("bind")
             .arg("-T")
             .arg("muxi")
             .arg(key.to_string())
             .arg("run")
             .arg(&command)
-            .output()?;
+            .arg(";");
+    }
 
-        if !output.status.success() {
-            return Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{key} = muxi"),
-            ));
-        }
+    let output = tmux_command.output()?;
+
+    if !output.status.success() {
+        return Err(TmuxError::BindKey(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+            "Error binding uppercase overrides".to_string(),
+        ));
     }
 
     Ok(())
