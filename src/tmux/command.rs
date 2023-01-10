@@ -18,14 +18,12 @@ pub enum TmuxError {
     NotInTmux(#[from] std::env::VarError),
     #[error("failed to run command")]
     CommandError(#[from] io::Error),
-    #[error("failed to clear muxi table: `{0}`")]
-    ClearTable(String),
-    #[error("{0}\nin: {1}")]
-    BindKey(String, String),
     #[error("failed to parse tmux output: `{0}`")]
     ParseError(#[from] FromUtf8Error),
     #[error("failed to switch to sesion {0}: `{1}`")]
     SwitchError(String, String),
+    #[error("failed to initialize muxi: `{0}`")]
+    InitError(String),
 }
 
 /// Checks if it's run within a tmux session
@@ -41,71 +39,67 @@ pub fn within_tmux() -> TmuxResult<()> {
 pub fn create_muxi_bindings(settings: &Settings, sessions: &Sessions) -> TmuxResult<()> {
     within_tmux()?;
 
-    clear_muxi_table()?;
-    bind_table_prefix(settings)?;
+    let mut tmux_command = Command::new("tmux");
+
+    clear_muxi_table(&mut tmux_command);
+    bind_table_prefix(&mut tmux_command, settings);
 
     if settings.uppercase_overrides {
-        bind_uppercase_overrides()?;
+        bind_uppercase_overrides(&mut tmux_command);
     }
 
-    settings_bindings(settings)?;
-    bind_sessions(sessions)?;
+    settings_bindings(&mut tmux_command, settings);
+    bind_sessions(&mut tmux_command, sessions);
+
+    let output = tmux_command.output()?;
+
+    if !output.status.success() {
+        return Err(TmuxError::InitError(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ));
+    }
 
     Ok(())
 }
 
 /// Runs `tmux unbind -aq -T muxi`
-fn clear_muxi_table() -> TmuxResult<()> {
-    let output = Command::new("tmux")
+#[inline]
+fn clear_muxi_table(tmux_command: &mut Command) {
+    tmux_command
         .arg("unbind")
         .arg("-aq")
         .arg("-T")
         .arg("muxi")
-        .output()?;
-
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(TmuxError::ClearTable(
-            String::from_utf8_lossy(&output.stderr).trim().to_string(),
-        ))
-    }
+        .arg(";");
 }
 
 /// tmux bind <settings.prefix> switch-client -T muxi
-fn bind_table_prefix(settings: &Settings) -> TmuxResult<()> {
-    let mut command = Command::new("tmux");
-    command.arg("bind");
+#[inline]
+fn bind_table_prefix(tmux_command: &mut Command, settings: &Settings) {
+    tmux_command.arg("bind");
 
     // Bind at root table if no tmux prefix
     if !settings.tmux_prefix {
-        command.arg("-n");
+        tmux_command.arg("-n");
     }
 
-    command
+    tmux_command
         .arg(settings.muxi_prefix.as_ref())
         .arg("switch-client")
         .arg("-T")
-        .arg("muxi");
-
-    let output = command.output()?;
-
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(TmuxError::BindKey(
-            String::from_utf8_lossy(&output.stderr).trim().to_string(),
-            format!("muxi_prefix: {}", settings.muxi_prefix),
-        ))
-    }
+        .arg("muxi")
+        .arg(";");
 }
 
 /// Generates bindings defined in the settings
-fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
+#[inline]
+fn settings_bindings(tmux_command: &mut Command, settings: &Settings) {
     for (key, binding) in &settings.bindings {
-        let mut command = Command::new("tmux");
-
-        command.arg("bind").arg("-T").arg("muxi").arg(key.as_ref());
+        tmux_command
+            .arg("bind")
+            .arg("-T")
+            .arg("muxi")
+            .arg(key.as_ref());
 
         if let Some(Popup {
             title,
@@ -113,7 +107,7 @@ fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
             height,
         }) = &binding.popup
         {
-            command
+            tmux_command
                 .arg("popup")
                 .arg("-w")
                 .arg(width)
@@ -124,32 +118,22 @@ fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
                 .arg("-E");
 
             if let Some(title) = title {
-                command.arg("-T").arg(title);
+                tmux_command.arg("-T").arg(title);
             }
         } else {
-            command.arg("run");
+            tmux_command.arg("run");
         }
 
-        command.arg(&binding.command);
-
-        let output = command.output()?;
-
-        if !output.status.success() {
-            return Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{key} = {binding:?}"),
-            ));
-        }
+        tmux_command.arg(&binding.command).arg(";");
     }
-
-    Ok(())
 }
 
 /// Generates bindings for all the muxi sessions
 /// Equivalent to: `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
-fn bind_sessions(sessions: &Sessions) -> TmuxResult<()> {
+#[inline]
+fn bind_sessions(tmux_command: &mut Command, sessions: &Sessions) {
     for (key, session) in sessions {
-        let output = Command::new("tmux")
+        tmux_command
             .arg("bind")
             .arg("-T")
             .arg("muxi")
@@ -160,22 +144,14 @@ fn bind_sessions(sessions: &Sessions) -> TmuxResult<()> {
             .arg(&session.name)
             .arg("-c")
             .arg(&session.path)
-            .output()?;
-
-        if !output.status.success() {
-            return Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{key} = {session:?}"),
-            ));
-        }
+            .arg(";");
     }
-
-    Ok(())
 }
 
 /// Generates uppercase overrides
 /// Equivalent to: `tmux bind -T muxi <uppercase_letter> run-shell "muxi sessions set j && tmux display 'bound current session to j'"`
-fn bind_uppercase_overrides() -> TmuxResult<()> {
+#[inline]
+fn bind_uppercase_overrides(tmux_command: &mut Command) {
     for key in 'A'..='Z' {
         let command = format!(
             "muxi sessions set {} && tmux display 'bound current session to {}'",
@@ -183,24 +159,15 @@ fn bind_uppercase_overrides() -> TmuxResult<()> {
             key.to_lowercase()
         );
 
-        let output = Command::new("tmux")
+        tmux_command
             .arg("bind")
             .arg("-T")
             .arg("muxi")
             .arg(key.to_string())
             .arg("run")
             .arg(&command)
-            .output()?;
-
-        if !output.status.success() {
-            return Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{key} = muxi"),
-            ));
-        }
+            .arg(";");
     }
-
-    Ok(())
 }
 
 /// Captures de current session's name
