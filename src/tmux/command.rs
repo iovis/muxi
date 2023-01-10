@@ -148,8 +148,10 @@ fn settings_bindings(settings: &Settings) -> TmuxResult<()> {
 /// Generates bindings for all the muxi sessions
 /// Equivalent to: `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
 fn bind_sessions(sessions: &Sessions) -> TmuxResult<()> {
+    let mut tmux_command = Command::new("tmux");
+
     for (key, session) in sessions {
-        let output = Command::new("tmux")
+        tmux_command
             .arg("bind")
             .arg("-T")
             .arg("muxi")
@@ -160,14 +162,16 @@ fn bind_sessions(sessions: &Sessions) -> TmuxResult<()> {
             .arg(&session.name)
             .arg("-c")
             .arg(&session.path)
-            .output()?;
+            .arg(";");
+    }
 
-        if !output.status.success() {
-            return Err(TmuxError::BindKey(
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
-                format!("{key} = {session:?}"),
-            ));
-        }
+    let output = tmux_command.output()?;
+
+    if !output.status.success() {
+        return Err(TmuxError::BindKey(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+            "Error binding sessions".to_string(),
+        ));
     }
 
     Ok(())
