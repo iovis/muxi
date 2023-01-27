@@ -3,6 +3,6 @@ use color_eyre::Result;
 use crate::commands::helpers::open_editor_for;
 use crate::path;
 
-pub fn edit() -> Result<()> {
-    open_editor_for(&path::sessions_file())
+pub fn edit(editor_args: &[String]) -> Result<()> {
+    open_editor_for(&path::sessions_file(), editor_args)
 }

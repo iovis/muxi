@@ -35,8 +35,8 @@ uppercase_overrides = false
 
 # Optional bindings to be created on tmux's muxi table (Examples shown)
 [bindings]
-# <prefix>ge => edit your sessions file
-e = { popup = { title = " sessions " }, command = "muxi sessions edit" }
+# <prefix>ge => edit your sessions file (You can pass optional arguments to your editor after "--")
+e = { popup = { title = " sessions " }, command = "muxi sessions edit -- +ZenMode" }
 
 # <prefix>gc => edit config
 c = { popup = { title = " config " }, command = "muxi config edit" }

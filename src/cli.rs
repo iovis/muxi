@@ -67,7 +67,11 @@ pub struct Config {
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommands {
     /// Open your editor to change your settings
-    Edit,
+    Edit {
+        /// Args forwarded to your $EDITOR
+        #[arg(last = true)]
+        editor_args: Vec<String>,
+    },
 
     /// See your current settings
     List,
@@ -85,7 +89,11 @@ pub enum SessionCommands {
     Delete(SessionDeleteArgs),
 
     /// Open your editor to change your muxi sessions
-    Edit,
+    Edit {
+        /// Args forwarded to your $EDITOR
+        #[arg(last = true)]
+        editor_args: Vec<String>,
+    },
 
     /// Print your current muxi sessions
     List,

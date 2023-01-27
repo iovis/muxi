@@ -16,7 +16,7 @@ fn main() -> Result<()> {
             let command = sessions_command.command.unwrap_or(SessionCommands::List);
 
             match command {
-                SessionCommands::Edit => sessions::edit(),
+                SessionCommands::Edit { editor_args } => sessions::edit(&editor_args),
                 SessionCommands::List => sessions::list(),
                 SessionCommands::Delete(options) => sessions::delete(options),
                 SessionCommands::Set(options) => sessions::set(options),
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
 
             match command {
                 ConfigCommands::List => config::list(),
-                ConfigCommands::Edit => config::edit(),
+                ConfigCommands::Edit { editor_args } => config::edit(&editor_args),
             }
         }
         Command::Completions { shell } => {
