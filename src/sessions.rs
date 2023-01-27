@@ -19,7 +19,7 @@ pub struct Session {
 }
 
 pub fn save(sessions: &Sessions) -> Result<()> {
-    let toml = toml_edit::easy::to_string(&sessions)?;
+    let toml = toml_edit::ser::to_string(&sessions)?;
     let sessions_file = path::sessions_file();
 
     std::fs::write(sessions_file, toml)?;
@@ -79,7 +79,7 @@ mod tests {
             },
         );
 
-        let session: Sessions = toml::from_str(toml_string).unwrap();
+        let session: Sessions = toml_edit::de::from_str(toml_string).unwrap();
 
         assert_eq!(session, expected);
     }

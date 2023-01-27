@@ -8,7 +8,7 @@ pub enum Error {
     #[error("Error reading your sessions file")]
     IoError(#[from] std::io::Error),
     #[error("Error parsing your sessions file")]
-    ParseError(#[from] toml::de::Error),
+    ParseError(#[from] toml_edit::de::Error),
 }
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ impl Muxi {
         }
 
         let sessions_data = std::fs::read_to_string(sessions_file)?;
-        let sessions = toml::from_str(&sessions_data)?;
+        let sessions = toml_edit::de::from_str(&sessions_data)?;
 
         Ok(Self { sessions })
     }
