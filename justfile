@@ -5,7 +5,7 @@ alias i := install
 alias p := publish
 alias t := test
 
-completions_dir := env_var('ZDOTDIR') / "completions/_muxi"
+completions_dir := env_var('FDOTDIR') / "completions/muxi.fish"
 
 # list recipes
 default:
@@ -25,7 +25,7 @@ default:
 
 # Generate and install completions
 completions:
-  cargo run -q -- completions zsh > {{ completions_dir }}
+  cargo run -q -- completions fish > {{ completions_dir }}
 
 # Compile and open docs for muxi and its dependencies
 @docs:
