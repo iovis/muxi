@@ -1,15 +1,14 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use color_eyre::Result;
-use itertools::Itertools;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::path;
 use crate::tmux::Key;
 
-pub type Sessions = HashMap<Key, Session>;
+pub type Sessions = BTreeMap<Key, Session>;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Session {
@@ -38,7 +37,7 @@ pub(crate) fn sessions_for_display(sessions: &Sessions) -> Vec<String> {
 
     let mut sessions_list: Vec<String> = Vec::with_capacity(sessions.len());
 
-    for (key, session) in sessions.iter().sorted_by_key(|key| key.0) {
+    for (key, session) in sessions {
         sessions_list.push(format!(
             "{:<max_width_key$}  {:<max_width_name$}  {}",
             key.green(),
@@ -70,7 +69,7 @@ mod tests {
             d = { name = "dotfiles", path = "~/.dotfiles" }
         "#;
 
-        let mut expected: Sessions = HashMap::new();
+        let mut expected: Sessions = BTreeMap::new();
         expected.insert(
             Key::parse("d").unwrap(),
             Session {

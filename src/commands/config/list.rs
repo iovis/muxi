@@ -1,5 +1,4 @@
 use color_eyre::Result;
-use itertools::Itertools;
 use owo_colors::OwoColorize;
 
 use crate::path;
@@ -27,7 +26,7 @@ pub fn list() -> Result<()> {
             .max()
             .unwrap();
 
-        for (key, binding) in settings.bindings.iter().sorted_by_key(|key| key.0) {
+        for (key, binding) in settings.bindings {
             print!("    {:<max_width_key$}  {}", key.green(), binding.command);
 
             if binding.popup.is_some() {

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::path::Path;
 
@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 use crate::tmux::{Key, Popup};
 
-type Bindings = HashMap<Key, Binding>;
+type Bindings = BTreeMap<Key, Binding>;
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Settings {
@@ -98,7 +98,7 @@ mod tests {
             muxi_prefix = "g"
         "#;
 
-        let expected_settings = default_settings(HashMap::new());
+        let expected_settings = default_settings(BTreeMap::new());
 
         with_config(config, |settings| {
             assert_eq!(settings, expected_settings);
@@ -116,7 +116,7 @@ mod tests {
             tmux_prefix: false,
             muxi_prefix: "M-Space".try_into().unwrap(),
             uppercase_overrides: false,
-            bindings: HashMap::new(),
+            bindings: BTreeMap::new(),
         };
 
         with_config(config, |settings| {
@@ -133,7 +133,7 @@ mod tests {
             j = { command = "tmux switch-client -l" }
         "#;
 
-        let mut bindings: Bindings = HashMap::new();
+        let mut bindings: Bindings = BTreeMap::new();
         bindings.insert(
             "j".try_into().unwrap(),
             Binding {
@@ -158,7 +158,7 @@ mod tests {
             j = { popup = { width = "60%" }, command = "muxi sessions edit" }
         "#;
 
-        let mut bindings: Bindings = HashMap::new();
+        let mut bindings: Bindings = BTreeMap::new();
         bindings.insert(
             "j".try_into().unwrap(),
             Binding {
@@ -187,7 +187,7 @@ mod tests {
             j = { popup = {}, command = "muxi sessions edit" }
         "#;
 
-        let mut bindings: Bindings = HashMap::new();
+        let mut bindings: Bindings = BTreeMap::new();
         bindings.insert(
             "j".try_into().unwrap(),
             Binding {
@@ -217,7 +217,7 @@ mod tests {
             command = "muxi sessions edit"
         "#;
 
-        let mut bindings: Bindings = HashMap::new();
+        let mut bindings: Bindings = BTreeMap::new();
         bindings.insert(
             "j".try_into().unwrap(),
             Binding {
