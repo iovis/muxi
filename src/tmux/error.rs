@@ -13,8 +13,10 @@ pub enum Error {
     Command(#[from] io::Error),
     #[error("failed to parse tmux output: `{0}`")]
     Parse(#[from] FromUtf8Error),
-    #[error("failed to switch to sesion {0}: `{1}`")]
+    #[error("failed to switch to session {0}: `{1}`")]
     Switch(String, String),
+    #[error("failed to generate tmux menu: `{0}`")]
+    DisplayMenu(String),
     #[error("failed to initialize muxi: `{0}`")]
     Init(String),
 }

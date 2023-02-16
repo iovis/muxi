@@ -26,6 +26,13 @@ pub fn switch(key: &tmux::Key) -> Result<()> {
     Ok(())
 }
 
+pub fn tmux_menu() -> Result<()> {
+    let sessions = Muxi::new()?.sessions;
+    tmux::sessions_menu(&sessions)?;
+
+    Ok(())
+}
+
 pub fn picker() -> Result<()> {
     let sessions = Muxi::new()?.sessions;
     let choices = SessionChoice::from(sessions);

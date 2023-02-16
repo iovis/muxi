@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use crate::sessions::Session;
+use crate::sessions::{Session, Sessions};
 
 use super::{Error, TmuxResult};
 
@@ -88,6 +88,33 @@ pub fn switch_to(session: &Session) -> TmuxResult<()> {
     } else {
         Err(Error::Switch(
             session.name.to_string(),
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ))
+    }
+}
+
+/// Tmux session menu picker
+/// Equivalent to: `tmux display-menu -T ' muxi ' <session_name> <key> "run {switch_to_session}"`
+pub fn sessions_menu(sessions: &Sessions) -> TmuxResult<()> {
+    let mut tmux = Command::new("tmux"); // Prevent 'temporary value dropped while borrowed'
+    let tmux_command = tmux
+        .arg("display-menu")
+        .arg("-T")
+        .arg("#[align=left fg=green] muxi ");
+
+    for (key, session) in sessions {
+        tmux_command
+            .arg(format!("#[fg=blue]{}", &session.name))
+            .arg(key.as_ref())
+            .arg(format!("run -b 'muxi sessions switch {key}'"));
+    }
+
+    let output = tmux_command.output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(Error::DisplayMenu(
             String::from_utf8_lossy(&output.stderr).trim().to_string(),
         ))
     }
