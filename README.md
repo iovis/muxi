@@ -42,13 +42,17 @@ e = { popup = { title = " sessions " }, command = "muxi sessions edit -- +ZenMod
 c = { popup = { title = " config " }, command = "muxi config edit" }
 
 # <prefix>gs => session switcher
-c = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" }
+s = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" }
 
+# <prefix>gt => session switcher (native tmux menu)
+t = { command = "muxi sessions switch --tmux-menu" }
+
+# You can bind your own commands too!
 # `tmux run-shell "tmux switch-client -l"`
 M-Space = { command = "tmux switch-client -l" }
 
 [bindings.g]
-command = "tmux send htop Enter" # Make tmux do the hard work for you!
+command = "tmux send htop Enter"
 
 [bindings.l]
 # popup = {
