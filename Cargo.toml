@@ -11,8 +11,8 @@ categories = ["command-line-utilities"]
 repository = "https://github.com/iovis/muxi"
 
 [dependencies]
-clap = { version = "4.1.4", features = ["derive"] }
-clap_complete = "4.1.1"
+clap = { version = "4.1.6", features = ["derive"] }
+clap_complete = "4.1.2"
 color-eyre = "0.6.2"
 config = "0.13.3"
 dialoguer = "0.10.3"
@@ -20,9 +20,9 @@ dirs = "4.0.0"
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 serde = { version = "1.0.152", features = ["derive"] }
 thiserror = "1.0.38"
-toml_edit = { version = "0.18.1", features = ["serde"] }
+toml_edit = { version = "0.19.3", features = ["serde"] }
 
 [dev-dependencies]
 temp-env = "0.3.1"
-uuid = { version = "1.2.2", features = ["serde", "v4"] }
+uuid = { version = "1.3.0", features = ["serde", "v4"] }
 # debug = true    # Uncomment to profile with `cargo flamegraph`
