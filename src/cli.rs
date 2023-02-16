@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::{Args, Parser, Subcommand};
 use clap_complete::Shell;
 
 use crate::tmux::Key;
@@ -11,36 +11,6 @@ use crate::tmux::Key;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
-
-    #[arg(
-        long,
-        global = true,
-        require_equals = true,
-        value_name = "WHEN",
-        num_args = 0..=1,
-        default_value_t = ColorWhen::Auto,
-        default_missing_value = "always",
-        value_enum
-    )]
-    pub color: ColorWhen,
-}
-
-#[derive(ValueEnum, Clone, Copy, Debug)]
-pub enum ColorWhen {
-    Always,
-    Auto,
-    Never,
-}
-
-impl ColorWhen {
-    pub fn init(self) {
-        // Set a supports-color override based on the variable passed in.
-        match self {
-            ColorWhen::Always => owo_colors::set_override(true),
-            ColorWhen::Auto => {}
-            ColorWhen::Never => owo_colors::set_override(false),
-        }
-    }
 }
 
 #[derive(Debug, Subcommand)]

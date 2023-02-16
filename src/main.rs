@@ -7,7 +7,6 @@ use muxi::commands::{self, config, sessions};
 fn main() -> Result<()> {
     color_eyre::install()?;
     let app = Cli::parse();
-    app.color.init(); // TODO: owo-colors need to use `.if_supports_color(Stdout, |text| text.bright_blue())` to use this
 
     match app.command {
         Command::Init => commands::init(),
