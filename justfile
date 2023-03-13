@@ -1,10 +1,5 @@
 # set dotenv-load  # Uncomment to load .env
 
-alias d := docs
-alias i := install
-alias p := publish
-alias t := test
-
 completions_dir := env_var('FDOTDIR') / "completions/muxi.fish"
 
 # list recipes
@@ -12,14 +7,17 @@ default:
   @just --list
 
 # Run tests with nextest
+alias t := test
 @test:
   cargo nextest run
 
 # Install locally
+alias i := install
 @install:
   cargo install --path .
 
 # Publish to creates.io
+alias p := publish
 @publish: test
   cargo publish
 
@@ -28,5 +26,6 @@ completions:
   cargo run -q -- completions fish > {{ completions_dir }}
 
 # Compile and open docs for muxi and its dependencies
+alias d := docs
 @docs:
   cargo doc --open
