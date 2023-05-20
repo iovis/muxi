@@ -29,6 +29,7 @@ pub struct Binding {
 impl Settings {
     pub fn new(path: &Path) -> Result<Self, ConfigError> {
         Config::builder()
+            .set_default("muxi_prefix", "g")?
             .set_default("tmux_prefix", true)?
             .set_default("uppercase_overrides", false)?
             .add_source(File::from(path).required(false))
@@ -95,7 +96,6 @@ mod tests {
     #[test]
     fn test_parse_valid_muxi_prefix() {
         let config = r#"
-            muxi_prefix = "g"
         "#;
 
         let expected_settings = default_settings(BTreeMap::new());

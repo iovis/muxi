@@ -24,11 +24,11 @@ Then provide a `settings.toml` in one of the following locations:
 Or run `muxi config edit`
 
 ```toml
-# Muxi's table binding, `<prefix>g`
-muxi_prefix = "g"
-
 # Optional: Use tmux <prefix> to define muxi's table (default: true)
 tmux_prefix = true
+
+# Optional: Muxi's table binding (default: "g"), will result in `<prefix>g`
+muxi_prefix = "g"
 
 # Optional: Uppercase letters will set the current session (default: false)
 uppercase_overrides = false
