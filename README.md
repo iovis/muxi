@@ -9,19 +9,14 @@ cargo install muxi
 
 ## Configuration
 
-In your tmux configuration:
-```tmux
-if "type muxi" {
-  run -b "muxi init"
-}
-```
+### TOML
 
-Then provide a `settings.toml` in one of the following locations:
+You can provide a `settings.toml` in one of the following locations:
 - `$MUXI_CONFIG_PATH`
 - `$XDG_CONFIG_HOME/muxi/`
 - `~/.config/muxi/`
 
-Or run `muxi config edit`
+Or run `muxi config edit` to open it in your favorite `$EDITOR`
 
 ```toml
 # Optional: Use tmux <prefix> to define muxi's table (default: true)
@@ -64,6 +59,35 @@ popup = { width = "75%", height = "60%" }
 command = "muxi sessions | less"
 ```
 
+And start `muxi` in your `tmux.conf`:
+
+```tmux
+if "type muxi" {
+    run -b "muxi init"
+}
+```
+
+### Tmux variables
+
+You can alternatively define settings entirely from your tmux config:
+
+```tmux
+# Optional settings (default values shown)
+set -g @muxi-use-tmux-prefix 'on'      # on|off
+set -g @muxi-prefix 'g'                # Any valid tmux key, like `M-Space`
+set -g @muxi-uppercase-overrides 'off' # on|off
+
+# Init muxi
+if "type muxi" {
+  # If you're going to define bindings on the muxi table, don't use `-b`
+  run "muxi init"
+}
+
+# Define bindings on the muxi table:
+# <prefix>ge => Edit sessions in your editor
+bind -T muxi e popup -w 76% -h 75% -b rounded -T " sessions " -E "muxi sessions edit -- +ZenMode -c 'nmap <silent> q :wqa<cr>'"
+```
+
 ## Sessions
 
 Running `muxi sessions edit` will open your `sessions.toml` file, which should look something like the following:
@@ -75,4 +99,4 @@ m = { name = "muxi", path = "~/Sites/rust/muxi/" }
 n = { name = "notes", path = "~/Library/Mobile Documents/com~apple~CloudDocs/notes" }
 ```
 
-This is the file that `muxi` will use to generate your session bindings and keep state
+This is the file that `muxi` will use to generate your session bindings and keep state. After exiting your editor, `muxi` will resync the sessions (same with your configuration!)

@@ -6,7 +6,7 @@ use config::{Config, ConfigError, File};
 use owo_colors::OwoColorize;
 use serde::Deserialize;
 
-use crate::tmux::{Key, Popup};
+use crate::tmux::{self, Key, Popup};
 
 type Bindings = BTreeMap<Key, Binding>;
 
@@ -28,11 +28,16 @@ pub struct Binding {
 
 impl Settings {
     pub fn new(path: &Path) -> Result<Self, ConfigError> {
+        let tmux_settings = tmux::Settings::new();
+
         Config::builder()
             .set_default("muxi_prefix", "g")?
             .set_default("tmux_prefix", true)?
             .set_default("uppercase_overrides", false)?
             .add_source(File::from(path).required(false))
+            .set_override_option("muxi_prefix", tmux_settings.muxi_prefix)?
+            .set_override_option("tmux_prefix", tmux_settings.tmux_prefix)?
+            .set_override_option("uppercase_overrides", tmux_settings.uppercase_overrides)?
             .build()?
             .try_deserialize()
     }
