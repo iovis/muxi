@@ -86,6 +86,10 @@ if "type muxi" {
 # Define bindings on the muxi table:
 # <prefix>ge => Edit sessions in your editor
 bind -T muxi e popup -w 76% -h 75% -b rounded -T " sessions " -E "muxi sessions edit -- +ZenMode -c 'nmap <silent> q :wqa<cr>'"
+
+# TIP: Using the native tmux menu is a good alternative to the common workflow,
+# it'll map your session bindings to the menu
+bind 'f' run 'muxi sessions switch --tmux-menu'
 ```
 
 ## Sessions
