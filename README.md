@@ -62,6 +62,9 @@ c = { popup = { title = " config " }, command = "muxi config edit" }
 # <prefix>gs => session switcher
 s = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" }
 
+# <prefix>gf => FZF integration
+f = { command = "muxi fzf" }
+
 # <prefix>gt => session switcher (native tmux menu)
 t = { command = "muxi sessions switch --tmux-menu" }
 
