@@ -27,7 +27,7 @@ pub fn save(sessions: &Sessions) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn sessions_for_display(sessions: &Sessions) -> Vec<String> {
+pub(crate) fn to_list(sessions: &Sessions) -> Vec<String> {
     let max_width_key = sessions.keys().map(|key| key.as_ref().len()).max().unwrap();
 
     let max_width_name = sessions
