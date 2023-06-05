@@ -27,9 +27,7 @@ pub struct Binding {
 }
 
 impl Settings {
-    pub fn new(path: &Path) -> Result<Self, ConfigError> {
-        let tmux_settings = tmux::Settings::new();
-
+    pub fn new(path: &Path, tmux_settings: tmux::Settings) -> Result<Self, ConfigError> {
         Config::builder()
             .set_default("muxi_prefix", "g")?
             .set_default("tmux_prefix", true)?
@@ -80,7 +78,7 @@ mod tests {
 
         // Set $MUXI_CONFIG_PATH to current folder and load config
         temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd.clone()), || {
-            let settings = Settings::new(&path);
+            let settings = Settings::new(&path, tmux::Settings::default());
 
             // Cleanup before test, in case of panic
             std::fs::remove_dir_all(&pwd).unwrap();

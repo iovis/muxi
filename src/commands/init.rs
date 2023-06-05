@@ -7,7 +7,8 @@ use crate::tmux;
 
 pub fn init() -> Result<()> {
     let muxi = Muxi::new()?;
-    let settings = Settings::new(&path::settings_file())?;
+    let tmux_settings = tmux::Settings::new();
+    let settings = Settings::new(&path::settings_file(), tmux_settings)?;
 
     tmux::create_muxi_bindings(&settings, &muxi.sessions)?;
 
