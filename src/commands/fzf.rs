@@ -17,6 +17,8 @@ pub fn spawn() -> Result<()> {
         .arg("--bind")
         .arg("start:reload:muxi sessions list")
         .arg("--bind")
+        .arg("change:first")
+        .arg("--bind")
         .arg("enter:execute(muxi sessions switch {1})+abort")
         .arg("--bind")
         .arg("ctrl-x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
