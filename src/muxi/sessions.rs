@@ -9,45 +9,49 @@ use crate::tmux::Key;
 
 use super::path;
 
-pub type Sessions = BTreeMap<Key, Session>;
-
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Session {
     pub name: String,
     #[serde(deserialize_with = "expand_tilde")]
     pub path: PathBuf,
 }
 
-pub fn save(sessions: &Sessions) -> Result<()> {
-    let toml = toml_edit::ser::to_string(&sessions)?;
-    let sessions_file = path::sessions_file();
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Sessions(pub BTreeMap<Key, Session>);
 
-    std::fs::write(sessions_file, toml)?;
+impl Sessions {
+    pub fn save(&self) -> Result<()> {
+        let toml = toml_edit::ser::to_string(&self.0)?;
+        let sessions_file = path::sessions_file();
 
-    Ok(())
-}
+        std::fs::write(sessions_file, toml)?;
 
-pub(crate) fn to_list(sessions: &Sessions) -> Vec<String> {
-    let max_width_key = sessions.keys().map(|key| key.as_ref().len()).max().unwrap();
-
-    let max_width_name = sessions
-        .values()
-        .map(|session| session.name.len())
-        .max()
-        .unwrap();
-
-    let mut sessions_list: Vec<String> = Vec::with_capacity(sessions.len());
-
-    for (key, session) in sessions {
-        sessions_list.push(format!(
-            "{:<max_width_key$}  {:<max_width_name$}  {}",
-            key.green(),
-            session.name.blue(),
-            session.path.display().dimmed(),
-        ));
+        Ok(())
     }
 
-    sessions_list
+    pub fn to_list(&self) -> Vec<String> {
+        let max_width_key = self.0.keys().map(|key| key.as_ref().len()).max().unwrap();
+
+        let max_width_name = self
+            .0
+            .values()
+            .map(|session| session.name.len())
+            .max()
+            .unwrap();
+
+        let mut sessions_list: Vec<String> = Vec::with_capacity(self.0.len());
+
+        for (key, session) in &self.0 {
+            sessions_list.push(format!(
+                "{:<max_width_key$}  {:<max_width_name$}  {}",
+                key.green(),
+                session.name.blue(),
+                session.path.display().dimmed(),
+            ));
+        }
+
+        sessions_list
+    }
 }
 
 // Thank you ChatGPT
@@ -70,7 +74,7 @@ mod tests {
             d = { name = "dotfiles", path = "~/.dotfiles" }
         "#;
 
-        let mut expected: Sessions = BTreeMap::new();
+        let mut expected = BTreeMap::new();
         expected.insert(
             Key::parse("d").unwrap(),
             Session {
@@ -79,8 +83,8 @@ mod tests {
             },
         );
 
-        let session: Sessions = toml_edit::de::from_str(toml_string).unwrap();
+        let session = Sessions(toml_edit::de::from_str(toml_string).unwrap());
 
-        assert_eq!(session, expected);
+        assert_eq!(session, Sessions(expected));
     }
 }

@@ -119,7 +119,7 @@ fn bind_settings(tmux_command: &mut Command, settings: &Settings) {
 /// Equivalent to: `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
 #[inline]
 fn bind_sessions(tmux_command: &mut Command, sessions: &Sessions) {
-    for (key, session) in sessions {
+    for (key, session) in &sessions.0 {
         tmux_command
             .arg("bind")
             .arg("-T")

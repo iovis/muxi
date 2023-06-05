@@ -3,7 +3,7 @@ use color_eyre::Result;
 
 use crate::cli::SessionSetArgs;
 use crate::commands;
-use crate::muxi::{sessions, Muxi, Session};
+use crate::muxi::{Muxi, Session};
 use crate::tmux;
 
 pub fn set(SessionSetArgs { key, name, path }: SessionSetArgs) -> Result<()> {
@@ -17,8 +17,8 @@ pub fn set(SessionSetArgs { key, name, path }: SessionSetArgs) -> Result<()> {
 
     // Update sessions.toml
     let mut sessions = Muxi::new()?.sessions;
-    sessions.insert(key, Session { name, path });
-    sessions::save(&sessions)?;
+    sessions.0.insert(key, Session { name, path });
+    sessions.save()?;
 
     // Reload
     commands::init()

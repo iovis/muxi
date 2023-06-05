@@ -126,7 +126,7 @@ pub fn sessions_menu(sessions: &Sessions) -> TmuxResult<()> {
 
     // Define tmux menu items: {session_name} {key} {command}
     // Ex: "#[blue]dotfiles" "d" "run -b 'muxi sessions switch d'"
-    for (key, session) in sessions {
+    for (key, session) in &sessions.0 {
         tmux_command
             .arg(format!("#[fg=blue]{}", &session.name))
             .arg(key.as_ref())
@@ -139,7 +139,7 @@ pub fn sessions_menu(sessions: &Sessions) -> TmuxResult<()> {
         tmux_command.arg("");
 
         // Quick delete items
-        for (key, session) in sessions {
+        for (key, session) in &sessions.0 {
             tmux_command
                 .arg(format!("#[fg=red]{}", &session.name))
                 .arg(key.as_ref().to_uppercase())

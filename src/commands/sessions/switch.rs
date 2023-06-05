@@ -11,7 +11,7 @@ use crate::tmux;
 pub fn switch(key: &tmux::Key) -> Result<()> {
     let sessions = Muxi::new()?.sessions;
 
-    let Some(session) = sessions.get(key) else {
+    let Some(session) = sessions.0.get(key) else {
         println!("{}", "Session not found!".red());
         return Ok(());
     };
@@ -58,9 +58,9 @@ struct SessionChoice {
 
 impl SessionChoice {
     pub fn from(sessions: Sessions) -> Vec<Self> {
-        let mut choices = Vec::with_capacity(sessions.len());
+        let mut choices = Vec::with_capacity(sessions.0.len());
 
-        for (key, session) in sessions {
+        for (key, session) in sessions.0 {
             choices.push(Self { key, session });
         }
 

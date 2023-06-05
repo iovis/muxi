@@ -25,7 +25,7 @@ impl Muxi {
         }
 
         let sessions_data = std::fs::read_to_string(sessions_file)?;
-        let sessions = toml_edit::de::from_str(&sessions_data)?;
+        let sessions = Sessions(toml_edit::de::from_str(&sessions_data)?);
 
         Ok(Self { sessions })
     }
@@ -67,40 +67,42 @@ mod tests {
     }
 
     fn expected_sessions() -> Sessions {
-        vec![
-            (
-                "d".try_into().unwrap(),
-                Session {
-                    name: "dotfiles".into(),
-                    path: path::expand_tilde("~/.dotfiles".into()),
-                },
-            ),
-            (
-                "k".try_into().unwrap(),
-                Session {
-                    name: "muxi".into(),
-                    path: path::expand_tilde("/home/user/muxi/".into()),
-                },
-            ),
-            (
-                "Space".try_into().unwrap(),
-                Session {
-                    name: "tmux".into(),
-                    path: path::expand_tilde("~/Sites/tmux/".into()),
-                },
-            ),
-            (
-                "M-n".try_into().unwrap(),
-                Session {
-                    name: "notes".into(),
-                    path: path::expand_tilde(
-                        "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
-                    ),
-                },
-            ),
-        ]
-        .into_iter()
-        .collect()
+        Sessions(
+            vec![
+                (
+                    "d".try_into().unwrap(),
+                    Session {
+                        name: "dotfiles".into(),
+                        path: path::expand_tilde("~/.dotfiles".into()),
+                    },
+                ),
+                (
+                    "k".try_into().unwrap(),
+                    Session {
+                        name: "muxi".into(),
+                        path: path::expand_tilde("/home/user/muxi/".into()),
+                    },
+                ),
+                (
+                    "Space".try_into().unwrap(),
+                    Session {
+                        name: "tmux".into(),
+                        path: path::expand_tilde("~/Sites/tmux/".into()),
+                    },
+                ),
+                (
+                    "M-n".try_into().unwrap(),
+                    Session {
+                        name: "notes".into(),
+                        path: path::expand_tilde(
+                            "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
+                        ),
+                    },
+                ),
+            ]
+            .into_iter()
+            .collect(),
+        )
     }
 
     #[test]
