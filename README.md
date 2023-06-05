@@ -3,8 +3,30 @@
 Create dynamic shortcuts for your tmux sessions!
 
 ## Install
+
 ```sh
 cargo install muxi
+```
+
+## Usage
+
+```sh
+❯ muxi
+Create bookmarks for your tmux sessions on the fly! 🚀
+
+Usage: muxi <COMMAND>
+
+Commands:
+  init         Register within Tmux and add bindings
+  config       See and edit your settings
+  sessions     See and manage your muxi sessions
+  completions  Generate completions for your shell
+  fzf          Spawn a FZF popup to manage your muxi sessions
+  help         Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 ## Configuration
@@ -12,6 +34,7 @@ cargo install muxi
 ### TOML
 
 You can provide a `settings.toml` in one of the following locations:
+
 - `$MUXI_CONFIG_PATH`
 - `$XDG_CONFIG_HOME/muxi/`
 - `~/.config/muxi/`
