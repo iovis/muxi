@@ -1,4 +1,5 @@
 pub mod config;
+pub mod fzf;
 pub mod sessions;
 
 mod helpers;
