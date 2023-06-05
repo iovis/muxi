@@ -26,6 +26,9 @@ pub enum Command {
 
     /// Generate completions for your shell
     Completions { shell: Shell },
+
+    /// Spawn a FZF popup to manage your muxi sessions
+    Fzf, // TODO: maybe allow to forward fzf options?
 }
 
 #[derive(Debug, Args)]

@@ -2,7 +2,7 @@ use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use color_eyre::Result;
 use muxi::cli::{Cli, Command, ConfigCommands, SessionCommands};
-use muxi::commands::{self, config, sessions};
+use muxi::commands::{self, config, fzf, sessions};
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -53,5 +53,6 @@ fn main() -> Result<()> {
             );
             Ok(())
         }
+        Command::Fzf => fzf::spawn(),
     }
 }
