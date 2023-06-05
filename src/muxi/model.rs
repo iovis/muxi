@@ -1,7 +1,6 @@
 use thiserror::Error;
 
-use crate::path;
-use crate::sessions::Sessions;
+use super::{path, Sessions};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -39,7 +38,7 @@ mod tests {
 
     use uuid::Uuid;
 
-    use crate::sessions::Session;
+    use crate::muxi::Session;
 
     use super::*;
 

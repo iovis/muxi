@@ -1,8 +1,8 @@
 use color_eyre::Result;
 
 use crate::cli::SessionDeleteArgs;
-use crate::muxi::Muxi;
-use crate::{commands, sessions};
+use crate::commands;
+use crate::muxi::{sessions, Muxi};
 
 pub fn delete(SessionDeleteArgs { key }: SessionDeleteArgs) -> Result<()> {
     // Update sessions.toml

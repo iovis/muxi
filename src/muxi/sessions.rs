@@ -5,8 +5,9 @@ use color_eyre::Result;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::path;
 use crate::tmux::Key;
+
+use super::path;
 
 pub type Sessions = BTreeMap<Key, Session>;
 

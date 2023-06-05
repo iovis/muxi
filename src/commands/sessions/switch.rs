@@ -5,8 +5,7 @@ use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use owo_colors::OwoColorize;
 
-use crate::muxi::Muxi;
-use crate::sessions::{Session, Sessions};
+use crate::muxi::{Muxi, Session, Sessions};
 use crate::tmux;
 
 pub fn switch(key: &tmux::Key) -> Result<()> {

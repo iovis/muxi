@@ -1,7 +1,6 @@
 use std::process::Command;
 
-use crate::sessions::Sessions;
-use crate::settings::Settings;
+use crate::muxi::{Sessions, Settings};
 
 use super::{Error, Popup, TmuxResult};
 

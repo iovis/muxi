@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use crate::sessions::{Session, Sessions};
+use crate::muxi::{Session, Sessions};
 
 use super::{Error, TmuxResult};
 

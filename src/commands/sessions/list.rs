@@ -1,8 +1,7 @@
 use color_eyre::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::Muxi;
-use crate::sessions::sessions_for_display;
+use crate::muxi::{sessions_for_display, Muxi};
 
 pub fn list() -> Result<()> {
     let sessions = Muxi::new()?.sessions;

@@ -3,8 +3,7 @@ use color_eyre::Result;
 
 use crate::cli::SessionSetArgs;
 use crate::commands;
-use crate::muxi::Muxi;
-use crate::sessions::{self, Session};
+use crate::muxi::{sessions, Muxi, Session};
 use crate::tmux;
 
 pub fn set(SessionSetArgs { key, name, path }: SessionSetArgs) -> Result<()> {
