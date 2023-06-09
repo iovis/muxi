@@ -23,7 +23,7 @@ pub fn spawn() -> Result<()> {
         .arg("--bind")
         .arg("ctrl-x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
         .arg("--preview")
-        .arg("tmux capture-pane -ep -t {2}")
+        .arg("tmux capture-pane -ep -t '{2}:'")
         .arg("--preview-window")
         .arg("down,60%")
         .stdin(Stdio::piped())
