@@ -54,6 +54,17 @@ impl Display for Settings {
     }
 }
 
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            muxi_prefix: Key::parse("g").unwrap(),
+            tmux_prefix: true,
+            uppercase_overrides: false,
+            bindings: BTreeMap::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::env::temp_dir;
@@ -87,21 +98,12 @@ mod tests {
         });
     }
 
-    fn default_settings(bindings: Bindings) -> Settings {
-        Settings {
-            tmux_prefix: true,
-            muxi_prefix: "g".try_into().unwrap(),
-            uppercase_overrides: false,
-            bindings,
-        }
-    }
-
     #[test]
     fn test_parse_valid_muxi_prefix() {
         let config = r#"
         "#;
 
-        let expected_settings = default_settings(BTreeMap::new());
+        let expected_settings = Settings::default();
 
         with_config(config, |settings| {
             assert_eq!(settings, expected_settings);
@@ -145,7 +147,10 @@ mod tests {
             },
         );
 
-        let expected_settings = default_settings(bindings);
+        let expected_settings = Settings {
+            bindings,
+            ..Default::default()
+        };
 
         with_config(config, |settings| {
             assert_eq!(settings, expected_settings);
@@ -174,7 +179,10 @@ mod tests {
             },
         );
 
-        let expected_settings = default_settings(bindings);
+        let expected_settings = Settings {
+            bindings,
+            ..Default::default()
+        };
 
         with_config(config, |settings| {
             assert_eq!(settings, expected_settings);
@@ -203,7 +211,10 @@ mod tests {
             },
         );
 
-        let expected_settings = default_settings(bindings);
+        let expected_settings = Settings {
+            bindings,
+            ..Default::default()
+        };
 
         with_config(config, |settings| {
             assert_eq!(settings, expected_settings);
@@ -233,7 +244,10 @@ mod tests {
             },
         );
 
-        let expected_settings = default_settings(bindings);
+        let expected_settings = Settings {
+            bindings,
+            ..Default::default()
+        };
 
         with_config(config, |settings| {
             assert_eq!(settings, expected_settings);
