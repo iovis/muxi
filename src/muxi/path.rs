@@ -13,7 +13,7 @@ pub fn muxi_dir() -> PathBuf {
 }
 
 pub fn settings_file() -> PathBuf {
-    muxi_dir().join("settings.toml")
+    muxi_dir().join("init.lua")
 }
 
 pub fn sessions_file() -> PathBuf {

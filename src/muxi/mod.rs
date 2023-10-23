@@ -1,3 +1,4 @@
+pub mod lua;
 pub mod path;
 pub mod sessions;
 
