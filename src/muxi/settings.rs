@@ -4,13 +4,13 @@ use std::path::Path;
 
 use config::{Config, ConfigError, File};
 use owo_colors::OwoColorize;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::tmux::{self, Key, Popup};
 
 type Bindings = BTreeMap<Key, Binding>;
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Settings {
     pub muxi_prefix: Key,
     pub tmux_prefix: bool,
@@ -19,8 +19,9 @@ pub struct Settings {
     pub bindings: Bindings,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Binding {
+    // TODO: `prefix: bool` or `table: String`?
     pub command: String,
     #[serde(default)]
     pub popup: Option<Popup>,
@@ -62,6 +63,32 @@ impl Default for Settings {
             uppercase_overrides: false,
             bindings: BTreeMap::default(),
         }
+    }
+}
+
+pub struct SettingsBuilder {
+    settings: Settings,
+}
+
+impl SettingsBuilder {
+    pub fn new() -> Self {
+        Self {
+            settings: Settings::default(),
+        }
+    }
+
+    pub fn set(mut self, settings: Settings) -> Self {
+        self.settings = settings;
+        self
+    }
+
+    pub fn merge_tmux_settings(mut self, tmux_settings: &tmux::Settings) -> Self {
+        // TODO: merge tmux settings
+        self
+    }
+
+    pub fn build(self) -> Settings {
+        self.settings
     }
 }
 
