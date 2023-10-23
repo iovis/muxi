@@ -1,12 +1,11 @@
 use color_eyre::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::path;
-use crate::{muxi, tmux};
+use crate::muxi::{self, path};
 
 pub fn list() -> Result<()> {
-    let tmux_settings = tmux::Settings::new();
-    let settings = muxi::Settings::new(&path::settings_file(), tmux_settings)?;
+    let path = path::muxi_dir();
+    let settings = muxi::parse_settings(&path)?;
 
     // Settings
     println!(
