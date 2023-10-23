@@ -83,7 +83,18 @@ impl SettingsBuilder {
     }
 
     pub fn merge_tmux_settings(mut self, tmux_settings: &tmux::Settings) -> Self {
-        // TODO: merge tmux settings
+        if let Some(muxi_prefix) = &tmux_settings.muxi_prefix {
+            self.settings.muxi_prefix = Key::parse(muxi_prefix).unwrap();
+        }
+
+        if let Some(tmux_prefix) = &tmux_settings.tmux_prefix {
+            self.settings.tmux_prefix = *tmux_prefix;
+        }
+
+        if let Some(uppercase_overrides) = &tmux_settings.uppercase_overrides {
+            self.settings.uppercase_overrides = *uppercase_overrides;
+        }
+
         self
     }
 
