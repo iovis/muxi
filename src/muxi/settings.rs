@@ -32,6 +32,7 @@ pub struct Settings {
     pub muxi_prefix: Key,
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
+    pub use_current_pane_path: bool,
     #[serde(default)]
     pub bindings: Bindings,
 }
@@ -46,13 +47,29 @@ pub struct Binding {
 
 impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "    {} {}", "muxi_prefix:".green(), self.muxi_prefix)?;
-        writeln!(f, "    {} {}", "tmux_prefix:".green(), self.tmux_prefix)?;
+        writeln!(
+            f,
+            "    {} {}",
+            "muxi_prefix:".green(),
+            self.muxi_prefix.yellow()
+        )?;
+        writeln!(
+            f,
+            "    {} {}",
+            "tmux_prefix:".green(),
+            self.tmux_prefix.blue()
+        )?;
         writeln!(
             f,
             "    {} {}",
             "uppercase_overrides:".green(),
-            self.uppercase_overrides
+            self.uppercase_overrides.blue()
+        )?;
+        writeln!(
+            f,
+            "    {} {}",
+            "use_current_pane_path:".green(),
+            self.use_current_pane_path.blue()
         )
     }
 }
@@ -63,6 +80,7 @@ impl Default for Settings {
             muxi_prefix: Key::parse("g").unwrap(),
             tmux_prefix: true,
             uppercase_overrides: false,
+            use_current_pane_path: false,
             bindings: BTreeMap::default(),
         }
     }
@@ -96,6 +114,10 @@ impl SettingsBuilder {
 
         if let Some(uppercase_overrides) = &tmux_settings.uppercase_overrides {
             self.settings.uppercase_overrides = *uppercase_overrides;
+        }
+
+        if let Some(use_current_pane_path) = &tmux_settings.use_current_pane_path {
+            self.settings.use_current_pane_path = *use_current_pane_path;
         }
 
         self

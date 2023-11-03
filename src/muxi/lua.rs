@@ -110,6 +110,7 @@ mod tests {
                 tmux_prefix: false,
                 muxi_prefix: "M-Space".try_into().unwrap(),
                 uppercase_overrides: false,
+                use_current_pane_path: false,
                 bindings: BTreeMap::new(),
             };
 
@@ -216,6 +217,7 @@ mod tests {
     fn test_parse_binding_popup_struct() {
         let config = r#"
             muxi.muxi_prefix = "g"
+            muxi.use_current_pane_path = true
 
             muxi.bindings = {
                 j = {
@@ -241,6 +243,7 @@ mod tests {
 
             let expected_settings = Settings {
                 bindings,
+                use_current_pane_path: true,
                 ..Default::default()
             };
 

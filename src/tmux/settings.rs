@@ -5,6 +5,7 @@ pub struct Settings {
     pub muxi_prefix: Option<String>,
     pub tmux_prefix: Option<bool>,
     pub uppercase_overrides: Option<bool>,
+    pub use_current_pane_path: Option<bool>,
 }
 
 impl Settings {
@@ -18,10 +19,15 @@ impl Settings {
             as_bool(&opt).expect("`@muxi-uppercase-overrides` should be true|on|false|off")
         });
 
+        let use_current_pane_path = super::get_option("@muxi-use-current-pane-path").map(|opt| {
+            as_bool(&opt).expect("`@muxi-use-current-pane-path` should be true|on|false|off")
+        });
+
         Self {
             muxi_prefix,
             tmux_prefix,
             uppercase_overrides,
+            use_current_pane_path,
         }
     }
 }

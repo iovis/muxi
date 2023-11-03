@@ -51,6 +51,9 @@ muxi.muxi_prefix = "g"
 -- Optional: Uppercase letters will set the current session (default: false)
 muxi.uppercase_overrides = false
 
+-- Optional: Set current session path to current pane's path
+muxi.use_current_pane_path = false
+
 -- Optional bindings to be created on tmux's muxi table (Examples shown)
 muxi.bindings = {
   -- <prefix>ge => edit your sessions file (You can pass optional arguments to your editor after "--")
@@ -100,9 +103,10 @@ You can alternatively define settings entirely from your tmux config:
 
 ```tmux
 # Optional settings (default values shown)
-set -g @muxi-use-tmux-prefix 'on'      # on|off
-set -g @muxi-prefix 'g'                # Any valid tmux key, like `M-Space`
-set -g @muxi-uppercase-overrides 'off' # on|off
+set -g @muxi-use-tmux-prefix 'on'        # on|off
+set -g @muxi-prefix 'g'                  # Any valid tmux key, like `M-Space`
+set -g @muxi-uppercase-overrides 'off'   # on|off
+set -g @muxi-use-current-pane-path 'off' # on|off
 
 # Init muxi
 if "type muxi" {
