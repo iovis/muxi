@@ -61,6 +61,23 @@ pub fn current_session_path() -> Option<PathBuf> {
     }
 }
 
+/// Captures de current pane's path
+/// Equivalent to: `tmux display-message -p '#{pane_current_path}'`
+pub fn current_pane_path() -> Option<PathBuf> {
+    let output = Command::new("tmux")
+        .arg("display-message")
+        .arg("-p")
+        .arg("#{pane_current_path}")
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        Some(String::from_utf8(output.stdout).ok()?.trim().into())
+    } else {
+        None
+    }
+}
+
 /// Check if a tmux session exists
 /// Equivalent to: `tmux has-session -t <session_name>`
 pub fn has_session(session: &Session) -> bool {
