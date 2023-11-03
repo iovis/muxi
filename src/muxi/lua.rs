@@ -14,9 +14,9 @@ pub enum Error {
 }
 
 /// Get `muxi::Settings` from muxi/init.lua
-pub fn parse_settings(path: &Path) -> Result<Settings, Error> {
+pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Error> {
     let code = std::fs::read_to_string(path.join("init.lua"))?;
-    let lua = lua_init(path)?;
+    let lua = lua_init(path, settings)?;
 
     lua.load(code).exec()?;
 
@@ -25,11 +25,11 @@ pub fn parse_settings(path: &Path) -> Result<Settings, Error> {
     Ok(lua.from_value(muxi_table)?)
 }
 
-fn lua_init(path: &Path) -> Result<Lua, Error> {
+fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
     let lua = Lua::new();
 
     {
-        // `globals` is a borrow of lua
+        // `globals` is a borrow of `lua`
         let globals = lua.globals();
 
         // package.path (allow requires)
@@ -45,8 +45,8 @@ fn lua_init(path: &Path) -> Result<Lua, Error> {
 
         package.set("path", package_path.join(";"))?;
 
-        // muxi table
-        globals.set("muxi", lua.to_value(&Settings::default())?)?;
+        // Expose muxi settings table to lua
+        globals.set("muxi", lua.to_value(settings)?)?;
     }
 
     Ok(lua)
@@ -79,7 +79,7 @@ mod tests {
 
         // Set $MUXI_CONFIG_PATH to current folder and load config
         temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd.clone()), || {
-            let settings = parse_settings(&pwd).unwrap();
+            let settings = parse_settings(&pwd, &Settings::default()).unwrap();
 
             // Cleanup before test, in case of panic
             std::fs::remove_dir_all(&pwd).unwrap();

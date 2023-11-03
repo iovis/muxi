@@ -13,7 +13,7 @@ use super::lua;
 pub fn parse_settings(path: &Path) -> color_eyre::Result<Settings> {
     let mut settings_builder = SettingsBuilder::new();
 
-    match lua::parse_settings(path) {
+    match lua::parse_settings(path, &settings_builder.settings) {
         Ok(settings) => {
             settings_builder = settings_builder.set(settings);
         }
