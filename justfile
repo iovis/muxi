@@ -29,3 +29,8 @@ completions:
 alias d := docs
 @docs:
   cargo doc --open
+
+# Open an evcxr console
+alias c := console
+@console:
+    evcxr
