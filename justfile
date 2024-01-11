@@ -1,5 +1,3 @@
-# set dotenv-load  # Uncomment to load .env
-
 completions_dir := env_var('FDOTDIR') / "completions/muxi.fish"
 
 # list recipes
@@ -34,3 +32,8 @@ alias d := docs
 alias c := console
 @console:
     evcxr
+
+# Profile with samply
+profile args:
+    cargo build --profile profiling
+    samply record target/profiling/muxi {{args}}
