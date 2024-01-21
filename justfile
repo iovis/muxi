@@ -1,39 +1,36 @@
-completions_dir := env_var('FDOTDIR') / "completions/muxi.fish"
+completions_dir := env_var("FDOTDIR") / "completions/muxi.fish"
 
 # list recipes
 default:
-  @just --list
+    @just --list
 
 # Run tests with nextest
-alias t := test
 @test:
-  cargo nextest run
+    cargo nextest run
 
 # Install locally
-alias i := install
 @install:
-  cargo install --path .
+    cargo install --path .
 
 # Publish to creates.io
-alias p := publish
 @publish: test
-  cargo publish
+    cargo audit
+    git push --tags  # cargo-dist
+    cargo publish
 
 # Generate and install completions
 completions:
-  cargo run -q -- completions fish > {{ completions_dir }}
+    cargo run -q -- completions fish > {{ completions_dir }}
 
 # Compile and open docs for muxi and its dependencies
-alias d := docs
 @docs:
-  cargo doc --open
+    cargo doc --open
 
 # Open an evcxr console
-alias c := console
 @console:
     evcxr
 
 # Profile with samply
 profile args:
     cargo build --profile profiling
-    samply record target/profiling/muxi {{args}}
+    samply record target/profiling/muxi {{ args }}
