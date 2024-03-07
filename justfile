@@ -34,3 +34,7 @@ completions:
 profile args:
     cargo build --profile profiling
     samply record target/profiling/muxi {{ args }}
+
+# Run cargo-dist
+dist:
+    cargo dist init
