@@ -53,6 +53,6 @@ fn main() -> Result<()> {
             );
             Ok(())
         }
-        Command::Fzf => fzf::spawn(),
+        Command::Fzf { fzf_args } => fzf::spawn(&fzf_args),
     }
 }

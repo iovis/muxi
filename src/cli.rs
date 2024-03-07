@@ -28,7 +28,11 @@ pub enum Command {
     Completions { shell: Shell },
 
     /// Spawn a FZF popup to manage your muxi sessions
-    Fzf, // TODO: maybe allow to forward fzf options?
+    Fzf {
+        /// Args forwarded to `fzf`
+        #[arg(last = true)]
+        fzf_args: Vec<String>,
+    },
 }
 
 #[derive(Debug, Args)]
