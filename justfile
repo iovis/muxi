@@ -15,6 +15,7 @@ default:
 # Publish to creates.io
 @publish: test
     cargo audit
+    git push
     git push --tags  # cargo-dist
     cargo publish
 
