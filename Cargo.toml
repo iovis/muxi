@@ -11,20 +11,20 @@ categories = ["command-line-utilities"]
 repository = "https://github.com/iovis/muxi"
 
 [dependencies]
-clap = { version = "4.5.2", features = ["derive"] }
-clap_complete = "4.5.1"
-color-eyre = "0.6.2"
+clap = { version = "4.5.11", features = ["derive"] }
+clap_complete = "4.5.11"
+color-eyre = "0.6.3"
 dialoguer = "0.11.0"
 dirs = "5.0.1"
-mlua = { version = "0.9.6", features = ["luajit", "vendored", "serialize"] }
+mlua = { version = "0.9.9", features = ["luajit", "vendored", "serialize"] }
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
-serde = { version = "1.0.197", features = ["derive"] }
-thiserror = "1.0.57"
-toml_edit = { version = "0.22.6", features = ["serde"] }
+serde = { version = "1.0.204", features = ["derive"] }
+thiserror = "1.0.63"
+toml_edit = { version = "0.22.17", features = ["serde"] }
 
 [dev-dependencies]
 temp-env = "0.3.6"
-uuid = { version = "1.7.0", features = ["serde", "v4"] }
+uuid = { version = "1.10.0", features = ["serde", "v4"] }
 
 [profile.profiling]
 inherits = "release"
