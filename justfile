@@ -19,6 +19,10 @@ default:
     git push --tags  # cargo-dist
     cargo publish
 
+# Run cargo-dist
+dist:
+    cargo dist init
+
 # Generate and install completions
 completions:
     cargo run -q -- completions fish > {{ completions_dir }}
@@ -26,6 +30,10 @@ completions:
 # Compile and open docs for muxi and its dependencies
 @docs:
     cargo doc --open
+
+# Open project in Github
+open:
+    gh repo view --web
 
 # Open an evcxr console
 @console:
@@ -35,7 +43,3 @@ completions:
 profile args:
     cargo build --profile profiling
     samply record target/profiling/muxi {{ args }}
-
-# Run cargo-dist
-dist:
-    cargo dist init
