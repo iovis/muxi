@@ -11,20 +11,25 @@ categories = ["command-line-utilities"]
 repository = "https://github.com/iovis/muxi"
 
 [dependencies]
-clap = { version = "4.5.11", features = ["derive"] }
-clap_complete = "4.5.11"
+clap = { version = "4.5.20", features = ["derive"] }
+clap_complete = "4.5.37"
 color-eyre = "0.6.3"
 dialoguer = "0.11.0"
 dirs = "5.0.1"
-mlua = { version = "0.9.9", features = ["luajit", "vendored", "serialize"] }
-owo-colors = { version = "4.0.0", features = ["supports-colors"] }
-serde = { version = "1.0.204", features = ["derive"] }
-thiserror = "1.0.63"
-toml_edit = { version = "0.22.17", features = ["serde"] }
+mlua = { version = "0.10.0", features = [
+  "luajit",
+  "vendored",
+  "serialize",
+  "send",
+] }
+owo-colors = { version = "4.1.0", features = ["supports-colors"] }
+serde = { version = "1.0.214", features = ["derive"] }
+thiserror = "2.0.0"
+toml_edit = { version = "0.22.22", features = ["serde"] }
 
 [dev-dependencies]
 temp-env = "0.3.6"
-uuid = { version = "1.10.0", features = ["serde", "v4"] }
+uuid = { version = "1.11.0", features = ["serde", "v4"] }
 
 [profile.profiling]
 inherits = "release"
@@ -38,18 +43,16 @@ lto = "thin"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.19.1"
+cargo-dist-version = "0.20.0"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = []
+installers = ["shell"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = [
-  "aarch64-apple-darwin",
-  "x86_64-apple-darwin",
-  "x86_64-unknown-linux-gnu",
-  "x86_64-unknown-linux-musl",
-  "x86_64-pc-windows-msvc",
-]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = false

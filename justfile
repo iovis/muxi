@@ -39,6 +39,9 @@ open:
 @console:
     evcxr
 
+upgrade:
+    cargo upgrade --incompatible allow
+
 # Profile with samply
 profile args:
     cargo build --profile profiling

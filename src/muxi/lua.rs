@@ -35,7 +35,7 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
         // package.path (allow requires)
         let package: mlua::Table = globals.get("package")?;
         let mut package_path: Vec<String> = package
-            .get::<_, String>("path")?
+            .get::<String>("path")?
             .split(';')
             .map(ToOwned::to_owned)
             .collect();
