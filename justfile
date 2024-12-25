@@ -21,7 +21,7 @@ default:
 
 # Run cargo-dist
 dist:
-    cargo dist init
+    dist init
 
 # Generate and install completions
 completions:
