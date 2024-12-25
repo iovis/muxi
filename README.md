@@ -67,9 +67,9 @@ muxi.bindings = {
     popup = {
       title = " config ",
       width = "75%",
-      height = "60%"
+      height = "60%",
     },
-    command = "muxi config edit -- -c 'nmap <silent> q :wqa<cr>'"
+    command = "muxi config edit -- -c 'nmap <silent> q :wqa<cr>'",
   },
 
   -- <prefix>gs => session switcher
@@ -102,12 +102,6 @@ if "type muxi" {
 You can alternatively define settings entirely from your tmux config:
 
 ```tmux
-# Optional settings (default values shown)
-set -g @muxi-use-tmux-prefix 'on'        # on|off
-set -g @muxi-prefix 'g'                  # Any valid tmux key, like `M-Space`
-set -g @muxi-uppercase-overrides 'off'   # on|off
-set -g @muxi-use-current-pane-path 'off' # on|off
-
 # Init muxi
 if "type muxi" {
   # If you're going to define bindings on the muxi table, don't use `-b`
