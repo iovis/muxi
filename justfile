@@ -46,3 +46,7 @@ upgrade:
 profile args="":
     cargo build --profile profiling
     samply record target/profiling/muxi {{ args }}
+
+debug args="":
+    cargo build
+    rust-lldb -Q -- target/debug/muxi {{ args }}
