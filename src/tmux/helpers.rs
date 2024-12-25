@@ -5,28 +5,6 @@ use crate::muxi::{Session, Sessions};
 
 use super::{Error, TmuxResult};
 
-/// Check the value of a tmux option
-/// Equivalent to: `tmux show -g <option>`
-pub fn get_option(option: &str) -> Option<String> {
-    let output = Command::new("tmux")
-        .arg("show")
-        .arg("-g")
-        .arg(option)
-        .output();
-
-    if let Ok(output) = output {
-        let output = String::from_utf8(output.stdout)
-            .ok()?
-            .strip_prefix(format!("{option} ").as_str())?
-            .trim()
-            .to_string();
-
-        Some(output)
-    } else {
-        None
-    }
-}
-
 /// Captures de current session's name
 /// Equivalent to: `tmux display-message -p '#S'`
 pub fn current_session_name() -> Option<String> {

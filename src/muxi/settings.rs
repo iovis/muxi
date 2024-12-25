@@ -5,7 +5,7 @@ use std::path::Path;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::tmux::{self, Key, Popup};
+use crate::tmux::{Key, Popup};
 
 use super::lua;
 
@@ -21,8 +21,7 @@ pub fn parse_settings(path: &Path) -> color_eyre::Result<Settings> {
         Err(error) => return Err(error)?,
     };
 
-    let tmux_settings = tmux::Settings::new();
-    Ok(settings_builder.merge_tmux_settings(&tmux_settings).build())
+    Ok(settings_builder.build())
 }
 
 pub type Bindings = BTreeMap<Key, Binding>;
@@ -100,26 +99,6 @@ impl SettingsBuilder {
 
     pub fn set(mut self, settings: Settings) -> Self {
         self.settings = settings;
-        self
-    }
-
-    pub fn merge_tmux_settings(mut self, tmux_settings: &tmux::Settings) -> Self {
-        if let Some(muxi_prefix) = &tmux_settings.muxi_prefix {
-            self.settings.muxi_prefix = Key::parse(muxi_prefix).unwrap();
-        }
-
-        if let Some(tmux_prefix) = &tmux_settings.tmux_prefix {
-            self.settings.tmux_prefix = *tmux_prefix;
-        }
-
-        if let Some(uppercase_overrides) = &tmux_settings.uppercase_overrides {
-            self.settings.uppercase_overrides = *uppercase_overrides;
-        }
-
-        if let Some(use_current_pane_path) = &tmux_settings.use_current_pane_path {
-            self.settings.use_current_pane_path = *use_current_pane_path;
-        }
-
         self
     }
 
