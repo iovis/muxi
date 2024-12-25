@@ -43,6 +43,6 @@ upgrade:
     cargo upgrade --incompatible allow
 
 # Profile with samply
-profile args:
+profile args="":
     cargo build --profile profiling
     samply record target/profiling/muxi {{ args }}
