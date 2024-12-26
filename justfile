@@ -1,3 +1,4 @@
+bin := file_name(justfile_directory())
 completions_dir := env_var("FDOTDIR") / "completions/muxi.fish"
 
 # list recipes
@@ -12,7 +13,7 @@ default:
 @install:
     cargo install --path .
 
-# Publish to creates.io
+# Publish to crates.io
 @publish: test
     cargo audit
     git push
@@ -39,14 +40,16 @@ open:
 @console:
     evcxr
 
+# Upgrade dependencies
 upgrade:
     cargo upgrade --incompatible allow
 
 # Profile with samply
-profile args="":
+profile *args:
     cargo build --profile profiling
-    samply record target/profiling/muxi {{ args }}
+    samply record target/profiling/{{ bin }} {{ args }}
 
-debug args="":
+# Debug with rust-lldb
+debug *args:
     cargo build
-    rust-lldb -Q -- target/debug/muxi {{ args }}
+    rust-lldb -Q -- target/debug/{{ bin }} {{ args }}
