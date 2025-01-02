@@ -16,10 +16,10 @@ pub fn within_tmux() -> TmuxResult<()> {
 /// Generate all muxi bindings
 pub fn create_muxi_bindings(settings: &Settings, sessions: &Sessions) -> TmuxResult<()> {
     within_tmux()?;
+    clear_muxi_table()?;
 
     let mut tmux_command = Command::new("tmux");
 
-    clear_muxi_table(&mut tmux_command);
     bind_table_prefix(&mut tmux_command, settings);
 
     if settings.uppercase_overrides {
@@ -41,14 +41,23 @@ pub fn create_muxi_bindings(settings: &Settings, sessions: &Sessions) -> TmuxRes
 }
 
 /// Runs `tmux unbind -aq -T muxi`
+/// Cannot be ran alongside binding creation because if fails to bind anything
 #[inline]
-fn clear_muxi_table(tmux_command: &mut Command) {
-    tmux_command
+fn clear_muxi_table() -> TmuxResult<()> {
+    let output = Command::new("tmux")
         .arg("unbind")
         .arg("-aq")
         .arg("-T")
         .arg("muxi")
-        .arg(";");
+        .output()?;
+
+    if !output.status.success() {
+        return Err(Error::Init(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ));
+    }
+
+    Ok(())
 }
 
 /// tmux bind <settings.prefix> switch-client -T muxi
