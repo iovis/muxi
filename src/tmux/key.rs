@@ -16,10 +16,6 @@ impl Key {
             Err(format!("{value} is not a valid tmux binding"))
         }
     }
-
-    pub fn to_string(&self) -> String {
-        self.0.to_string()
-    }
 }
 
 impl TryFrom<String> for Key {

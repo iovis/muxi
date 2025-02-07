@@ -69,7 +69,7 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .0
         .keys()
         .map(Key::to_string)
-        .collect::<Vec<String>>()
+        .collect::<Vec<_>>()
         .join(",");
 
     fzf_command.arg("--no-input").arg("--bind").arg(format!(
