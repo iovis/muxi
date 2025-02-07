@@ -6,7 +6,7 @@ use crate::muxi::Muxi;
 pub fn list() -> Result<()> {
     let sessions = Muxi::new()?.sessions;
 
-    if sessions.0.is_empty() {
+    if sessions.is_empty() {
         println!("{}", "No sessions defined!".red());
         return Ok(());
     }
