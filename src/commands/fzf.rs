@@ -3,11 +3,12 @@ use std::process::{Command, Stdio};
 use color_eyre::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::Muxi;
+use crate::muxi::{self, path, Muxi};
 use crate::tmux::Key;
 
 pub fn spawn(fzf_args: &[String]) -> Result<()> {
     let sessions = Muxi::new()?.sessions;
+    let settings = muxi::parse_settings(&path::muxi_dir())?;
 
     if sessions.is_empty() {
         println!("{}", "No sessions defined!".red());
@@ -64,26 +65,40 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("alt-r:change-preview-window(right|down)");
 
-    // Bind muxi keys to fzf
-    let keys = sessions
-        .0
-        .keys()
-        .map(Key::to_string)
-        .collect::<Vec<_>>()
-        .join(",");
+    // Hide fuzzy prompt
+    if !settings.fzf.input {
+        fzf_command.arg("--no-input");
 
-    fzf_command.arg("--no-input").arg("--bind").arg(format!(
-        "j:down,k:up,q:abort,i,/:show-input+unbind(j,k,q,i,/,x,{keys})"
-    ));
+        if settings.fzf.bind_sessions {
+            // Bind muxi keys to fzf
+            let keys = sessions
+                .0
+                .keys()
+                .map(Key::to_string)
+                .collect::<Vec<_>>()
+                .join(",");
 
-    for key in sessions.0.keys() {
-        fzf_command
-            .arg("--bind")
-            .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
+            fzf_command.arg("--bind").arg(format!(
+                "j:down,k:up,q:abort,i,/:show-input+unbind(j,k,q,i,/,x,{keys})"
+            ));
+
+            for key in sessions.0.keys() {
+                fzf_command
+                    .arg("--bind")
+                    .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
+            }
+        } else {
+            fzf_command
+                .arg("--bind")
+                .arg("j:down,k:up,q:abort,i,/:show-input+unbind(j,k,q,i,/,x)");
+        }
     }
 
+    // Append user provided args
+    fzf_command.args(fzf_args);
+
+    // Execute
     fzf_command
-        .args(fzf_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
