@@ -51,11 +51,11 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("enter:execute(muxi sessions switch {1})+abort")
         .arg("--bind")
-        .arg("x,ctrl-x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
+        .arg("ctrl-x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
         .arg("--bind")
-        .arg("r,ctrl-r:execute(muxi sessions edit)+reload(muxi sessions list)")
+        .arg("ctrl-r:execute(muxi sessions edit)+reload(muxi sessions list)")
         .arg("--bind")
-        .arg("g,ctrl-g:execute(muxi config edit)+reload(muxi sessions list)")
+        .arg("ctrl-g:execute(muxi config edit)+reload(muxi sessions list)")
         .arg("--preview")
         .arg("tmux capture-pane -ep -t '{2}:'")
         .arg("--preview-window")
@@ -69,6 +69,23 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
     if !settings.fzf.input {
         fzf_command.arg("--no-input");
 
+        // vim bindings
+        fzf_command
+            .arg("--bind")
+            .arg("j:down,k:up,q:abort")
+            .arg("--bind")
+            .arg("x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
+            .arg("--bind")
+            .arg("e:execute(muxi sessions edit)+reload(muxi sessions list)")
+            .arg("--bind")
+            .arg("c:execute(muxi config edit)+reload(muxi sessions list)")
+            .arg("--bind")
+            .arg("p:toggle-preview")
+            .arg("--bind")
+            .arg("r:change-preview-window(right|down)")
+            .arg("--bind")
+            .arg("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/)");
+
         if settings.fzf.bind_sessions {
             // Bind muxi keys to fzf
             let keys = sessions
@@ -78,25 +95,20 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
                 .collect::<Vec<_>>()
                 .join(",");
 
-            fzf_command.arg("--bind").arg(format!(
-                "j:down,k:up,q:abort,i,/:show-input+unbind(j,k,q,i,/,x,{keys})"
-            ));
+            fzf_command
+                .arg("--bind")
+                .arg(format!("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{keys})"));
 
             for key in sessions.0.keys() {
                 fzf_command
                     .arg("--bind")
                     .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
             }
-        } else {
-            fzf_command
-                .arg("--bind")
-                .arg("j:down,k:up,q:abort,i,/:show-input+unbind(j,k,q,i,/,x)");
         }
     }
 
     // Append user provided args
-    fzf_command.args(settings.fzf.args);
-    fzf_command.args(fzf_args);
+    fzf_command.args(settings.fzf.args).args(fzf_args);
 
     // Execute
     fzf_command
