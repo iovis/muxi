@@ -34,7 +34,7 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("hidden")
         .arg("--header")
         .arg(format!(
-            "  <{}> to {} | <{}> to {} | <{}> to {}",
+            "  <{}> to {} | <{}> to {} | <{}> to {}\n ",
             "ctrl-x".yellow(),
             "delete".red(),
             "ctrl-r".yellow(),
