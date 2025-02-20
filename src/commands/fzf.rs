@@ -95,6 +95,7 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
     }
 
     // Append user provided args
+    fzf_command.args(settings.fzf.args);
     fzf_command.args(fzf_args);
 
     // Execute

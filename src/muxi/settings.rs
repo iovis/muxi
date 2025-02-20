@@ -28,8 +28,9 @@ pub type Bindings = BTreeMap<Key, Binding>;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct FzfSettings {
-    pub input: bool,
+    pub args: Option<String>,
     pub bind_sessions: bool,
+    pub input: bool,
 }
 
 impl Default for FzfSettings {
@@ -37,6 +38,7 @@ impl Default for FzfSettings {
         Self {
             input: true,
             bind_sessions: false,
+            args: None,
         }
     }
 }
@@ -97,6 +99,12 @@ impl Display for Settings {
             "    {} {}",
             "bind_sessions:".green(),
             self.fzf.bind_sessions.blue()
+        )?;
+        writeln!(
+            f,
+            "    {} {}",
+            "args:".green(),
+            self.fzf.args.as_ref().map_or("", |v| v).blue()
         )
     }
 }

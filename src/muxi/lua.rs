@@ -121,16 +121,18 @@ mod tests {
 
     #[test]
     fn test_parse_valid_fzf_options() {
-        let config = "
+        let config = r#"
           muxi.fzf.input = false
           muxi.fzf.bind_sessions = true
-        ";
+          muxi.fzf.args = "--bind=d:toggle-preview"
+        "#;
 
         with_config(config, |settings| {
             let expected_settings = Settings {
                 fzf: FzfSettings {
                     input: false,
                     bind_sessions: true,
+                    args: Some("--bind=d:toggle-preview".to_string()),
                 },
                 ..Default::default()
             };
@@ -153,6 +155,7 @@ mod tests {
                 fzf: FzfSettings {
                     input: false,
                     bind_sessions: false,
+                    args: None,
                 },
                 ..Default::default()
             };
