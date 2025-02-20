@@ -49,6 +49,7 @@ pub struct Settings {
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
     pub use_current_pane_path: bool,
+    pub editor_args: Vec<String>,
     pub fzf: FzfSettings,
     #[serde(default)]
     pub bindings: Bindings,
@@ -92,6 +93,13 @@ impl Display for Settings {
             self.use_current_pane_path.blue()
         )?;
 
+        writeln!(
+            f,
+            "    {} {}",
+            "editor_args:".green(),
+            self.editor_args.join(" ").blue()
+        )?;
+
         writeln!(f, "\n{}", "FZF:".yellow())?;
         writeln!(f, "    {} {}", "input:".green(), self.fzf.input.blue())?;
         writeln!(
@@ -116,6 +124,7 @@ impl Default for Settings {
             tmux_prefix: true,
             uppercase_overrides: false,
             use_current_pane_path: false,
+            editor_args: vec![],
             fzf: FzfSettings::default(),
             bindings: BTreeMap::default(),
         }
