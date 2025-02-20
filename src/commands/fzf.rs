@@ -86,20 +86,22 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
             .arg("--bind")
             .arg("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/)");
 
+        // Bind muxi keys to fzf
+        let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
+
+        for key in &muxi_session_keys {
+            fzf_command.arg("--bind").arg(format!(
+                "alt-{key}:execute(muxi sessions switch {key})+abort"
+            ));
+        }
+
         if settings.fzf.bind_sessions {
-            // Bind muxi keys to fzf
-            let keys = sessions
-                .0
-                .keys()
-                .map(Key::to_string)
-                .collect::<Vec<_>>()
-                .join(",");
+            fzf_command.arg("--bind").arg(format!(
+                "i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{})",
+                muxi_session_keys.join(",")
+            ));
 
-            fzf_command
-                .arg("--bind")
-                .arg(format!("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{keys})"));
-
-            for key in sessions.0.keys() {
+            for key in &muxi_session_keys {
                 fzf_command
                     .arg("--bind")
                     .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
