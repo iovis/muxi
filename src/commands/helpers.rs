@@ -4,12 +4,19 @@ use std::process::{Command, Stdio};
 use color_eyre::eyre::bail;
 use color_eyre::Result;
 
+use crate::muxi::{self, path};
+
 pub fn open_editor_for(path: &Path, editor_args: &[String]) -> Result<()> {
     // Get the value of the $EDITOR environment variable
     let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vim".to_string());
+    let settings = muxi::parse_settings(&path::muxi_dir())?;
 
     let mut command = Command::new(editor);
-    command.args(editor_args).arg(path);
+
+    command
+        .args(settings.editor_args)
+        .args(editor_args)
+        .arg(path);
 
     // Set stdin, stdout, and stderr to be the same as the current process
     command

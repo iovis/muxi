@@ -27,11 +27,30 @@ pub fn parse_settings(path: &Path) -> color_eyre::Result<Settings> {
 pub type Bindings = BTreeMap<Key, Binding>;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct FzfSettings {
+    pub args: Vec<String>,
+    pub bind_sessions: bool,
+    pub input: bool,
+}
+
+impl Default for FzfSettings {
+    fn default() -> Self {
+        Self {
+            input: true,
+            bind_sessions: false,
+            args: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Settings {
     pub muxi_prefix: Key,
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
     pub use_current_pane_path: bool,
+    pub editor_args: Vec<String>,
+    pub fzf: FzfSettings,
     #[serde(default)]
     pub bindings: Bindings,
 }
@@ -52,23 +71,48 @@ impl Display for Settings {
             "muxi_prefix:".green(),
             self.muxi_prefix.yellow()
         )?;
+
         writeln!(
             f,
             "    {} {}",
             "tmux_prefix:".green(),
             self.tmux_prefix.blue()
         )?;
+
         writeln!(
             f,
             "    {} {}",
             "uppercase_overrides:".green(),
             self.uppercase_overrides.blue()
         )?;
+
         writeln!(
             f,
             "    {} {}",
             "use_current_pane_path:".green(),
             self.use_current_pane_path.blue()
+        )?;
+
+        writeln!(
+            f,
+            "    {} {}",
+            "editor_args:".green(),
+            self.editor_args.join(" ").blue()
+        )?;
+
+        writeln!(f, "\n{}", "FZF:".yellow())?;
+        writeln!(f, "    {} {}", "input:".green(), self.fzf.input.blue())?;
+        writeln!(
+            f,
+            "    {} {}",
+            "bind_sessions:".green(),
+            self.fzf.bind_sessions.blue()
+        )?;
+        writeln!(
+            f,
+            "    {} {}",
+            "args:".green(),
+            self.fzf.args.join(" ").blue()
         )
     }
 }
@@ -80,6 +124,8 @@ impl Default for Settings {
             tmux_prefix: true,
             uppercase_overrides: false,
             use_current_pane_path: false,
+            editor_args: vec![],
+            fzf: FzfSettings::default(),
             bindings: BTreeMap::default(),
         }
     }

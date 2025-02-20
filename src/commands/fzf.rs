@@ -3,11 +3,12 @@ use std::process::{Command, Stdio};
 use color_eyre::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::Muxi;
+use crate::muxi::{self, path, Muxi};
 use crate::tmux::Key;
 
 pub fn spawn(fzf_args: &[String]) -> Result<()> {
     let sessions = Muxi::new()?.sessions;
+    let settings = muxi::parse_settings(&path::muxi_dir())?;
 
     if sessions.is_empty() {
         println!("{}", "No sessions defined!".red());
@@ -50,11 +51,11 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("enter:execute(muxi sessions switch {1})+abort")
         .arg("--bind")
-        .arg("x,ctrl-x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
+        .arg("ctrl-x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
         .arg("--bind")
-        .arg("r,ctrl-r:execute(muxi sessions edit)+reload(muxi sessions list)")
+        .arg("ctrl-r:execute(muxi sessions edit)+reload(muxi sessions list)")
         .arg("--bind")
-        .arg("g,ctrl-g:execute(muxi config edit)+reload(muxi sessions list)")
+        .arg("ctrl-g:execute(muxi config edit)+reload(muxi sessions list)")
         .arg("--preview")
         .arg("tmux capture-pane -ep -t '{2}:'")
         .arg("--preview-window")
@@ -64,26 +65,53 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("alt-r:change-preview-window(right|down)");
 
-    // Bind muxi keys to fzf
-    let keys = sessions
-        .0
-        .keys()
-        .map(Key::to_string)
-        .collect::<Vec<_>>()
-        .join(",");
+    // Hide fuzzy prompt
+    if !settings.fzf.input {
+        fzf_command.arg("--no-input");
 
-    fzf_command.arg("--no-input").arg("--bind").arg(format!(
-        "j:down,k:up,q:abort,i,/:show-input+unbind(j,k,q,i,/,x,{keys})"
-    ));
-
-    for key in sessions.0.keys() {
+        // vim bindings
         fzf_command
             .arg("--bind")
-            .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
+            .arg("j:down,k:up,q:abort")
+            .arg("--bind")
+            .arg("x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
+            .arg("--bind")
+            .arg("e:execute(muxi sessions edit)+reload(muxi sessions list)")
+            .arg("--bind")
+            .arg("c:execute(muxi config edit)+reload(muxi sessions list)")
+            .arg("--bind")
+            .arg("p:toggle-preview")
+            .arg("--bind")
+            .arg("r:change-preview-window(right|down)")
+            .arg("--bind")
+            .arg("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/)");
+
+        if settings.fzf.bind_sessions {
+            // Bind muxi keys to fzf
+            let keys = sessions
+                .0
+                .keys()
+                .map(Key::to_string)
+                .collect::<Vec<_>>()
+                .join(",");
+
+            fzf_command
+                .arg("--bind")
+                .arg(format!("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{keys})"));
+
+            for key in sessions.0.keys() {
+                fzf_command
+                    .arg("--bind")
+                    .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
+            }
+        }
     }
 
+    // Append user provided args
+    fzf_command.args(settings.fzf.args).args(fzf_args);
+
+    // Execute
     fzf_command
-        .args(fzf_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;

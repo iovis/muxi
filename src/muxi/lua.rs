@@ -60,7 +60,7 @@ mod tests {
 
     use uuid::Uuid;
 
-    use crate::muxi::{Binding, Bindings};
+    use crate::muxi::{Binding, Bindings, FzfSettings};
     use crate::tmux::Popup;
 
     use super::*;
@@ -111,7 +111,55 @@ mod tests {
                 muxi_prefix: "M-Space".try_into().unwrap(),
                 uppercase_overrides: false,
                 use_current_pane_path: false,
+                editor_args: vec![],
+                fzf: FzfSettings::default(),
                 bindings: BTreeMap::new(),
+            };
+
+            assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_valid_fzf_options() {
+        let config = r#"
+          muxi.fzf.input = false
+          muxi.fzf.bind_sessions = true
+          muxi.fzf.args = { "--bind", "d:toggle-preview" }
+        "#;
+
+        with_config(config, |settings| {
+            let expected_settings = Settings {
+                fzf: FzfSettings {
+                    input: false,
+                    bind_sessions: true,
+                    args: vec!["--bind".to_string(), "d:toggle-preview".to_string()],
+                },
+                ..Default::default()
+            };
+
+            assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_valid_fzf_options_table() {
+        let config = "
+          muxi.fzf = {
+            input = false,
+            bind_sessions = false,
+            args = {},
+          }
+        ";
+
+        with_config(config, |settings| {
+            let expected_settings = Settings {
+                fzf: FzfSettings {
+                    input: false,
+                    bind_sessions: false,
+                    args: vec![],
+                },
+                ..Default::default()
             };
 
             assert_eq!(settings, expected_settings);
