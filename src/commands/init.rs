@@ -1,6 +1,6 @@
 use color_eyre::Result;
 
-use crate::muxi::{self, path, Muxi};
+use crate::muxi::{self, Muxi, path};
 use crate::tmux;
 
 pub fn init() -> Result<()> {

@@ -1,7 +1,7 @@
 [package]
 name = "muxi"
 version = "3.2.1"
-edition = "2021"
+edition = "2024"
 authors = ["David Marchante <davidmarchan@gmail.com>"]
 description = "Create bookmarks for your tmux sessions on the fly! 🚀"
 license = "MIT"

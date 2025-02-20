@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use super::{path, Sessions};
+use super::{Sessions, path};
 
 #[derive(Debug, Error)]
 pub enum Error {

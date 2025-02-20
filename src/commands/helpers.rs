@@ -1,8 +1,8 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use color_eyre::eyre::bail;
 use color_eyre::Result;
+use color_eyre::eyre::bail;
 
 use crate::muxi::{self, path};
 

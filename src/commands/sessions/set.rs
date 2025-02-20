@@ -1,8 +1,8 @@
-use color_eyre::eyre::ContextCompat;
 use color_eyre::Result;
+use color_eyre::eyre::ContextCompat;
 
 use crate::cli::SessionSetArgs;
-use crate::muxi::{path, Muxi, Session};
+use crate::muxi::{Muxi, Session, path};
 use crate::tmux;
 use crate::{commands, muxi};
 

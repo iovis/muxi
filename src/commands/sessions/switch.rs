@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
 use color_eyre::Result;
-use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
+use dialoguer::theme::ColorfulTheme;
 use owo_colors::OwoColorize;
 
 use crate::muxi::{Muxi, Session, Sessions};

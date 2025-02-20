@@ -3,7 +3,7 @@ use std::process::{Command, Stdio};
 use color_eyre::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::{self, path, Muxi};
+use crate::muxi::{self, Muxi, path};
 use crate::tmux::Key;
 
 pub fn spawn(fzf_args: &[String]) -> Result<()> {
