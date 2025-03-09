@@ -69,43 +69,18 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
     if !settings.fzf.input {
         fzf_command.arg("--no-input");
 
-        // vim bindings
-        fzf_command
-            .arg("--bind")
-            .arg("j:down,k:up,q:abort")
-            .arg("--bind")
-            .arg("x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
-            .arg("--bind")
-            .arg("e:execute(muxi sessions edit)+reload(muxi sessions list)")
-            .arg("--bind")
-            .arg("c:execute(muxi config edit)+reload(muxi sessions list)")
-            .arg("--bind")
-            .arg("p:toggle-preview")
-            .arg("--bind")
-            .arg("r:change-preview-window(right|down)")
-            .arg("--bind")
-            .arg("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/)");
+        bind_vim_keys(&mut fzf_command);
 
-        // Bind muxi keys to fzf
         let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
+        bind_alt_session_keys(&mut fzf_command, &muxi_session_keys);
 
-        for key in &muxi_session_keys {
-            fzf_command.arg("--bind").arg(format!(
-                "alt-{key}:execute(muxi sessions switch {key})+abort"
-            ));
+        // Allow to set current session to key with alt-<uppercase_letter>
+        if settings.uppercase_overrides {
+            bind_session_overrides(&mut fzf_command);
         }
 
         if settings.fzf.bind_sessions {
-            fzf_command.arg("--bind").arg(format!(
-                "i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{})",
-                muxi_session_keys.join(",")
-            ));
-
-            for key in &muxi_session_keys {
-                fzf_command
-                    .arg("--bind")
-                    .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
-            }
+            bind_raw_session_keys(&mut fzf_command, &muxi_session_keys);
         }
     }
 
@@ -119,4 +94,52 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .spawn()?;
 
     Ok(())
+}
+
+fn bind_vim_keys(fzf_command: &mut Command) {
+    fzf_command
+        .arg("--bind")
+        .arg("j:down,k:up,q:abort")
+        .arg("--bind")
+        .arg("x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
+        .arg("--bind")
+        .arg("e:execute(muxi sessions edit)+reload(muxi sessions list)")
+        .arg("--bind")
+        .arg("c:execute(muxi config edit)+reload(muxi sessions list)")
+        .arg("--bind")
+        .arg("p:toggle-preview")
+        .arg("--bind")
+        .arg("r:change-preview-window(right|down)")
+        .arg("--bind")
+        .arg("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/)");
+}
+
+fn bind_alt_session_keys(fzf_command: &mut Command, muxi_session_keys: &[String]) {
+    for key in muxi_session_keys {
+        fzf_command.arg("--bind").arg(format!(
+            "alt-{key}:execute(muxi sessions switch {key})+abort"
+        ));
+    }
+}
+
+fn bind_raw_session_keys(fzf_command: &mut Command, muxi_session_keys: &[String]) {
+    fzf_command.arg("--bind").arg(format!(
+        "i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{})",
+        muxi_session_keys.join(",")
+    ));
+
+    for key in muxi_session_keys {
+        fzf_command
+            .arg("--bind")
+            .arg(format!("{key}:execute(muxi sessions switch {key})+abort"));
+    }
+}
+
+fn bind_session_overrides(fzf_command: &mut Command) {
+    for key in 'A'..='Z' {
+        fzf_command.arg("--bind").arg(format!(
+            "alt-{key}:execute-silent(muxi sessions set {})+reload(muxi sessions list)",
+            key.to_lowercase()
+        ));
+    }
 }
