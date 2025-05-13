@@ -15,6 +15,12 @@ install-updater = false
 
 [dist.github-custom-runners]
 runner = "ubuntu-24.04"
-aarch64-apple-darwin = "macos-14"
-aarch64-unknown-linux-gnu = "ubuntu-24.04"
-x86_64-unknown-linux-gnu = "ubuntu-24.04"
+
+[dist.github-custom-runners.aarch64-apple-darwin]
+runner = "macos-14"
+
+[dist.github-custom-runners.aarch64-unknown-linux-gnu]
+runner = "ubuntu-24.04"
+
+[dist.github-custom-runners.x86_64-unknown-linux-gnu]
+runner = "ubuntu-24.04"
