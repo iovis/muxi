@@ -101,7 +101,7 @@ fn bind_vim_keys(fzf_command: &mut Command) {
         .arg("--bind")
         .arg("j:down,k:up,q:abort")
         .arg("--bind")
-        .arg("x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
+        .arg("d,x:execute-silent(muxi sessions delete {1})+reload(muxi sessions list)")
         .arg("--bind")
         .arg("e:execute(muxi sessions edit)+reload(muxi sessions list)")
         .arg("--bind")
@@ -111,7 +111,7 @@ fn bind_vim_keys(fzf_command: &mut Command) {
         .arg("--bind")
         .arg("r:change-preview-window(right|down)")
         .arg("--bind")
-        .arg("i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/)");
+        .arg("i,/:show-input+unbind(j,k,q,d,x,e,c,p,r,i,/)");
 }
 
 fn bind_alt_session_keys(fzf_command: &mut Command, muxi_session_keys: &[String]) {
@@ -124,7 +124,7 @@ fn bind_alt_session_keys(fzf_command: &mut Command, muxi_session_keys: &[String]
 
 fn bind_raw_session_keys(fzf_command: &mut Command, muxi_session_keys: &[String]) {
     fzf_command.arg("--bind").arg(format!(
-        "i,/:show-input+unbind(j,k,q,x,e,c,p,r,i,/,{})",
+        "i,/:show-input+unbind(j,k,q,d,x,e,c,p,r,i,/,{})",
         muxi_session_keys.join(",")
     ));
 
