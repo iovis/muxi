@@ -14,13 +14,13 @@ install-path = "CARGO_HOME"
 install-updater = false
 
 [dist.github-custom-runners]
-runner = "ubuntu-24.04"
+global = "ubuntu-latest"
 
 [dist.github-custom-runners.aarch64-apple-darwin]
-runner = "macos-14"
+runner = "macos-latest"
 
 [dist.github-custom-runners.aarch64-unknown-linux-gnu]
-runner = "ubuntu-24.04"
+runner = "ubuntu-latest"
 
 [dist.github-custom-runners.x86_64-unknown-linux-gnu]
-runner = "ubuntu-24.04"
+runner = "ubuntu-latest"
