@@ -60,7 +60,7 @@ mod tests {
 
     use uuid::Uuid;
 
-    use crate::muxi::{Binding, Bindings, FzfSettings};
+    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings};
     use crate::tmux::Popup;
 
     use super::*;
@@ -111,7 +111,7 @@ mod tests {
                 muxi_prefix: "M-Space".try_into().unwrap(),
                 uppercase_overrides: false,
                 use_current_pane_path: false,
-                editor_args: vec![],
+                editor: EditorSettings::default(),
                 fzf: FzfSettings::default(),
                 bindings: BTreeMap::new(),
             };

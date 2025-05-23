@@ -5,11 +5,7 @@ members = ["cargo:."]
 cargo-dist-version = "0.28.0"
 ci = "github"
 installers = ["shell"]
-targets = [
-  "aarch64-apple-darwin",
-  "aarch64-unknown-linux-gnu",
-  "x86_64-unknown-linux-gnu",
-]
+targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu"]
 install-path = "CARGO_HOME"
 install-updater = false
 
@@ -18,9 +14,6 @@ global = "ubuntu-latest"
 
 [dist.github-custom-runners.aarch64-apple-darwin]
 runner = "macos-latest"
-
-[dist.github-custom-runners.aarch64-unknown-linux-gnu]
-runner = "ubuntu-latest"
 
 [dist.github-custom-runners.x86_64-unknown-linux-gnu]
 runner = "ubuntu-latest"

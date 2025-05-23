@@ -19,12 +19,26 @@ pub fn parse_settings(path: &Path) -> color_eyre::Result<Settings> {
         }
         Err(lua::Error::NotFound(_)) => (),
         Err(error) => return Err(error)?,
-    };
+    }
 
     Ok(settings_builder.build())
 }
 
 pub type Bindings = BTreeMap<Key, Binding>;
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct Binding {
+    // TODO: `prefix: bool` or `table: String`?
+    pub command: String,
+    #[serde(default)]
+    pub popup: Option<Popup>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Default)]
+pub struct EditorSettings {
+    pub args: Vec<String>,
+    pub command: Option<String>,
+}
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct FzfSettings {
@@ -49,18 +63,10 @@ pub struct Settings {
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
     pub use_current_pane_path: bool,
-    pub editor_args: Vec<String>,
+    pub editor: EditorSettings,
     pub fzf: FzfSettings,
     #[serde(default)]
     pub bindings: Bindings,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct Binding {
-    // TODO: `prefix: bool` or `table: String`?
-    pub command: String,
-    #[serde(default)]
-    pub popup: Option<Popup>,
 }
 
 impl Display for Settings {
@@ -93,14 +99,27 @@ impl Display for Settings {
             self.use_current_pane_path.blue()
         )?;
 
+        // Editor
+        writeln!(f, "\n{}", "editor:".yellow())?;
         writeln!(
             f,
             "    {} {}",
-            "editor_args:".green(),
-            self.editor_args.join(" ").blue()
+            "command:".green(),
+            self.editor
+                .command
+                .clone()
+                .unwrap_or_else(|| "$EDITOR".to_string())
+                .blue()
+        )?;
+        writeln!(
+            f,
+            "    {} {}",
+            "args:".green(),
+            self.editor.args.join(" ").blue()
         )?;
 
-        writeln!(f, "\n{}", "FZF:".yellow())?;
+        // FZF
+        writeln!(f, "\n{}", "fzf:".yellow())?;
         writeln!(f, "    {} {}", "input:".green(), self.fzf.input.blue())?;
         writeln!(
             f,
@@ -113,7 +132,36 @@ impl Display for Settings {
             "    {} {}",
             "args:".green(),
             self.fzf.args.join(" ").blue()
-        )
+        )?;
+
+        // Bindings
+        if !self.bindings.is_empty() {
+            writeln!(f, "\n{}", "bindings:".yellow())?;
+
+            let max_width_key = self
+                .bindings
+                .keys()
+                .map(|key| key.as_ref().len())
+                .max()
+                .unwrap();
+
+            for (key, binding) in &self.bindings {
+                write!(
+                    f,
+                    "    {:<max_width_key$}  {}",
+                    key.green(),
+                    binding.command
+                )?;
+
+                if binding.popup.is_some() {
+                    write!(f, "{}", " (popup)".yellow())?;
+                }
+
+                writeln!(f)?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -124,7 +172,7 @@ impl Default for Settings {
             tmux_prefix: true,
             uppercase_overrides: false,
             use_current_pane_path: false,
-            editor_args: vec![],
+            editor: EditorSettings::default(),
             fzf: FzfSettings::default(),
             bindings: BTreeMap::default(),
         }
