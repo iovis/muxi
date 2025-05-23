@@ -1,5 +1,5 @@
 bin := file_name(justfile_directory())
-completions_dir := env_var("FDOTDIR") / "completions/muxi.fish"
+completions_dir := env("FDOTDIR") / "completions/muxi.fish"
 
 # list recipes
 default:
