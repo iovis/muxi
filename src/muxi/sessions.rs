@@ -16,6 +16,19 @@ pub struct Session {
     pub path: PathBuf,
 }
 
+impl Session {
+    pub fn display_path(&self) -> String {
+        if let Some(home_dir) = std::env::home_dir()
+            && self.path.starts_with(&home_dir)
+        {
+            let stripped = self.path.strip_prefix(&home_dir).unwrap();
+            return format!("~/{}", stripped.display());
+        }
+
+        self.path.display().to_string()
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Sessions(pub BTreeMap<Key, Session>);
 
@@ -46,7 +59,7 @@ impl Sessions {
                 "{:<max_width_key$}  {:<max_width_name$}  {}",
                 key.green(),
                 session.name.blue(),
-                session.path.display().dimmed(),
+                session.display_path().dimmed(),
             ));
         }
 
