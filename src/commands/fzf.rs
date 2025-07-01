@@ -24,26 +24,30 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("-h")
         .arg("80%")
         .arg("-b")
-        .arg("rounded")
+        .arg("none")
         .arg("-E")
-        .arg("-S")
-        .arg("fg=#414559")
         .arg("fzf")
         .arg("--reverse")
         .arg("--info")
-        .arg("hidden")
-        .arg("--header")
-        .arg(format!(
-            "  <{}> to {} | <{}> to {} | <{}> to {}\n ",
-            "ctrl-x".yellow(),
-            "delete".red(),
-            "ctrl-r".yellow(),
-            "rename".red(),
-            "ctrl-g".yellow(),
-            "config".red()
-        ))
+        .arg("inline-right")
+        .arg("--list-border")
+        .arg("--list-label")
+        .arg(" muxi sessions ")
+        .arg("--input-border")
+        .arg("--color")
+        .arg("list-label:green")
+        .arg("--color")
+        .arg("preview-label:black")
+        .arg("--color")
+        .arg("list-border:black")
+        .arg("--color")
+        .arg("preview-border:black")
+        .arg("--color")
+        .arg("input-border:black")
         .arg("--prompt")
-        .arg("muxi> ")
+        .arg("❯ ")
+        .arg("--ghost")
+        .arg("muxi sessions")
         .arg("--bind")
         .arg("start:reload:muxi sessions list")
         .arg("--bind")
@@ -59,11 +63,13 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--preview")
         .arg("tmux capture-pane -ep -t '{2}:'")
         .arg("--preview-window")
-        .arg("down,60%")
+        .arg("right,60%")
+        .arg("--bind")
+        .arg("focus:transform-preview-label:echo ' {2} '")
         .arg("--bind")
         .arg("alt-p:toggle-preview")
         .arg("--bind")
-        .arg("alt-r:change-preview-window(right|down)");
+        .arg("alt-r:change-preview-window(down|right)");
 
     // Hide fuzzy prompt
     if !settings.fzf.input {
@@ -109,7 +115,7 @@ fn bind_vim_keys(fzf_command: &mut Command) {
         .arg("--bind")
         .arg("p:toggle-preview")
         .arg("--bind")
-        .arg("r:change-preview-window(right|down)")
+        .arg("r:change-preview-window(down|right)")
         .arg("--bind")
         .arg("i,/:show-input+unbind(j,k,q,d,x,e,c,p,r,i,/)");
 }
