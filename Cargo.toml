@@ -11,12 +11,12 @@ keywords = ["cli", "tmux"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-clap = { version = "4.5.40", features = ["derive"] }
-clap_complete = "4.5.54"
+clap = { version = "4.5.41", features = ["derive"] }
+clap_complete = "4.5.55"
 color-eyre = "0.6.5"
 dialoguer = "0.11.0"
 dirs = "6.0.0"
-mlua = { version = "0.10.5", features = [
+mlua = { version = "0.11.1", features = [
   "luajit",
   "send",
   "serialize",
@@ -25,7 +25,7 @@ mlua = { version = "0.10.5", features = [
 owo-colors = { version = "4.2.2", features = ["supports-colors"] }
 serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
-toml_edit = { version = "0.22.27", features = ["serde"] }
+toml_edit = { version = "0.23.2", features = ["serde"] }
 
 [dev-dependencies]
 temp-env = "0.3.6"
