@@ -1,19 +1,15 @@
 [workspace]
 members = ["cargo:."]
 
+# Config for 'dist'
 [dist]
-cargo-dist-version = "0.28.0"
+cargo-dist-version = "0.28.1"
 ci = "github"
 installers = ["shell"]
-targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu"]
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "x86_64-unknown-linux-musl",
+]
 install-path = "CARGO_HOME"
 install-updater = false
-
-[dist.github-custom-runners]
-global = "ubuntu-latest"
-
-[dist.github-custom-runners.aarch64-apple-darwin]
-runner = "macos-latest"
-
-[dist.github-custom-runners.x86_64-unknown-linux-gnu]
-runner = "ubuntu-latest"
