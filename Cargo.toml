@@ -1,7 +1,6 @@
 [package]
 name = "muxi"
 version = "3.4.1"
-authors = ["David Marchante <davidmarchan@gmail.com>"]
 edition = "2024"
 description = "Create bookmarks for your tmux sessions on the fly! 🚀"
 readme = "README.md"
@@ -11,25 +10,25 @@ keywords = ["cli", "tmux"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-clap = { version = "4.5.41", features = ["derive"] }
-clap_complete = "4.5.55"
+clap = { version = "4.5.48", features = ["derive"] }
+clap_complete = "4.5.58"
 color-eyre = "0.6.5"
-dialoguer = "0.11.0"
+dialoguer = "0.12.0"
 dirs = "6.0.0"
-mlua = { version = "0.11.1", features = [
+mlua = { version = "0.11.4", features = [
   "luajit",
   "send",
   "serialize",
   "vendored",
 ] }
-owo-colors = { version = "4.2.2", features = ["supports-colors"] }
-serde = { version = "1.0.219", features = ["derive"] }
-thiserror = "2.0.12"
-toml_edit = { version = "0.23.2", features = ["serde"] }
+owo-colors = { version = "4.2.3", features = ["supports-colors"] }
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = "2.0.17"
+toml_edit = { version = "0.23.6", features = ["serde"] }
 
 [dev-dependencies]
 temp-env = "0.3.6"
-uuid = { version = "1.17.0", features = ["serde", "v4"] }
+uuid = { version = "1.18.1", features = ["serde", "v4"] }
 
 [profile.profiling]
 inherits = "release"
