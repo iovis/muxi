@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use mlua::prelude::{Lua, LuaError, LuaSerdeExt};
+use mlua::prelude::{Lua, LuaError, LuaSerdeExt, LuaTable};
 use thiserror::Error;
 
 use crate::muxi::Settings;
@@ -15,11 +15,17 @@ pub enum Error {
 
 /// Get `muxi::Settings` from muxi/init.lua
 pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Error> {
-    let code = std::fs::read_to_string(path.join("init.lua"))?;
     let lua = lua_init(path, settings)?;
 
-    lua.load(code).exec()?;
+    // read user config
+    let code = std::fs::read_to_string(path.join("init.lua"))?;
+    let user_config = lua.load(code).eval::<Option<LuaTable>>()?.or_else(|| {
+        Some(lua.create_table().unwrap())
+    });
 
+    // merge config defaults with user's
+    lua.globals().set("muxi_user_config", user_config)?;
+    lua.load("MuxiTableMerge(muxi, muxi_user_config)").exec()?;
     let muxi_table = lua.globals().get("muxi")?;
 
     Ok(lua.from_value(muxi_table)?)
@@ -47,6 +53,10 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
 
         // Expose muxi settings table to lua
         globals.set("muxi", lua.to_value(settings)?)?;
+
+        // load table merge function
+        let table_merge = include_str!("table_merge.lua");
+        lua.load(table_merge).exec()?;
     }
 
     Ok(lua)
@@ -158,6 +168,46 @@ mod tests {
                     input: false,
                     bind_sessions: false,
                     args: vec![],
+                },
+                ..Default::default()
+            };
+
+            assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_and_merge_config() {
+        let config = r#"
+            return {
+              uppercase_overrides = true,
+              use_current_pane_path = true,
+              editor = {
+                args = {
+                  "+ZenMode",
+                  "-c",
+                  "nmap q <cmd>silent wqa<cr>",
+                },
+              },
+              fzf = {
+                input = false,
+                bind_sessions = true,
+              },
+            }
+        "#;
+
+        with_config(config, |settings| {
+            let expected_settings = Settings {
+                uppercase_overrides: true,
+                use_current_pane_path: true,
+                editor: EditorSettings {
+                    args: vec!["+ZenMode".into(), "-c".into(), "nmap q <cmd>silent wqa<cr>".into()],
+                    ..Default::default()
+                },
+                fzf: FzfSettings {
+                    input: false,
+                    bind_sessions: true,
+                    ..Default::default()
                 },
                 ..Default::default()
             };
