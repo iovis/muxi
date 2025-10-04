@@ -10,7 +10,7 @@ cargo install muxi
 
 ## Usage
 
-```sh
+```
 ❯ muxi
 Create bookmarks for your tmux sessions on the fly! 🚀
 
@@ -42,50 +42,65 @@ You can provide an `init.lua` in one of the following locations:
 Or run `muxi config edit` to open it in your favorite `$EDITOR`
 
 ```lua
--- Optional: Use tmux <prefix> to define muxi's table (default: true)
-muxi.tmux_prefix = true
+return {
+  -- Optional: Use tmux <prefix> to define muxi's table (default: true)
+  tmux_prefix = true
 
--- Optional: Muxi's table binding (default: "g"), will result in `<prefix>g`
-muxi.muxi_prefix = "g"
+  -- Optional: Muxi's table binding (default: "g"), will result in `<prefix>g`
+  muxi_prefix = "g"
 
--- Optional: Uppercase letters will set the current session (default: false)
-muxi.uppercase_overrides = false
+  -- Optional: Uppercase letters will set the current session (default: false)
+  uppercase_overrides = false
 
--- Optional: Set current session path to current pane's path
-muxi.use_current_pane_path = false
+  -- Optional: Set current session path to current pane's path
+  use_current_pane_path = false
 
--- Optional bindings to be created on tmux's muxi table (Examples shown)
-muxi.bindings = {
-  -- <prefix>ge => edit your sessions file (You can pass optional arguments to your editor after "--")
-  e = {
-    popup = { title = " sessions " },
-    command = "muxi sessions edit -- +ZenMode",
+  -- Optional: open editor with certain arguments
+  editor = {
+    command = "nvim", -- Default $EDITOR
+    args = { "+ZenMode", "-c", "nmap q <cmd>silent wqa<cr>" }, -- Default {}
   },
 
-  -- <prefix>gc => edit config
-  c = {
-    popup = {
-      title = " config ",
-      width = "75%",
-      height = "60%",
+  -- FZF integration
+  fzf = {
+    input = false,  -- Use --no-input
+    bind_sessions = false,  -- Bind the key of the session to switch to it
+    args = { "--color=input-border:black" }, -- Default {}
+  },
+
+  -- Optional bindings to be created on tmux muxi table (Examples shown)
+  bindings = {
+    -- <prefix>ge => edit your sessions file (You can pass optional arguments to your editor after "--")
+    e = {
+      popup = { title = " sessions " },
+      command = "muxi sessions edit -- +ZenMode",
     },
-    command = "muxi config edit -- -c 'nmap <silent> q :wqa<cr>'",
-  },
 
-  -- <prefix>gs => session switcher
-  s = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" },
+    -- <prefix>gc => edit config
+    c = {
+      popup = {
+        title = " config ",
+        width = "75%",
+        height = "60%",
+      },
+      command = "muxi config edit -- -c 'nmap <silent> q :wqa<cr>'",
+    },
 
-  -- <prefix>gf => FZF integration
-  f = { command = "muxi fzf" },
+    -- <prefix>gs => session switcher
+    s = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" },
 
-  -- <prefix>gt => session switcher (native tmux menu)
-  t = { command = "muxi sessions switch --tmux-menu" },
+    -- <prefix>gf => FZF integration
+    f = { command = "muxi fzf" },
 
-  -- You can bind your own commands too!
-  -- `tmux run-shell "tmux switch-client -l"`
-  ["M-Space"] = { command = "tmux switch-client -l" },
+    -- <prefix>gt => session switcher (native tmux menu)
+    t = { command = "muxi sessions switch --tmux-menu" },
 
-  g = { command = "tmux send htop Enter" },
+    -- You can bind your own commands too!
+    -- `tmux run-shell "tmux switch-client -l"`
+    ["M-Space"] = { command = "tmux switch-client -l" },
+
+    g = { command = "tmux send htop Enter" },
+  }
 }
 ```
 
