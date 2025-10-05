@@ -11,50 +11,15 @@ use super::lua;
 
 #[allow(clippy::module_name_repetitions)]
 pub fn parse_settings(path: &Path) -> color_eyre::Result<Settings> {
-    let mut settings_builder = SettingsBuilder::new();
+    let mut settings = Settings::default();
 
-    match lua::parse_settings(path, &settings_builder.settings) {
-        Ok(settings) => {
-            settings_builder = settings_builder.set(settings);
-        }
+    match lua::parse_settings(path, &settings) {
+        Ok(user_settings) => settings = user_settings,
         Err(lua::Error::NotFound(_)) => (),
         Err(error) => return Err(error)?,
     }
 
-    Ok(settings_builder.build())
-}
-
-pub type Bindings = BTreeMap<Key, Binding>;
-
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct Binding {
-    // TODO: `prefix: bool` or `table: String`?
-    pub command: String,
-    #[serde(default)]
-    pub popup: Option<Popup>,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Default)]
-pub struct EditorSettings {
-    pub args: Vec<String>,
-    pub command: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct FzfSettings {
-    pub args: Vec<String>,
-    pub bind_sessions: bool,
-    pub input: bool,
-}
-
-impl Default for FzfSettings {
-    fn default() -> Self {
-        Self {
-            input: true,
-            bind_sessions: false,
-            args: vec![],
-        }
-    }
+    Ok(settings)
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -67,6 +32,20 @@ pub struct Settings {
     pub fzf: FzfSettings,
     #[serde(default)]
     pub bindings: Bindings,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            muxi_prefix: Key::parse("g").unwrap(),
+            tmux_prefix: true,
+            uppercase_overrides: false,
+            use_current_pane_path: false,
+            editor: EditorSettings::default(),
+            fzf: FzfSettings::default(),
+            bindings: BTreeMap::default(),
+        }
+    }
 }
 
 impl Display for Settings {
@@ -165,38 +144,34 @@ impl Display for Settings {
     }
 }
 
-impl Default for Settings {
+pub type Bindings = BTreeMap<Key, Binding>;
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct Binding {
+    pub command: String,
+    #[serde(default)]
+    pub popup: Option<Popup>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Default)]
+pub struct EditorSettings {
+    pub args: Vec<String>,
+    pub command: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct FzfSettings {
+    pub args: Vec<String>,
+    pub bind_sessions: bool,
+    pub input: bool,
+}
+
+impl Default for FzfSettings {
     fn default() -> Self {
         Self {
-            muxi_prefix: Key::parse("g").unwrap(),
-            tmux_prefix: true,
-            uppercase_overrides: false,
-            use_current_pane_path: false,
-            editor: EditorSettings::default(),
-            fzf: FzfSettings::default(),
-            bindings: BTreeMap::default(),
+            input: true,
+            bind_sessions: false,
+            args: vec![],
         }
-    }
-}
-
-#[allow(clippy::module_name_repetitions)]
-pub struct SettingsBuilder {
-    settings: Settings,
-}
-
-impl SettingsBuilder {
-    pub fn new() -> Self {
-        Self {
-            settings: Settings::default(),
-        }
-    }
-
-    pub fn set(mut self, settings: Settings) -> Self {
-        self.settings = settings;
-        self
-    }
-
-    pub fn build(self) -> Settings {
-        self.settings
     }
 }
