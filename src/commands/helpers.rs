@@ -4,10 +4,10 @@ use std::process::{Command, Stdio};
 use color_eyre::Result;
 use color_eyre::eyre::bail;
 
-use crate::muxi::{self, path};
+use crate::muxi::Settings;
 
 pub fn open_editor_for(path: &Path, editor_args: &[String]) -> Result<()> {
-    let settings = muxi::parse_settings(&path::muxi_dir())?;
+    let settings = Settings::from_lua()?;
     let editor = settings
         .editor
         .command

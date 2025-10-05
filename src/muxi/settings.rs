@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
-use std::path::Path;
 
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
@@ -8,19 +7,6 @@ use serde::{Deserialize, Serialize};
 use crate::tmux::{Key, Popup};
 
 use super::lua;
-
-#[allow(clippy::module_name_repetitions)]
-pub fn parse_settings(path: &Path) -> color_eyre::Result<Settings> {
-    let mut settings = Settings::default();
-
-    match lua::parse_settings(path, &settings) {
-        Ok(user_settings) => settings = user_settings,
-        Err(lua::Error::NotFound(_)) => (),
-        Err(error) => return Err(error)?,
-    }
-
-    Ok(settings)
-}
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Settings {
@@ -32,6 +18,21 @@ pub struct Settings {
     pub fzf: FzfSettings,
     #[serde(default)]
     pub bindings: Bindings,
+}
+
+impl Settings {
+    pub fn from_lua() -> color_eyre::Result<Settings> {
+        let path = super::path::muxi_dir();
+        let mut settings = Settings::default();
+
+        match lua::parse_settings(&path, &settings) {
+            Ok(user_settings) => settings = user_settings,
+            Err(lua::Error::NotFound(_)) => (),
+            Err(error) => return Err(error)?,
+        }
+
+        Ok(settings)
+    }
 }
 
 impl Default for Settings {

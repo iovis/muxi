@@ -2,12 +2,12 @@ use color_eyre::Result;
 use color_eyre::eyre::ContextCompat;
 
 use crate::cli::SessionSetArgs;
-use crate::muxi::{Muxi, Session, path};
+use crate::muxi::{Muxi, Session, Settings};
 use crate::tmux;
-use crate::{commands, muxi};
+use crate::commands;
 
 pub fn set(SessionSetArgs { key, name, path }: SessionSetArgs) -> Result<()> {
-    let settings = muxi::parse_settings(&path::muxi_dir())?;
+    let settings = Settings::from_lua()?;
 
     let name = name
         .or_else(tmux::current_session_name)

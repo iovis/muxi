@@ -3,12 +3,12 @@ use std::process::{Command, Stdio};
 use color_eyre::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::{self, Muxi, path};
+use crate::muxi::{Muxi, Settings};
 use crate::tmux::Key;
 
 pub fn spawn(fzf_args: &[String]) -> Result<()> {
     let sessions = Muxi::new()?.sessions;
-    let settings = muxi::parse_settings(&path::muxi_dir())?;
+    let settings = Settings::from_lua()?;
 
     if sessions.is_empty() {
         println!("{}", "No sessions defined!".red());
