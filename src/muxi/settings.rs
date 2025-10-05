@@ -3,6 +3,7 @@ use std::fmt::Display;
 
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::tmux::{Key, Popup};
 
@@ -14,6 +15,7 @@ pub struct Settings {
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
     pub use_current_pane_path: bool,
+    pub plugins: Vec<Url>,
     pub editor: EditorSettings,
     pub fzf: FzfSettings,
     #[serde(default)]
@@ -42,6 +44,7 @@ impl Default for Settings {
             tmux_prefix: true,
             uppercase_overrides: false,
             use_current_pane_path: false,
+            plugins: vec![],
             editor: EditorSettings::default(),
             fzf: FzfSettings::default(),
             bindings: BTreeMap::default(),
@@ -78,6 +81,16 @@ impl Display for Settings {
             "use_current_pane_path:".green(),
             self.use_current_pane_path.blue()
         )?;
+
+        // Plugins
+        writeln!(f, "\n{}", "plugins:".yellow())?;
+        for plugin in &self.plugins {
+            writeln!(
+                f,
+                "    {}",
+                plugin.green()
+            )?;
+        }
 
         // Editor
         writeln!(f, "\n{}", "editor:".yellow())?;
