@@ -18,7 +18,7 @@ pub struct Session {
 
 impl Session {
     pub fn display_path(&self) -> String {
-        if let Some(home_dir) = std::env::home_dir()
+        if let Some(home_dir) = dirs::home_dir()
             && self.path.starts_with(&home_dir)
         {
             let stripped = self.path.strip_prefix(&home_dir).unwrap();
@@ -43,14 +43,19 @@ impl Sessions {
     }
 
     pub fn to_list(&self) -> Vec<String> {
-        let max_width_key = self.0.keys().map(|key| key.as_ref().len()).max().unwrap();
+        let max_width_key = self
+            .0
+            .keys()
+            .map(|key| key.as_ref().len())
+            .max()
+            .unwrap_or(0);
 
         let max_width_name = self
             .0
             .values()
             .map(|session| session.name.len())
             .max()
-            .unwrap();
+            .unwrap_or(0);
 
         let mut sessions_list: Vec<String> = Vec::with_capacity(self.0.len());
 
@@ -71,7 +76,6 @@ impl Sessions {
     }
 }
 
-// Thank you ChatGPT
 fn expand_tilde<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
 where
     D: Deserializer<'de>,

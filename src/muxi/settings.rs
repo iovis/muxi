@@ -85,11 +85,7 @@ impl Display for Settings {
         // Plugins
         writeln!(f, "\n{}", "plugins:".yellow())?;
         for plugin in &self.plugins {
-            writeln!(
-                f,
-                "    {}",
-                plugin.green()
-            )?;
+            writeln!(f, "    {}", plugin.green())?;
         }
 
         // Editor

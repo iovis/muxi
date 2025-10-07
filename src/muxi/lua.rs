@@ -19,13 +19,15 @@ pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Erro
 
     // read user config
     let code = std::fs::read_to_string(path.join("init.lua"))?;
-    let user_config = lua.load(code).eval::<Option<LuaTable>>()?.or_else(|| {
-        Some(lua.create_table().unwrap())
-    });
+    let user_config = lua
+        .load(code)
+        .eval::<Option<LuaTable>>()?
+        .unwrap_or_else(|| lua.create_table().unwrap());
 
     // merge config defaults with user's
     lua.globals().set("muxi_user_config", user_config)?;
-    lua.load("muxi.merge(muxi.config, muxi_user_config)").exec()?;
+    lua.load("muxi.merge(muxi.config, muxi_user_config)")
+        .exec()?;
     let muxi_config = lua.globals().get::<LuaTable>("muxi")?.get("config")?;
 
     Ok(lua.from_value(muxi_config)?)
@@ -55,7 +57,10 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
         let muxi_table = lua.create_table_from([
             ("config", lua.to_value(settings)?),
             ("inspect", lua.load(include_str!("lua/inspect.lua")).eval()?),
-            ("merge", lua.load(include_str!("lua/table_merge.lua")).eval()?),
+            (
+                "merge",
+                lua.load(include_str!("lua/table_merge.lua")).eval()?,
+            ),
             ("print", lua.load(include_str!("lua/print.lua")).eval()?),
         ])?;
 
@@ -124,6 +129,7 @@ mod tests {
                 muxi_prefix: "M-Space".try_into().unwrap(),
                 uppercase_overrides: false,
                 use_current_pane_path: false,
+                plugins: vec![],
                 editor: EditorSettings::default(),
                 fzf: FzfSettings::default(),
                 bindings: BTreeMap::new(),
@@ -204,7 +210,11 @@ mod tests {
                 uppercase_overrides: true,
                 use_current_pane_path: true,
                 editor: EditorSettings {
-                    args: vec!["+ZenMode".into(), "-c".into(), "nmap q <cmd>silent wqa<cr>".into()],
+                    args: vec![
+                        "+ZenMode".into(),
+                        "-c".into(),
+                        "nmap q <cmd>silent wqa<cr>".into(),
+                    ],
                     ..Default::default()
                 },
                 fzf: FzfSettings {

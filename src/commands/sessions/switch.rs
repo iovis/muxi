@@ -41,11 +41,11 @@ pub fn picker() -> Result<()> {
         .default(0)
         .interact_opt()?;
 
-    if selection.is_none() {
+    let Some(index) = selection else {
         return Ok(());
-    }
+    };
 
-    let session = &choices[selection.unwrap()];
+    let session = &choices[index];
 
     switch(&session.key)
 }

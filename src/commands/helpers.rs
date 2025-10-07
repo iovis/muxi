@@ -27,11 +27,7 @@ pub fn open_editor_for(path: &Path, editor_args: &[String]) -> Result<()> {
         .stderr(Stdio::inherit());
 
     // Spawn the editor process and wait for it to finish
-    let status = command
-        .spawn()
-        .expect("Failed to spawn editor process")
-        .wait()
-        .expect("Failed to wait for editor process");
+    let status = command.spawn()?.wait()?;
 
     // Check the exit status of the editor process
     if status.success() {
