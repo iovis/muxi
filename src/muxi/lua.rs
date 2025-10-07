@@ -1,15 +1,24 @@
 use std::path::Path;
 
+use miette::Diagnostic;
 use mlua::prelude::{Lua, LuaError, LuaSerdeExt, LuaTable};
 use thiserror::Error;
 
 use crate::muxi::Settings;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 pub enum Error {
     #[error("{0} not found")]
+    #[diagnostic(code(muxi::lua::not_found))]
     NotFound(#[from] std::io::Error),
-    #[error("failed to parse tmux output: `{0}`")]
+
+    #[error("failed to parse Lua config: {0}")]
+    #[diagnostic(
+        code(muxi::lua::parse_error),
+        help(
+            "Check the syntax in ~/.config/muxi/init.lua\nMake sure it returns a valid configuration table"
+        )
+    )]
     LuaError(#[from] LuaError),
 }
 

@@ -1,11 +1,10 @@
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
-use color_eyre::Result;
+use miette::Result;
 use muxi::cli::{Cli, Command, ConfigCommands, PluginCommands, SessionCommands};
-use muxi::commands::{self, config, fzf, sessions, plugins};
+use muxi::commands::{self, config, fzf, plugins, sessions};
 
 fn main() -> Result<()> {
-    color_eyre::install()?;
     let app = Cli::parse();
 
     match app.command {
@@ -42,8 +41,8 @@ fn main() -> Result<()> {
 
             match command {
                 PluginCommands::List => plugins::list(),
-                PluginCommands::Install =>  todo!(), // plugins::install(),
-                PluginCommands::Update =>   todo!(), // plugins::update(),
+                PluginCommands::Install => todo!(), // plugins::install(),
+                PluginCommands::Update => todo!(),  // plugins::update(),
                 PluginCommands::Outdated => todo!(), // plugins::oudated(),
             }
         }

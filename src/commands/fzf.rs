@@ -1,6 +1,6 @@
 use std::process::{Command, Stdio};
 
-use color_eyre::Result;
+use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 
 use crate::muxi::{Muxi, Settings};
@@ -97,7 +97,8 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
     fzf_command
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .spawn()?;
+        .spawn()
+        .into_diagnostic()?;
 
     Ok(())
 }

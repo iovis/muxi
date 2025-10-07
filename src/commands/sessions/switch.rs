@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
-use color_eyre::Result;
 use dialoguer::Select;
 use dialoguer::theme::ColorfulTheme;
+use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 
 use crate::muxi::{Muxi, Session, Sessions};
@@ -39,7 +39,8 @@ pub fn picker() -> Result<()> {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(&choices)
         .default(0)
-        .interact_opt()?;
+        .interact_opt()
+        .into_diagnostic()?;
 
     let Some(index) = selection else {
         return Ok(());

@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use miette::Result;
 use owo_colors::OwoColorize;
 
 use crate::muxi::Muxi;

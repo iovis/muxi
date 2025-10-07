@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
 
+use miette::Result;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -23,7 +24,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn from_lua() -> color_eyre::Result<Settings> {
+    pub fn from_lua() -> Result<Settings> {
         let path = super::path::muxi_dir();
         let mut settings = Settings::default();
 

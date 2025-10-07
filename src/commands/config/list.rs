@@ -1,7 +1,7 @@
-use color_eyre::Result;
+use miette::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::{path, Settings};
+use crate::muxi::{Settings, path};
 
 pub fn list() -> Result<()> {
     let settings = Settings::from_lua()?;

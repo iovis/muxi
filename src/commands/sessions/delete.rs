@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use miette::Result;
 
 use crate::cli::SessionDeleteArgs;
 use crate::commands;

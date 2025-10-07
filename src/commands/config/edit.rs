@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use miette::Result;
 
 use crate::commands::helpers::open_editor_for;
 use crate::muxi::path;

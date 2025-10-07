@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use miette::Result;
 
 use crate::muxi::{Muxi, Settings};
 use crate::tmux;

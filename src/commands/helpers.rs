@@ -1,8 +1,8 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use color_eyre::Result;
-use color_eyre::eyre::bail;
+use miette::bail;
+use miette::{IntoDiagnostic, Result};
 
 use crate::muxi::Settings;
 
@@ -27,7 +27,11 @@ pub fn open_editor_for(path: &Path, editor_args: &[String]) -> Result<()> {
         .stderr(Stdio::inherit());
 
     // Spawn the editor process and wait for it to finish
-    let status = command.spawn()?.wait()?;
+    let status = command
+        .spawn()
+        .into_diagnostic()?
+        .wait()
+        .into_diagnostic()?;
 
     // Check the exit status of the editor process
     if status.success() {

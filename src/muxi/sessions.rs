@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use color_eyre::Result;
+use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -34,10 +34,10 @@ pub struct Sessions(pub BTreeMap<Key, Session>);
 
 impl Sessions {
     pub fn save(&self) -> Result<()> {
-        let toml = toml_edit::ser::to_string(&self.0)?;
+        let toml = toml_edit::ser::to_string(&self.0).into_diagnostic()?;
         let sessions_file = path::sessions_file();
 
-        std::fs::write(sessions_file, toml)?;
+        std::fs::write(sessions_file, toml).into_diagnostic()?;
 
         Ok(())
     }
