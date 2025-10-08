@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt;
 use std::path::PathBuf;
 
 use miette::{IntoDiagnostic, Result};
@@ -42,7 +43,13 @@ impl Sessions {
         Ok(())
     }
 
-    pub fn to_list(&self) -> Vec<String> {
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl fmt::Display for Sessions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let max_width_key = self
             .0
             .keys()
@@ -57,22 +64,21 @@ impl Sessions {
             .max()
             .unwrap_or(0);
 
-        let mut sessions_list: Vec<String> = Vec::with_capacity(self.0.len());
+        for (i, (key, session)) in self.0.iter().enumerate() {
+            if i > 0 {
+                writeln!(f)?;
+            }
 
-        for (key, session) in &self.0 {
-            sessions_list.push(format!(
+            write!(
+                f,
                 "{:<max_width_key$}  {:<max_width_name$}  {}",
                 key.green(),
                 session.name.blue(),
                 session.display_path().dimmed(),
-            ));
+            )?;
         }
 
-        sessions_list
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        Ok(())
     }
 }
 
@@ -107,5 +113,48 @@ mod tests {
         let session = Sessions(toml_edit::de::from_str(toml_string).unwrap());
 
         assert_eq!(session, Sessions(expected));
+    }
+
+    #[test]
+    fn test_display_sessions() {
+        let mut sessions_map = BTreeMap::new();
+        sessions_map.insert(
+            Key::parse("d").unwrap(),
+            Session {
+                name: "dotfiles".into(),
+                path: "/home/user/.dotfiles".into(),
+            },
+        );
+        sessions_map.insert(
+            Key::parse("p").unwrap(),
+            Session {
+                name: "project".into(),
+                path: "/home/user/projects/myproject".into(),
+            },
+        );
+
+        let sessions = Sessions(sessions_map);
+        let output = format!("{sessions}");
+
+        assert_eq!(
+            output.as_str(),
+            format!(
+                "{}  {}  {}\n{}  {}  {}",
+                "d".green(),
+                "dotfiles".blue(),
+                "/home/user/.dotfiles".dimmed(),
+                "p".green(),
+                "project ".blue(),
+                "/home/user/projects/myproject".dimmed(),
+            )
+        );
+    }
+
+    #[test]
+    fn test_display_empty_sessions() {
+        let sessions = Sessions(BTreeMap::new());
+        let output = format!("{sessions}");
+
+        assert_eq!(output, "");
     }
 }
