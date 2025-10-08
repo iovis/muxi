@@ -4,11 +4,10 @@ use std::fmt::Display;
 use miette::Result;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use url::Url;
 
 use crate::tmux::{Key, Popup};
 
-use super::lua;
+use super::{Plugin, lua};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Settings {
@@ -16,7 +15,7 @@ pub struct Settings {
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
     pub use_current_pane_path: bool,
-    pub plugins: Vec<Url>,
+    pub plugins: Vec<Plugin>,
     pub editor: EditorSettings,
     pub fzf: FzfSettings,
     #[serde(default)]

@@ -85,9 +85,10 @@ mod tests {
     use std::env::temp_dir;
     use std::io::Write;
 
+    use url::Url;
     use uuid::Uuid;
 
-    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings};
+    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings, Plugin};
     use crate::tmux::Popup;
 
     use super::*;
@@ -368,6 +369,36 @@ mod tests {
             };
 
             assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_plugins() {
+        let config = r#"
+          return {
+            plugins = {
+                "tmux-plugins/tmux-continuum",
+                "tmux-plugins/tmux-resurrect",
+                "https://gitlab.com/user/custom-plugin",
+            }
+          }
+        "#;
+
+        with_config(config, |settings| {
+            assert_eq!(
+                settings.plugins,
+                vec![
+                    Plugin {
+                        url: Url::parse("https://github.com/tmux-plugins/tmux-continuum").unwrap()
+                    },
+                    Plugin {
+                        url: Url::parse("https://github.com/tmux-plugins/tmux-resurrect").unwrap()
+                    },
+                    Plugin {
+                        url: Url::parse("https://gitlab.com/user/custom-plugin").unwrap()
+                    },
+                ]
+            );
         });
     }
 }
