@@ -41,8 +41,8 @@ fn main() -> Result<()> {
 
             match command {
                 PluginCommands::List => plugins::list(),
-                PluginCommands::Install => todo!(), // plugins::install(),
-                PluginCommands::Update => todo!(),  // plugins::update(),
+                PluginCommands::Install => plugins::install(),
+                PluginCommands::Update => todo!(), // plugins::update(),
                 PluginCommands::Outdated => todo!(), // plugins::oudated(),
             }
         }

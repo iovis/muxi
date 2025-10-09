@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Deserializer, Serialize};
 use url::Url;
@@ -25,6 +26,20 @@ impl Plugin {
 
         // Try parsing as URL one more time to get a proper error
         Url::parse(s).map(|url| Plugin { url })
+    }
+
+    /// Extract the repository name from the URL
+    pub fn repo_name(&self) -> &str {
+        self.url
+            .path_segments()
+            .and_then(std::iter::Iterator::last)
+            .unwrap_or("plugin")
+            .trim_end_matches(".git")
+    }
+
+    /// Get the installation path for this plugin
+    pub fn install_path(&self, base_dir: &Path) -> PathBuf {
+        base_dir.join(self.repo_name())
     }
 }
 
@@ -70,5 +85,27 @@ mod tests {
     fn test_plugin_parse_custom_git_url() {
         let plugin = Plugin::parse("https://gitlab.com/user/repo").unwrap();
         assert_eq!(plugin.url.as_str(), "https://gitlab.com/user/repo");
+    }
+
+    #[test]
+    fn test_plugin_repo_name() {
+        let plugin = Plugin::parse("tmux-plugins/tmux-continuum").unwrap();
+        assert_eq!(plugin.repo_name(), "tmux-continuum");
+    }
+
+    #[test]
+    fn test_plugin_repo_name_with_git_suffix() {
+        let plugin = Plugin::parse("https://github.com/user/repo.git").unwrap();
+        assert_eq!(plugin.repo_name(), "repo");
+    }
+
+    #[test]
+    fn test_plugin_install_path() {
+        let plugin = Plugin::parse("tmux-plugins/tmux-continuum").unwrap();
+        let base = PathBuf::from("/some/path");
+        assert_eq!(
+            plugin.install_path(&base),
+            PathBuf::from("/some/path/tmux-continuum")
+        );
     }
 }
