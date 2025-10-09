@@ -1,4 +1,6 @@
 use std::fs;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 use git2::Repository;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -26,22 +28,39 @@ pub fn install() -> Result<()> {
         )
     })?;
 
-    let multi = MultiProgress::new();
-    let mut errors = Vec::new();
+    let multi = Arc::new(MultiProgress::new());
+    let errors = Arc::new(Mutex::new(Vec::new()));
 
-    for plugin in plugins {
-        let result = install_plugin(&plugin, &plugins_dir, &multi);
-        if let Err(e) = result {
-            errors.push((plugin, e));
-        }
+    let handles: Vec<_> = plugins
+        .into_iter()
+        .map(|plugin| {
+            let plugins_dir = plugins_dir.clone();
+            let multi = Arc::clone(&multi);
+            let errors = Arc::clone(&errors);
+
+            thread::spawn(move || {
+                let result = install_plugin(&plugin, &plugins_dir, &multi);
+                if let Err(e) = result {
+                    errors.lock().unwrap().push((plugin, e));
+                }
+            })
+        })
+        .collect();
+
+    // Wait for all threads to complete
+    for handle in handles {
+        handle.join().unwrap();
     }
 
     // Report any errors at the end
+    let errors = errors.lock().unwrap();
     if !errors.is_empty() {
         eprintln!();
-        for (plugin, error) in errors {
+
+        for (plugin, error) in errors.iter() {
             eprintln!("{} {}: {}", "✗".red(), plugin, error);
         }
+
         return Err(miette::miette!("Some plugins failed to install"));
     }
 
