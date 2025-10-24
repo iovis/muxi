@@ -7,14 +7,13 @@ use super::{Error, Popup, TmuxResult};
 /// Checks if it's run within a tmux session
 #[inline]
 pub fn within_tmux() -> TmuxResult<()> {
-    // TODO: attribute macro?
     std::env::var("TMUX")?;
 
     Ok(())
 }
 
-/// Generate all muxi bindings
-pub fn create_muxi_bindings(settings: &Settings, sessions: &Sessions) -> TmuxResult<()> {
+/// Init system
+pub fn init(settings: &Settings, sessions: &Sessions) -> TmuxResult<()> {
     within_tmux()?;
     clear_muxi_table()?;
 
@@ -41,7 +40,7 @@ pub fn create_muxi_bindings(settings: &Settings, sessions: &Sessions) -> TmuxRes
 }
 
 /// Runs `tmux unbind -aq -T muxi`
-/// Cannot be ran alongside binding creation because if fails to bind anything
+/// Cannot be ran alongside binding creation because it fails to bind anything
 #[inline]
 fn clear_muxi_table() -> TmuxResult<()> {
     let output = Command::new("tmux")

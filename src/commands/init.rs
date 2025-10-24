@@ -7,7 +7,7 @@ pub fn init() -> Result<()> {
     let muxi = Muxi::new()?;
     let settings = Settings::from_lua()?;
 
-    tmux::create_muxi_bindings(&settings, &muxi.sessions)?;
+    tmux::init(&settings, &muxi.sessions)?;
 
     Ok(())
 }
