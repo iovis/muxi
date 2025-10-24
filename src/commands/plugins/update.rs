@@ -1,5 +1,5 @@
 use std::fs;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::thread;
 
 use indicatif::MultiProgress;
@@ -7,7 +7,7 @@ use miette::Result;
 use owo_colors::OwoColorize;
 
 use super::helpers;
-use crate::commands::plugins::ui::PluginSpinner;
+use super::ui::PluginSpinner;
 use crate::muxi::{Settings, path};
 
 pub fn update() -> Result<()> {
@@ -29,16 +29,12 @@ pub fn update() -> Result<()> {
         )
     })?;
 
-    let multi = Arc::new(MultiProgress::new());
-    let errors = Arc::new(Mutex::new(Vec::new()));
+    let multi = MultiProgress::new();
+    let errors = Mutex::new(Vec::new());
 
-    let handles: Vec<_> = plugins
-        .into_iter()
-        .map(|plugin| {
-            let multi = Arc::clone(&multi);
-            let errors = Arc::clone(&errors);
-
-            thread::spawn(move || {
+    thread::scope(|s| {
+        for plugin in plugins {
+            s.spawn(|| {
                 let spinner = PluginSpinner::new(&multi, plugin.repo_name());
 
                 match plugin.update() {
@@ -49,17 +45,12 @@ pub fn update() -> Result<()> {
                         errors.lock().unwrap().push((plugin, error));
                     }
                 }
-            })
-        })
-        .collect();
-
-    // Wait for all threads to complete
-    for handle in handles {
-        handle.join().unwrap();
-    }
+            });
+        }
+    });
 
     // Report any errors at the end
-    let errors = errors.lock().unwrap();
+    let errors = errors.into_inner().unwrap();
     if !errors.is_empty() {
         return Err(helpers::format_plugin_errors(&errors, "update"));
     }
