@@ -2,12 +2,13 @@ use std::fs;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-use git2::Repository;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use indicatif::MultiProgress;
 use miette::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::{Plugin, Settings, path};
+use crate::muxi::{Settings, path};
+
+use super::helpers::{format_plugin_errors, install_plugin};
 
 pub fn install() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -55,76 +56,8 @@ pub fn install() -> Result<()> {
     // Report any errors at the end
     let errors = errors.lock().unwrap();
     if !errors.is_empty() {
-        let error_messages: String = errors
-            .iter()
-            .map(|(plugin, error)| format!("- {plugin}: {error}"))
-            .collect::<Vec<_>>()
-            .join("\n");
-
-        return Err(miette::miette!(
-            "Some plugins failed to install\n{error_messages}"
-        ));
+        return Err(format_plugin_errors(&errors, "install"));
     }
 
     Ok(())
-}
-
-fn install_plugin(
-    plugin: &Plugin,
-    plugins_dir: &std::path::Path,
-    multi: &MultiProgress,
-) -> Result<()> {
-    let repo_name = plugin.repo_name();
-    let install_path = plugin.install_path(plugins_dir);
-
-    // Check if already installed
-    if install_path.exists() {
-        let pb = multi.add(ProgressBar::new_spinner());
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .template("{prefix:.bold.blue} {msg}")
-                .unwrap(),
-        );
-        pb.set_prefix("⊙");
-        pb.set_message(repo_name.to_string());
-        pb.finish_with_message(format!("{repo_name} {}", "(already installed)".dimmed()));
-        return Ok(());
-    }
-
-    // Create spinner for this plugin
-    let pb = multi.add(ProgressBar::new_spinner());
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
-            .template("{spinner:.black} {msg}")
-            .unwrap(),
-    );
-    pb.set_message(repo_name.to_string());
-    pb.enable_steady_tick(std::time::Duration::from_millis(80));
-
-    // Clone the repository
-    let result = Repository::clone(plugin.url.as_str(), &install_path);
-
-    match result {
-        Ok(_) => {
-            pb.set_style(
-                ProgressStyle::default_spinner()
-                    .template("{prefix:.bold.green} {msg}")
-                    .unwrap(),
-            );
-            pb.set_prefix("✔");
-            pb.finish_with_message(repo_name.to_string());
-            Ok(())
-        }
-        Err(e) => {
-            pb.set_style(
-                ProgressStyle::default_spinner()
-                    .template("{prefix:.bold.red} {msg}")
-                    .unwrap(),
-            );
-            pb.set_prefix("✗");
-            pb.finish_with_message(repo_name.to_string());
-            Err(miette::miette!("Failed to clone repository: {e}"))
-        }
-    }
 }
