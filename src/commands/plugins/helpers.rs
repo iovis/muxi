@@ -1,3 +1,5 @@
+use owo_colors::OwoColorize;
+
 use crate::muxi::Plugin;
 
 pub fn format_plugin_errors(
@@ -6,7 +8,7 @@ pub fn format_plugin_errors(
 ) -> miette::Report {
     let error_messages = errors
         .iter()
-        .map(|(plugin, error)| format!("- {}: {error}", plugin.repo_name()))
+        .map(|(plugin, error)| format!("{} {error}", plugin.repo_name().red()))
         .collect::<Vec<_>>()
         .join("\n");
 

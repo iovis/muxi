@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use git2::{BranchType, Repository};
 use miette::Result;
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 use url::Url;
 
@@ -58,7 +59,7 @@ impl Plugin {
         }
 
         Repository::clone(self.url.as_str(), self.install_path())
-            .map_err(|e| miette::miette!("Failed to clone repository: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to clone repository: {}", e.dimmed()))?;
 
         Ok(true)
     }
@@ -73,23 +74,23 @@ impl Plugin {
         }
 
         let repo = Repository::open(self.install_path())
-            .map_err(|e| miette::miette!("Failed to open repository: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to open repository: {}", e.dimmed()))?;
 
         let head = repo
             .head()
-            .map_err(|e| miette::miette!("Failed to get HEAD: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to get HEAD: {}", e.dimmed()))?;
 
         let old_commit = head
             .peel_to_commit()
-            .map_err(|e| miette::miette!("Failed to get commit: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to get commit: {}", e.dimmed()))?;
 
         let mut remote = repo
             .find_remote("origin")
-            .map_err(|e| miette::miette!("Failed to find remote 'origin': {e}"))?;
+            .map_err(|e| miette::miette!("Failed to find remote 'origin': {}", e.dimmed()))?;
 
         remote
             .fetch(&["HEAD"], None, None)
-            .map_err(|e| miette::miette!("Failed to fetch from remote: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to fetch from remote: {}", e.dimmed()))?;
 
         // Get the default branch name
         let default_branch = repo
@@ -114,17 +115,17 @@ impl Plugin {
                 }
                 Err(git2::Error::from_str("Could not find default branch"))
             })
-            .map_err(|e| miette::miette!("Failed to determine default branch: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to determine default branch: {}", e.dimmed()))?;
 
         // Get the latest commit from the default branch
         let remote_branch = repo
             .find_branch(&format!("origin/{default_branch}"), BranchType::Remote)
-            .map_err(|e| miette::miette!("Failed to find remote branch: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to find remote branch: {}", e.dimmed()))?;
 
         let remote_commit = remote_branch
             .get()
             .peel_to_commit()
-            .map_err(|e| miette::miette!("Failed to get remote commit: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to get remote commit: {}", e.dimmed()))?;
 
         // Check if already up to date
         if old_commit.id() == remote_commit.id() {
@@ -133,10 +134,10 @@ impl Plugin {
 
         // Update to the latest commit
         repo.set_head_detached(remote_commit.id())
-            .map_err(|e| miette::miette!("Failed to update HEAD: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to update HEAD: {}", e.dimmed()))?;
 
         repo.checkout_head(Some(git2::build::CheckoutBuilder::default().force()))
-            .map_err(|e| miette::miette!("Failed to checkout: {e}"))?;
+            .map_err(|e| miette::miette!("Failed to checkout: {}", e.dimmed()))?;
 
         Ok(true)
     }
