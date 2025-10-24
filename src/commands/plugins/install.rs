@@ -55,13 +55,15 @@ pub fn install() -> Result<()> {
     // Report any errors at the end
     let errors = errors.lock().unwrap();
     if !errors.is_empty() {
-        eprintln!();
+        let error_messages: String = errors
+            .iter()
+            .map(|(plugin, error)| format!("- {plugin}: {error}"))
+            .collect::<Vec<_>>()
+            .join("\n");
 
-        for (plugin, error) in errors.iter() {
-            eprintln!("{} {}: {}", "✗".red(), plugin, error);
-        }
-
-        return Err(miette::miette!("Some plugins failed to install"));
+        return Err(miette::miette!(
+            "Some plugins failed to install\n{error_messages}"
+        ));
     }
 
     Ok(())
