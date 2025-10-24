@@ -82,12 +82,12 @@ fn install_plugin(
         let pb = multi.add(ProgressBar::new_spinner());
         pb.set_style(
             ProgressStyle::default_spinner()
-                .template("{prefix:.bold} {msg}")
+                .template("{prefix:.bold.blue} {msg}")
                 .unwrap(),
         );
         pb.set_prefix("⊙");
         pb.set_message(repo_name.to_string());
-        pb.finish_with_message(format!("{} (already installed)", repo_name.dimmed()));
+        pb.finish_with_message(format!("{repo_name} {}", "(already installed)".dimmed()));
         return Ok(());
     }
 
@@ -96,7 +96,7 @@ fn install_plugin(
     pb.set_style(
         ProgressStyle::default_spinner()
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
-            .template("{spinner:.green} {msg}")
+            .template("{spinner:.black} {msg}")
             .unwrap(),
     );
     pb.set_message(repo_name.to_string());
@@ -124,7 +124,7 @@ fn install_plugin(
             );
             pb.set_prefix("✗");
             pb.finish_with_message(repo_name.to_string());
-            Err(miette::miette!("Failed to clone repository: {}", e))
+            Err(miette::miette!("Failed to clone repository: {e}"))
         }
     }
 }
