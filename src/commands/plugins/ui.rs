@@ -35,13 +35,6 @@ impl PluginSpinner {
         self.pb.finish_with_message(self.repo_name.clone());
     }
 
-    pub fn finish_success_with_details(&self, details: &str) {
-        self.pb.set_style(self.finish_style.clone());
-        self.pb.set_prefix(format!("{}", "✔".green().bold()));
-        self.pb
-            .finish_with_message(format!("{} {}", self.repo_name, details));
-    }
-
     pub fn finish_error(&self) {
         self.pb.set_style(self.finish_style.clone());
         self.pb.set_prefix(format!("{}", "✗".red().bold()));

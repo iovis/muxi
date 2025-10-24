@@ -6,9 +6,9 @@ use indicatif::MultiProgress;
 use miette::Result;
 use owo_colors::OwoColorize;
 
+use super::helpers;
+use crate::commands::plugins::ui::PluginSpinner;
 use crate::muxi::{Settings, path};
-
-use super::helpers::{format_plugin_errors, install_plugin};
 
 pub fn install() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -35,14 +35,19 @@ pub fn install() -> Result<()> {
     let handles: Vec<_> = plugins
         .into_iter()
         .map(|plugin| {
-            let plugins_dir = plugins_dir.clone();
             let multi = Arc::clone(&multi);
             let errors = Arc::clone(&errors);
 
             thread::spawn(move || {
-                let result = install_plugin(&plugin, &plugins_dir, &multi);
-                if let Err(e) = result {
-                    errors.lock().unwrap().push((plugin, e));
+                let spinner = PluginSpinner::new(&multi, plugin.repo_name());
+
+                match plugin.install() {
+                    Ok(true) => spinner.finish_success(),
+                    Ok(false) => spinner.finish_already_installed(),
+                    Err(error) => {
+                        spinner.finish_error();
+                        errors.lock().unwrap().push((plugin, error));
+                    }
                 }
             })
         })
@@ -56,7 +61,7 @@ pub fn install() -> Result<()> {
     // Report any errors at the end
     let errors = errors.lock().unwrap();
     if !errors.is_empty() {
-        return Err(format_plugin_errors(&errors, "install"));
+        return Err(helpers::format_plugin_errors(&errors, "install"));
     }
 
     Ok(())

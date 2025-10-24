@@ -1,7 +1,7 @@
 use miette::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::{Settings, path};
+use crate::muxi::Settings;
 
 pub fn list() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -11,16 +11,11 @@ pub fn list() -> Result<()> {
         return Ok(());
     }
 
-    let plugins_dir = path::plugins_dir();
-
     for plugin in plugins {
-        let install_path = plugin.install_path(&plugins_dir);
-        let repo_name = plugin.repo_name();
-
-        if install_path.exists() {
-            println!("{} {}", "✔".green().bold(), repo_name);
+        if plugin.is_installed() {
+            println!("{} {}", "✔".green().bold(), plugin.repo_name());
         } else {
-            println!("{} {}", "○".dimmed(), repo_name.dimmed());
+            println!("{} {}", "○".dimmed(), plugin.repo_name().dimmed());
         }
     }
 

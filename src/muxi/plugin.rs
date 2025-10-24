@@ -1,8 +1,12 @@
 use std::fmt::Display;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
+use git2::{BranchType, Repository};
+use miette::Result;
 use serde::{Deserialize, Deserializer, Serialize};
 use url::Url;
+
+use crate::muxi::path;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Plugin {
@@ -33,13 +37,108 @@ impl Plugin {
         self.url
             .path_segments()
             .and_then(std::iter::Iterator::last)
-            .unwrap_or("plugin")
+            .unwrap_or(self.url.as_str())
             .trim_end_matches(".git")
     }
 
     /// Get the installation path for this plugin
-    pub fn install_path(&self, base_dir: &Path) -> PathBuf {
-        base_dir.join(self.repo_name())
+    pub fn install_path(&self) -> PathBuf {
+        path::plugins_dir().join(self.repo_name())
+    }
+
+    /// Check if this plugin is installed
+    pub fn is_installed(&self) -> bool {
+        self.install_path().exists()
+    }
+
+    /// Install this plugin to the plugins directory
+    pub fn install(&self) -> Result<bool> {
+        if self.is_installed() {
+            return Ok(false);
+        }
+
+        Repository::clone(self.url.as_str(), self.install_path())
+            .map_err(|e| miette::miette!("Failed to clone repository: {e}"))?;
+
+        Ok(true)
+    }
+
+    /// Update this plugin to the latest commit on the default branch
+    /// Returns true if updated, false if already up to date
+    pub fn update(&self) -> Result<bool> {
+        // If not installed, install it
+        if !self.is_installed() {
+            self.install()?;
+            return Ok(true);
+        }
+
+        let repo = Repository::open(self.install_path())
+            .map_err(|e| miette::miette!("Failed to open repository: {e}"))?;
+
+        let head = repo
+            .head()
+            .map_err(|e| miette::miette!("Failed to get HEAD: {e}"))?;
+
+        let old_commit = head
+            .peel_to_commit()
+            .map_err(|e| miette::miette!("Failed to get commit: {e}"))?;
+
+        let mut remote = repo
+            .find_remote("origin")
+            .map_err(|e| miette::miette!("Failed to find remote 'origin': {e}"))?;
+
+        remote
+            .fetch(&["HEAD"], None, None)
+            .map_err(|e| miette::miette!("Failed to fetch from remote: {e}"))?;
+
+        // Get the default branch name
+        let default_branch = repo
+            .find_branch("origin/HEAD", BranchType::Remote)
+            .and_then(|branch| {
+                branch
+                    .get()
+                    .symbolic_target()
+                    .and_then(|target| target.strip_prefix("refs/remotes/origin/"))
+                    .map(String::from)
+                    .ok_or_else(|| git2::Error::from_str("Could not determine default branch"))
+            })
+            .or_else(|_| {
+                // Fallback to common default branches
+                for branch_name in ["main", "master"] {
+                    if repo
+                        .find_branch(&format!("origin/{branch_name}"), BranchType::Remote)
+                        .is_ok()
+                    {
+                        return Ok(branch_name.to_string());
+                    }
+                }
+                Err(git2::Error::from_str("Could not find default branch"))
+            })
+            .map_err(|e| miette::miette!("Failed to determine default branch: {e}"))?;
+
+        // Get the latest commit from the default branch
+        let remote_branch = repo
+            .find_branch(&format!("origin/{default_branch}"), BranchType::Remote)
+            .map_err(|e| miette::miette!("Failed to find remote branch: {e}"))?;
+
+        let remote_commit = remote_branch
+            .get()
+            .peel_to_commit()
+            .map_err(|e| miette::miette!("Failed to get remote commit: {e}"))?;
+
+        // Check if already up to date
+        if old_commit.id() == remote_commit.id() {
+            return Ok(false);
+        }
+
+        // Update to the latest commit
+        repo.set_head_detached(remote_commit.id())
+            .map_err(|e| miette::miette!("Failed to update HEAD: {e}"))?;
+
+        repo.checkout_head(Some(git2::build::CheckoutBuilder::default().force()))
+            .map_err(|e| miette::miette!("Failed to checkout: {e}"))?;
+
+        Ok(true)
     }
 }
 
@@ -102,10 +201,10 @@ mod tests {
     #[test]
     fn test_plugin_install_path() {
         let plugin = Plugin::parse("tmux-plugins/tmux-continuum").unwrap();
-        let base = PathBuf::from("/some/path");
+
         assert_eq!(
-            plugin.install_path(&base),
-            PathBuf::from("/some/path/tmux-continuum")
+            plugin.install_path(),
+            path::plugins_dir().join("tmux-continuum")
         );
     }
 }
