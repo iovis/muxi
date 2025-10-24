@@ -42,11 +42,6 @@ impl Plugin {
             .trim_end_matches(".git")
     }
 
-    /// Get the installation path for this plugin
-    pub fn install_path(&self) -> PathBuf {
-        path::plugins_dir().join(self.repo_name())
-    }
-
     /// Check if this plugin is installed
     pub fn is_installed(&self) -> bool {
         self.install_path().exists()
@@ -57,6 +52,8 @@ impl Plugin {
         if self.is_installed() {
             return Ok(false);
         }
+
+        self.create_plugins_dir()?;
 
         Repository::clone(self.url.as_str(), self.install_path())
             .map_err(|e| miette::miette!("Failed to clone repository: {}", e.dimmed()))?;
@@ -140,6 +137,26 @@ impl Plugin {
             .map_err(|e| miette::miette!("Failed to checkout: {}", e.dimmed()))?;
 
         Ok(true)
+    }
+
+    /// Get the installation path for this plugin
+    fn install_path(&self) -> PathBuf {
+        path::plugins_dir().join(self.repo_name())
+    }
+
+    #[allow(clippy::unused_self)]
+    fn create_plugins_dir(&self) -> Result<()> {
+        let plugins_dir = path::plugins_dir();
+
+        std::fs::create_dir_all(&plugins_dir).map_err(|e| {
+            miette::miette!(
+                "Failed to create plugins directory at {}: {}",
+                plugins_dir.display(),
+                e
+            )
+        })?;
+
+        Ok(())
     }
 }
 

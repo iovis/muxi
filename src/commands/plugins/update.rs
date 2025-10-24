@@ -1,4 +1,3 @@
-use std::fs;
 use std::sync::Mutex;
 use std::thread;
 
@@ -8,7 +7,7 @@ use owo_colors::OwoColorize;
 
 use super::helpers;
 use super::ui::PluginSpinner;
-use crate::muxi::{Settings, path};
+use crate::muxi::Settings;
 
 pub fn update() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -17,17 +16,6 @@ pub fn update() -> Result<()> {
         println!("{}", "No plugins defined!".red());
         return Ok(());
     }
-
-    let plugins_dir = path::plugins_dir();
-
-    // Create plugins directory if it doesn't exist
-    fs::create_dir_all(&plugins_dir).map_err(|e| {
-        miette::miette!(
-            "Failed to create plugins directory at {}: {}",
-            plugins_dir.display(),
-            e
-        )
-    })?;
 
     let multi = MultiProgress::new();
     let errors = Mutex::new(Vec::new());
