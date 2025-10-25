@@ -132,6 +132,9 @@ pub struct Plugins {
 
 #[derive(Debug, Subcommand)]
 pub enum PluginCommands {
+    /// Sources all plugins
+    Init,
+
     /// Print your current tmux plugins
     List,
 

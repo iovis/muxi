@@ -1,8 +1,9 @@
 use std::fmt::Display;
 use std::path::PathBuf;
+use std::process::Command;
 
 use git2::{BranchType, Repository};
-use miette::Result;
+use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 use url::Url;
@@ -42,9 +43,41 @@ impl Plugin {
             .trim_end_matches(".git")
     }
 
-    /// Check if this plugin is installed
+    /// Check if plugin is installed
     pub fn is_installed(&self) -> bool {
         self.install_path().exists()
+    }
+
+    /// Sources the plugin
+    pub fn source(&self) -> Result<()> {
+        if !self.is_installed() {
+            return Ok(());
+        }
+
+        let entries = std::fs::read_dir(self.install_path()).into_diagnostic()?;
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+
+            // Execute all "*.tmux" files in the plugin directory
+            if path.extension().is_some_and(|ext| ext == "tmux") {
+                let status = Command::new(&path)
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .status()
+                    .into_diagnostic()?;
+
+                if !status.success() {
+                    return Err(miette::miette!(
+                        "Failed to execute {}: script exited with {}",
+                        path.display(),
+                        status
+                    ));
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Install this plugin to the plugins directory

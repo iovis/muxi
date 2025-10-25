@@ -40,6 +40,7 @@ fn main() -> Result<()> {
             let command = plugins_command.command.unwrap_or(PluginCommands::List);
 
             match command {
+                PluginCommands::Init => plugins::init(),
                 PluginCommands::List => plugins::list(),
                 PluginCommands::Install => plugins::install(),
                 PluginCommands::Update => plugins::update(),
