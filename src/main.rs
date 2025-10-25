@@ -44,7 +44,6 @@ fn main() -> Result<()> {
                 PluginCommands::List => plugins::list(),
                 PluginCommands::Install => plugins::install(),
                 PluginCommands::Update => plugins::update(),
-                PluginCommands::Outdated => todo!(), // plugins::oudated(),
             }
         }
         Command::Config(config_command) => {

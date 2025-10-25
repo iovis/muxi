@@ -143,7 +143,4 @@ pub enum PluginCommands {
 
     /// Update plugins
     Update,
-
-    /// Show outdated plugins
-    Outdated,
 }
