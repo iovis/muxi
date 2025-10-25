@@ -210,7 +210,7 @@ muxi sessions list
 # - Enter: switch to session
 # - Ctrl-x: delete session
 # - Ctrl-r: edit sessions
-# - Ctrl-e: edit config
+# - Ctrl-g: edit config
 # - Alt-p: toggle preview
 # - Alt-r: rotate preview
 # - Alt-[key]: switch to session with <key>
