@@ -137,7 +137,7 @@ mod tests {
             let expected_settings = Settings {
                 tmux_prefix: false,
                 muxi_prefix: "M-Space".try_into().unwrap(),
-                uppercase_overrides: false,
+                uppercase_overrides: true,
                 use_current_pane_path: false,
                 plugins: vec![],
                 editor: EditorSettings::default(),

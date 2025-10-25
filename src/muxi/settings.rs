@@ -42,7 +42,7 @@ impl Default for Settings {
         Self {
             muxi_prefix: Key::parse("g").unwrap(),
             tmux_prefix: true,
-            uppercase_overrides: false,
+            uppercase_overrides: true,
             use_current_pane_path: false,
             plugins: vec![],
             editor: EditorSettings::default(),
