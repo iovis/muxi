@@ -1,12 +1,24 @@
+use miette::Diagnostic;
 use thiserror::Error;
 
 use super::{Sessions, path};
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 pub enum Error {
     #[error("Error reading your sessions file")]
+    #[diagnostic(
+        code(muxi::sessions::io_error),
+        help("Check that ~/.config/muxi/sessions.toml exists and is readable")
+    )]
     IoError(#[from] std::io::Error),
+
     #[error("Error parsing your sessions file")]
+    #[diagnostic(
+        code(muxi::sessions::parse_error),
+        help(
+            "Check the TOML syntax in ~/.config/muxi/sessions.toml\nExample format:\nd = {{ name = \"dotfiles\", path = \"~/.dotfiles\" }}"
+        )
+    )]
     ParseError(#[from] toml_edit::de::Error),
 }
 

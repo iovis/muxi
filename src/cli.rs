@@ -19,15 +19,25 @@ pub enum Command {
     Init,
 
     /// See and edit your settings
+    #[clap(visible_alias = "c")]
     Config(Config),
 
+    /// List sessions
+    Ls,
+
     /// See and manage your muxi sessions
+    #[clap(visible_alias = "s")]
     Sessions(Sessions),
+
+    /// See and manage your tmux plugins
+    #[clap(visible_alias = "p")]
+    Plugins(Plugins),
 
     /// Generate completions for your shell
     Completions { shell: Shell },
 
     /// Spawn a FZF popup to manage your muxi sessions
+    #[clap(visible_alias = "f")]
     Fzf {
         /// Args forwarded to `fzf`
         #[arg(last = true)]
@@ -112,4 +122,25 @@ pub struct SessionSetArgs {
 pub struct SessionDeleteArgs {
     /// Tmux key binding
     pub key: Key,
+}
+
+#[derive(Debug, Args)]
+pub struct Plugins {
+    #[command(subcommand)]
+    pub command: Option<PluginCommands>,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum PluginCommands {
+    /// Sources all plugins
+    Init,
+
+    /// Print your current tmux plugins
+    List,
+
+    /// Install plugins
+    Install,
+
+    /// Update plugins
+    Update,
 }

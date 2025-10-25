@@ -1,15 +1,15 @@
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
-use color_eyre::Result;
-use muxi::cli::{Cli, Command, ConfigCommands, SessionCommands};
-use muxi::commands::{self, config, fzf, sessions};
+use miette::Result;
+use muxi::cli::{Cli, Command, ConfigCommands, PluginCommands, SessionCommands};
+use muxi::commands::{self, config, fzf, plugins, sessions};
 
 fn main() -> Result<()> {
-    color_eyre::install()?;
     let app = Cli::parse();
 
     match app.command {
         Command::Init => commands::init(),
+        Command::Ls => sessions::list(),
         Command::Sessions(sessions_command) => {
             // Default to `list` if no command given
             let command = sessions_command.command.unwrap_or(SessionCommands::List);
@@ -33,6 +33,17 @@ fn main() -> Result<()> {
                         sessions::switch(&key.unwrap())
                     }
                 }
+            }
+        }
+        Command::Plugins(plugins_command) => {
+            // Default to `list` if no command given
+            let command = plugins_command.command.unwrap_or(PluginCommands::List);
+
+            match command {
+                PluginCommands::Init => plugins::init(),
+                PluginCommands::List => plugins::list(),
+                PluginCommands::Install => plugins::install(),
+                PluginCommands::Update => plugins::update(),
             }
         }
         Command::Config(config_command) => {

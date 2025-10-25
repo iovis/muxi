@@ -1,11 +1,10 @@
-use color_eyre::Result;
+use miette::Result;
 use owo_colors::OwoColorize;
 
-use crate::muxi::{self, path};
+use crate::muxi::{Settings, path};
 
 pub fn list() -> Result<()> {
-    let path = path::muxi_dir();
-    let settings = muxi::parse_settings(&path)?;
+    let settings = Settings::from_lua()?;
 
     println!(
         "{} {}",

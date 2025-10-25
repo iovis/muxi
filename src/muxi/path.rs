@@ -12,6 +12,22 @@ pub fn muxi_dir() -> PathBuf {
     expand_tilde(path)
 }
 
+pub fn muxi_data() -> PathBuf {
+    let path = if let Ok(data_path) = std::env::var("MUXI_DATA_PATH") {
+        PathBuf::from(data_path)
+    } else if let Ok(data_path) = std::env::var("XDG_DATA_HOME") {
+        PathBuf::from(data_path).join("muxi/")
+    } else {
+        PathBuf::from("~/.local/share/muxi/")
+    };
+
+    expand_tilde(path)
+}
+
+pub fn plugins_dir() -> PathBuf {
+    muxi_data().join("plugins")
+}
+
 pub fn settings_file() -> PathBuf {
     muxi_dir().join("init.lua")
 }

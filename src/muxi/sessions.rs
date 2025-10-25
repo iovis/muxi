@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
+use std::fmt;
 use std::path::PathBuf;
 
-use color_eyre::Result;
+use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -18,7 +19,7 @@ pub struct Session {
 
 impl Session {
     pub fn display_path(&self) -> String {
-        if let Some(home_dir) = std::env::home_dir()
+        if let Some(home_dir) = dirs::home_dir()
             && self.path.starts_with(&home_dir)
         {
             let stripped = self.path.strip_prefix(&home_dir).unwrap();
@@ -34,36 +35,12 @@ pub struct Sessions(pub BTreeMap<Key, Session>);
 
 impl Sessions {
     pub fn save(&self) -> Result<()> {
-        let toml = toml_edit::ser::to_string(&self.0)?;
+        let toml = toml_edit::ser::to_string(&self.0).into_diagnostic()?;
         let sessions_file = path::sessions_file();
 
-        std::fs::write(sessions_file, toml)?;
+        std::fs::write(sessions_file, toml).into_diagnostic()?;
 
         Ok(())
-    }
-
-    pub fn to_list(&self) -> Vec<String> {
-        let max_width_key = self.0.keys().map(|key| key.as_ref().len()).max().unwrap();
-
-        let max_width_name = self
-            .0
-            .values()
-            .map(|session| session.name.len())
-            .max()
-            .unwrap();
-
-        let mut sessions_list: Vec<String> = Vec::with_capacity(self.0.len());
-
-        for (key, session) in &self.0 {
-            sessions_list.push(format!(
-                "{:<max_width_key$}  {:<max_width_name$}  {}",
-                key.green(),
-                session.name.blue(),
-                session.display_path().dimmed(),
-            ));
-        }
-
-        sessions_list
     }
 
     pub fn is_empty(&self) -> bool {
@@ -71,7 +48,40 @@ impl Sessions {
     }
 }
 
-// Thank you ChatGPT
+impl fmt::Display for Sessions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let max_width_key = self
+            .0
+            .keys()
+            .map(|key| key.as_ref().len())
+            .max()
+            .unwrap_or(0);
+
+        let max_width_name = self
+            .0
+            .values()
+            .map(|session| session.name.len())
+            .max()
+            .unwrap_or(0);
+
+        for (i, (key, session)) in self.0.iter().enumerate() {
+            if i > 0 {
+                writeln!(f)?;
+            }
+
+            write!(
+                f,
+                "{:<max_width_key$}  {:<max_width_name$}  {}",
+                key.green(),
+                session.name.blue(),
+                session.display_path().dimmed(),
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
 fn expand_tilde<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
 where
     D: Deserializer<'de>,
@@ -103,5 +113,48 @@ mod tests {
         let session = Sessions(toml_edit::de::from_str(toml_string).unwrap());
 
         assert_eq!(session, Sessions(expected));
+    }
+
+    #[test]
+    fn test_display_sessions() {
+        let mut sessions_map = BTreeMap::new();
+        sessions_map.insert(
+            Key::parse("d").unwrap(),
+            Session {
+                name: "dotfiles".into(),
+                path: "/home/user/.dotfiles".into(),
+            },
+        );
+        sessions_map.insert(
+            Key::parse("p").unwrap(),
+            Session {
+                name: "project".into(),
+                path: "/home/user/projects/myproject".into(),
+            },
+        );
+
+        let sessions = Sessions(sessions_map);
+        let output = format!("{sessions}");
+
+        assert_eq!(
+            output.as_str(),
+            format!(
+                "{}  {}  {}\n{}  {}  {}",
+                "d".green(),
+                "dotfiles".blue(),
+                "/home/user/.dotfiles".dimmed(),
+                "p".green(),
+                "project ".blue(),
+                "/home/user/projects/myproject".dimmed(),
+            )
+        );
+    }
+
+    #[test]
+    fn test_display_empty_sessions() {
+        let sessions = Sessions(BTreeMap::new());
+        let output = format!("{sessions}");
+
+        assert_eq!(output, "");
     }
 }

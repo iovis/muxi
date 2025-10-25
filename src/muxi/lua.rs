@@ -1,15 +1,24 @@
 use std::path::Path;
 
+use miette::Diagnostic;
 use mlua::prelude::{Lua, LuaError, LuaSerdeExt, LuaTable};
 use thiserror::Error;
 
 use crate::muxi::Settings;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 pub enum Error {
     #[error("{0} not found")]
+    #[diagnostic(code(muxi::lua::not_found))]
     NotFound(#[from] std::io::Error),
-    #[error("failed to parse tmux output: `{0}`")]
+
+    #[error("failed to parse Lua config: {0}")]
+    #[diagnostic(
+        code(muxi::lua::parse_error),
+        help(
+            "Check the syntax in ~/.config/muxi/init.lua\nMake sure it returns a valid configuration table"
+        )
+    )]
     LuaError(#[from] LuaError),
 }
 
@@ -19,16 +28,18 @@ pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Erro
 
     // read user config
     let code = std::fs::read_to_string(path.join("init.lua"))?;
-    let user_config = lua.load(code).eval::<Option<LuaTable>>()?.or_else(|| {
-        Some(lua.create_table().unwrap())
-    });
+    let user_config = lua
+        .load(code)
+        .eval::<Option<LuaTable>>()?
+        .unwrap_or_else(|| lua.create_table().unwrap());
 
     // merge config defaults with user's
     lua.globals().set("muxi_user_config", user_config)?;
-    lua.load("MuxiTableMerge(muxi, muxi_user_config)").exec()?;
-    let muxi_table = lua.globals().get("muxi")?;
+    lua.load("muxi.merge(muxi.config, muxi_user_config)")
+        .exec()?;
+    let muxi_config = lua.globals().get::<LuaTable>("muxi")?.get("config")?;
 
-    Ok(lua.from_value(muxi_table)?)
+    Ok(lua.from_value(muxi_config)?)
 }
 
 fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
@@ -52,11 +63,17 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
         package.set("path", package_path.join(";"))?;
 
         // Expose muxi settings table to lua
-        globals.set("muxi", lua.to_value(settings)?)?;
+        let muxi_table = lua.create_table_from([
+            ("config", lua.to_value(settings)?),
+            ("inspect", lua.load(include_str!("lua/inspect.lua")).eval()?),
+            (
+                "merge",
+                lua.load(include_str!("lua/table_merge.lua")).eval()?,
+            ),
+            ("print", lua.load(include_str!("lua/print.lua")).eval()?),
+        ])?;
 
-        // load table merge function
-        let table_merge = include_str!("table_merge.lua");
-        lua.load(table_merge).exec()?;
+        globals.set("muxi", muxi_table)?;
     }
 
     Ok(lua)
@@ -68,9 +85,10 @@ mod tests {
     use std::env::temp_dir;
     use std::io::Write;
 
+    use url::Url;
     use uuid::Uuid;
 
-    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings};
+    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings, Plugin};
     use crate::tmux::Popup;
 
     use super::*;
@@ -111,16 +129,17 @@ mod tests {
     #[test]
     fn test_parse_valid_muxi_prefix_root() {
         let config = r#"
-          muxi.muxi_prefix = "M-Space"
-          muxi.tmux_prefix = false
+          muxi.config.muxi_prefix = "M-Space"
+          muxi.config.tmux_prefix = false
         "#;
 
         with_config(config, |settings| {
             let expected_settings = Settings {
                 tmux_prefix: false,
                 muxi_prefix: "M-Space".try_into().unwrap(),
-                uppercase_overrides: false,
+                uppercase_overrides: true,
                 use_current_pane_path: false,
+                plugins: vec![],
                 editor: EditorSettings::default(),
                 fzf: FzfSettings::default(),
                 bindings: BTreeMap::new(),
@@ -133,9 +152,9 @@ mod tests {
     #[test]
     fn test_parse_valid_fzf_options() {
         let config = r#"
-          muxi.fzf.input = false
-          muxi.fzf.bind_sessions = true
-          muxi.fzf.args = { "--bind", "d:toggle-preview" }
+          muxi.config.fzf.input = false
+          muxi.config.fzf.bind_sessions = true
+          muxi.config.fzf.args = { "--bind", "d:toggle-preview" }
         "#;
 
         with_config(config, |settings| {
@@ -155,7 +174,7 @@ mod tests {
     #[test]
     fn test_parse_valid_fzf_options_table() {
         let config = "
-          muxi.fzf = {
+          muxi.config.fzf = {
             input = false,
             bind_sessions = false,
             args = {},
@@ -201,7 +220,11 @@ mod tests {
                 uppercase_overrides: true,
                 use_current_pane_path: true,
                 editor: EditorSettings {
-                    args: vec!["+ZenMode".into(), "-c".into(), "nmap q <cmd>silent wqa<cr>".into()],
+                    args: vec![
+                        "+ZenMode".into(),
+                        "-c".into(),
+                        "nmap q <cmd>silent wqa<cr>".into(),
+                    ],
                     ..Default::default()
                 },
                 fzf: FzfSettings {
@@ -219,9 +242,9 @@ mod tests {
     #[test]
     fn test_parse_binding_no_popup() {
         let config = r#"
-          muxi.muxi_prefix = "g"
+          muxi.config.muxi_prefix = "g"
 
-          muxi.bindings = {
+          muxi.config.bindings = {
             j = { command = "tmux switch-client -l" }
           }
         "#;
@@ -248,9 +271,9 @@ mod tests {
     #[test]
     fn test_parse_binding_popup_default_height() {
         let config = r#"
-          muxi.muxi_prefix = "g"
+          muxi.config.muxi_prefix = "g"
 
-          muxi.bindings = {
+          muxi.config.bindings = {
             j = { popup = { width = "60%" }, command = "muxi sessions edit" }
           }
         "#;
@@ -281,9 +304,9 @@ mod tests {
     #[test]
     fn test_parse_binding_popup_default_all() {
         let config = r#"
-            muxi.muxi_prefix = "g"
+            muxi.config.muxi_prefix = "g"
 
-            muxi.bindings = {
+            muxi.config.bindings = {
                 j = { popup = {}, command = "muxi sessions edit" }
             }
         "#;
@@ -314,10 +337,10 @@ mod tests {
     #[test]
     fn test_parse_binding_popup_struct() {
         let config = r#"
-            muxi.muxi_prefix = "g"
-            muxi.use_current_pane_path = true
+            muxi.config.muxi_prefix = "g"
+            muxi.config.use_current_pane_path = true
 
-            muxi.bindings = {
+            muxi.config.bindings = {
                 j = {
                     popup = { title = "my title", width = "75%", height = "60%" },
                     command = "muxi sessions edit"
@@ -346,6 +369,36 @@ mod tests {
             };
 
             assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_plugins() {
+        let config = r#"
+          return {
+            plugins = {
+                "tmux-plugins/tmux-continuum",
+                "tmux-plugins/tmux-resurrect",
+                "https://gitlab.com/user/custom-plugin",
+            }
+          }
+        "#;
+
+        with_config(config, |settings| {
+            assert_eq!(
+                settings.plugins,
+                vec![
+                    Plugin {
+                        url: Url::parse("https://github.com/tmux-plugins/tmux-continuum").unwrap()
+                    },
+                    Plugin {
+                        url: Url::parse("https://github.com/tmux-plugins/tmux-resurrect").unwrap()
+                    },
+                    Plugin {
+                        url: Url::parse("https://gitlab.com/user/custom-plugin").unwrap()
+                    },
+                ]
+            );
         });
     }
 }

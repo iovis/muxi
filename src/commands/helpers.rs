@@ -1,13 +1,13 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use color_eyre::Result;
-use color_eyre::eyre::bail;
+use miette::bail;
+use miette::{IntoDiagnostic, Result};
 
-use crate::muxi::{self, path};
+use crate::muxi::Settings;
 
 pub fn open_editor_for(path: &Path, editor_args: &[String]) -> Result<()> {
-    let settings = muxi::parse_settings(&path::muxi_dir())?;
+    let settings = Settings::from_lua()?;
     let editor = settings
         .editor
         .command
@@ -29,9 +29,9 @@ pub fn open_editor_for(path: &Path, editor_args: &[String]) -> Result<()> {
     // Spawn the editor process and wait for it to finish
     let status = command
         .spawn()
-        .expect("Failed to spawn editor process")
+        .into_diagnostic()?
         .wait()
-        .expect("Failed to wait for editor process");
+        .into_diagnostic()?;
 
     // Check the exit status of the editor process
     if status.success() {

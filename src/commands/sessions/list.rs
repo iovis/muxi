@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use miette::Result;
 use owo_colors::OwoColorize;
 
 use crate::muxi::Muxi;
@@ -11,9 +11,7 @@ pub fn list() -> Result<()> {
         return Ok(());
     }
 
-    for session in sessions.to_list() {
-        println!("{session}");
-    }
+    println!("{sessions}");
 
     Ok(())
 }

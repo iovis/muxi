@@ -1,14 +1,14 @@
 use std::process::{Command, Stdio};
 
-use color_eyre::Result;
+use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 
-use crate::muxi::{self, Muxi, path};
+use crate::muxi::{Muxi, Settings};
 use crate::tmux::Key;
 
 pub fn spawn(fzf_args: &[String]) -> Result<()> {
     let sessions = Muxi::new()?.sessions;
-    let settings = muxi::parse_settings(&path::muxi_dir())?;
+    let settings = Settings::from_lua()?;
 
     if sessions.is_empty() {
         println!("{}", "No sessions defined!".red());
@@ -71,19 +71,19 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("alt-r:change-preview-window(down|right)");
 
+    let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
+    bind_alt_session_keys(&mut fzf_command, &muxi_session_keys);
+
+    // Allow to set current session to key with alt-<uppercase_letter>
+    if settings.uppercase_overrides {
+        bind_session_overrides(&mut fzf_command);
+    }
+
     // Hide fuzzy prompt
     if !settings.fzf.input {
         fzf_command.arg("--no-input");
 
         bind_vim_keys(&mut fzf_command);
-
-        let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
-        bind_alt_session_keys(&mut fzf_command, &muxi_session_keys);
-
-        // Allow to set current session to key with alt-<uppercase_letter>
-        if settings.uppercase_overrides {
-            bind_session_overrides(&mut fzf_command);
-        }
 
         if settings.fzf.bind_sessions {
             bind_raw_session_keys(&mut fzf_command, &muxi_session_keys);
@@ -97,7 +97,8 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
     fzf_command
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .spawn()?;
+        .spawn()
+        .into_diagnostic()?;
 
     Ok(())
 }
