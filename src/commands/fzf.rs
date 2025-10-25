@@ -71,19 +71,19 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("alt-r:change-preview-window(down|right)");
 
+    let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
+    bind_alt_session_keys(&mut fzf_command, &muxi_session_keys);
+
+    // Allow to set current session to key with alt-<uppercase_letter>
+    if settings.uppercase_overrides {
+        bind_session_overrides(&mut fzf_command);
+    }
+
     // Hide fuzzy prompt
     if !settings.fzf.input {
         fzf_command.arg("--no-input");
 
         bind_vim_keys(&mut fzf_command);
-
-        let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
-        bind_alt_session_keys(&mut fzf_command, &muxi_session_keys);
-
-        // Allow to set current session to key with alt-<uppercase_letter>
-        if settings.uppercase_overrides {
-            bind_session_overrides(&mut fzf_command);
-        }
 
         if settings.fzf.bind_sessions {
             bind_raw_session_keys(&mut fzf_command, &muxi_session_keys);
