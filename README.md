@@ -18,10 +18,12 @@ Usage: muxi <COMMAND>
 
 Commands:
   init         Register within Tmux and add bindings
-  config       See and edit your settings
-  sessions     See and manage your muxi sessions
+  config       See and edit your settings [aliases: c]
+  ls           List sessions
+  sessions     See and manage your muxi sessions [aliases: s]
+  plugins      See and manage your tmux plugins [aliases: p]
   completions  Generate completions for your shell
-  fzf          Spawn a FZF popup to manage your muxi sessions
+  fzf          Spawn a FZF popup to manage your muxi sessions [aliases: f]
   help         Print this message or the help of the given subcommand(s)
 
 Options:
@@ -59,6 +61,13 @@ return {
   editor = {
     command = "nvim", -- Default $EDITOR
     args = { "+ZenMode", "-c", "nmap q <cmd>silent wqa<cr>" }, -- Default {}
+  },
+
+  -- Optional: Define tmux plugins (EXPERIMENTAL)
+  plugins = {
+    "tmux-plugins/tmux-continuum",
+    "tmux-plugins/tmux-resurrect",
+    "tmux-plugins/tmux-yank",
   },
 
   -- FZF integration
@@ -144,3 +153,53 @@ n = { name = "notes", path = "~/Library/Mobile Documents/com~apple~CloudDocs/not
 ```
 
 This is the file that `muxi` will use to generate your session bindings and keep state. After exiting your editor, `muxi` will resync the sessions (same with your configuration!)
+
+## Plugins (Experimental)
+
+Muxi provides experimental support for managing tmux plugins. Plugins are cloned from GitHub and stored in `$XDG_DATA_HOME/muxi/plugins/` (or `~/.local/share/muxi/plugins/`).
+
+### Configuration
+
+Define plugins in your `init.lua`:
+
+```lua
+return {
+  plugins = {
+    "tmux-plugins/tmux-continuum",
+    "tmux-plugins/tmux-resurrect",
+    "tmux-plugins/tmux-yank",
+  },
+}
+```
+
+### Commands
+
+```sh
+# Install all configured plugins
+muxi plugins install
+
+# Update all plugins
+muxi plugins update
+
+# List plugins with their install status
+muxi plugins list
+
+# Source all installed plugins (call this in tmux.conf)
+muxi plugins init
+```
+
+### Sourcing Plugins
+
+To automatically source your plugins in tmux, add this to your `tmux.conf`:
+
+```tmux
+# Set plugin options before loading!
+set -g @continuum-restore 'on'
+set -g @continuum-save-interval '5'
+
+if "type muxi" {
+    run -b "muxi init && muxi plugins init"
+}
+```
+
+> **Note**: This feature is experimental and may change in future versions.
