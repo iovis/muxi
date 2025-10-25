@@ -2,10 +2,54 @@
 
 Create dynamic shortcuts for your tmux sessions!
 
-## Install
+Stop wasting time navigating between tmux sessions. Muxi lets you create keyboard shortcuts for your most-used sessions, switch between them with FZF, and manage everything from a simple config file.
+
+## Features
+
+- 🚀 **Dynamic session bookmarks** - Create keyboard shortcuts for any tmux session
+- ⚡ **FZF integration** - Fuzzy-find and switch sessions instantly
+- 🎯 **Lua configuration** - Flexible, programmable config with sensible defaults
+- 🔌 **Plugin management** - Install and update tmux plugins (experimental)
+- 🎨 **Multiple workflows** - Native tmux menu, FZF popup, or custom bindings
+- 📝 **Simple session file** - Edit your sessions in TOML with your favorite editor
+
+## Quick Start
+
+1. Install muxi:
+```sh
+cargo install muxi
+```
+
+2. Add to your `tmux.conf`:
+```tmux
+if "type muxi" {
+  run -b "muxi init"
+}
+```
+
+3. Reload tmux config:
+```sh
+tmux source ~/.tmux.conf
+```
+
+4. Create your first session bookmark: `<prefix>gJ` will make a bookmark for `j`
+
+5. Now press `<prefix>gj` to jump to your muxi session instantly!
+
+## Installation
+
+### From crates.io
 
 ```sh
 cargo install muxi
+```
+
+### From source
+
+```sh
+git clone https://github.com/iovis/muxi
+cd muxi
+cargo install --path .
 ```
 
 ## Usage
@@ -37,9 +81,9 @@ Options:
 
 You can provide an `init.lua` in one of the following locations:
 
-- `$MUXI_CONFIG_PATH`
-- `$XDG_CONFIG_HOME/muxi/`
-- `~/.config/muxi/`
+- `$MUXI_CONFIG_PATH/init.lua`
+- `$XDG_CONFIG_HOME/muxi/init.lua`
+- `~/.config/muxi/init.lua`
 
 Or run `muxi config edit` to open it in your favorite `$EDITOR`
 
@@ -48,19 +92,19 @@ return {
   -- Optional: Use tmux <prefix> to define muxi's table (default: true)
   tmux_prefix = true
 
-  -- Optional: Muxi's table binding (default: "g"), will result in `<prefix>g`
-  muxi_prefix = "g"
+  -- Optional: Muxi's table binding (default: "g")
+  muxi_prefix = "g" -- will bind to <prefix>g if tmux_prefix is true
 
-  -- Optional: Uppercase letters will set the current session (default: false)
-  uppercase_overrides = false
+  -- Optional: Uppercase letters will set the current session (default: true)
+  uppercase_overrides = true
 
-  -- Optional: Set current session path to current pane's path
+  -- Optional: Set current session path to current pane's path (default: false)
   use_current_pane_path = false
 
   -- Optional: open editor with certain arguments
   editor = {
-    command = "nvim", -- Default $EDITOR
-    args = { "+ZenMode", "-c", "nmap q <cmd>silent wqa<cr>" }, -- Default {}
+    command = "nvim", -- (default: $EDITOR or "vi")
+    args = { "+ZenMode", "-c", "nmap q <cmd>silent wqa<cr>" }, -- (default: {})
   },
 
   -- Optional: Define tmux plugins (EXPERIMENTAL)
@@ -70,11 +114,12 @@ return {
     "tmux-plugins/tmux-yank",
   },
 
-  -- FZF integration
+  -- Optional: FZF integration
+  -- Use <alt-x> to navigate directly to session `x`
   fzf = {
-    input = false,  -- Use --no-input
-    bind_sessions = false,  -- Bind the key of the session to switch to it
-    args = { "--color=input-border:black" }, -- Default {}
+    input = false,  -- Use --no-input (default: false)
+    bind_sessions = false,  -- Bind the key of the session to switch to it (default: false)
+    args = { "--color=input-border:black" }, -- Extra arguments for FZF (default: {})
   },
 
   -- Optional bindings to be created on tmux muxi table (Examples shown)
@@ -98,17 +143,17 @@ return {
     -- <prefix>gs => session switcher
     s = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" },
 
-    -- <prefix>gf => FZF integration
-    f = { command = "muxi fzf" },
+    -- <prefix>g/ => FZF integration
+    ["/"] = { command = "muxi fzf" },
 
     -- <prefix>gt => session switcher (native tmux menu)
     t = { command = "muxi sessions switch --tmux-menu" },
 
     -- You can bind your own commands too!
     -- `tmux run-shell "tmux switch-client -l"`
-    ["M-Space"] = { command = "tmux switch-client -l" },
+    ["Space"] = { command = "tmux switch-client -l" },
 
-    g = { command = "tmux send htop Enter" },
+    g = { command = "tmux new-window htop" },
   }
 }
 ```
@@ -116,8 +161,9 @@ return {
 And start `muxi` in your `tmux.conf`:
 
 ```tmux
+# ~/.tmux.conf
 if "type muxi" {
-    run -b "muxi init"
+  run -b "muxi init"
 }
 ```
 
@@ -126,13 +172,10 @@ if "type muxi" {
 You can alternatively define settings entirely from your tmux config:
 
 ```tmux
-# Init muxi
-if "type muxi" {
-  # If you're going to define bindings on the muxi table, don't use `-b`
-  run "muxi init"
-}
+# If you're going to define bindings on the muxi table, don't use `-b`
+run "muxi init"
 
-# Define bindings on the muxi table:
+# Defining bindings on the muxi table:
 # <prefix>ge => Edit sessions in your editor
 bind -T muxi e popup -w 76% -h 75% -b rounded -T " sessions " -E "muxi sessions edit -- +ZenMode -c 'nmap <silent> q :wqa<cr>'"
 
@@ -152,7 +195,37 @@ m = { name = "muxi", path = "~/Sites/rust/muxi/" }
 n = { name = "notes", path = "~/Library/Mobile Documents/com~apple~CloudDocs/notes" }
 ```
 
-This is the file that `muxi` will use to generate your session bindings and keep state. After exiting your editor, `muxi` will resync the sessions (same with your configuration!)
+This is the file that `muxi` will use to generate your session bindings and keep state. After exiting your editor, `muxi` will re-sync the sessions (same with your configuration!)
+
+### Session Commands
+
+```sh
+# Edit sessions in your $EDITOR
+muxi sessions edit
+
+# List all sessions
+muxi sessions list
+
+# Manage sessions with FZF popup
+# - Enter: switch to session
+# - Ctrl-x: delete session
+# - Ctrl-r: edit sessions
+# - Ctrl-e: edit config
+# - Alt-p: toggle preview
+# - Alt-r: rotate preview
+# - Alt-[key]: switch to session with <key>
+# - Alt-[KEY]: set current session to <key> (uppercase_overrides must be true)
+muxi fzf
+
+# Switch sessions using native tmux menu
+muxi sessions switch --tmux-menu
+
+# Delete a session
+muxi sessions delete <key>
+
+# Set a session (create or update)
+muxi sessions set <key>
+```
 
 ## Plugins (Experimental)
 
@@ -198,8 +271,79 @@ set -g @continuum-restore 'on'
 set -g @continuum-save-interval '5'
 
 if "type muxi" {
-    run -b "muxi init && muxi plugins init"
+  run -b "muxi init"
+  run -b "muxi plugins init"
 }
 ```
 
 > **Note**: This feature is experimental and may change in future versions.
+> `muxi init` and `muxi plugins init` are independent; you can use one without the other.
+
+## Why Muxi?
+
+Muxi is designed for developers who want a lightweight, flexible way to manage tmux sessions without the overhead of full session managers.
+
+**vs tmuxinator/tmuxp**: No YAML files, no session templates. Just bookmarks with keyboard shortcuts. Create sessions on the fly, not in advance.
+
+**vs tmux-resurrect**: Muxi doesn't save/restore your entire environment. It gives you quick access to session directories you care about.
+
+**vs native tmux**: Muxi adds the missing keyboard shortcuts layer. Instead of `<prefix>s` → navigate list → find session → enter, just press `<prefix>gm`.
+
+**vs custom shell scripts**: Muxi handles tmux integration, path resolution, config reloading, and provides a consistent UI.
+
+## Troubleshooting
+
+### Command not found after install
+
+Make sure `~/.cargo/bin` is in your `$PATH`:
+
+```sh
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
+# or ~/.zshrc, ~/.config/fish/config.fish, etc.
+```
+
+### Tmux doesn't detect muxi
+
+Check that muxi is in your PATH from within tmux:
+
+```sh
+tmux run "which muxi"
+```
+
+If empty, add the full path to your `tmux.conf`:
+
+```tmux
+if "test -x $HOME/.cargo/bin/muxi" {
+    run -b "$HOME/.cargo/bin/muxi init"
+}
+```
+
+### Bindings don't work
+
+1. Verify muxi is initialized: `muxi --help`
+2. Reload your tmux config: `tmux source-file ~/.tmux.conf`
+3. Check your muxi table bindings: `tmux list-keys -T muxi`
+
+### Editor doesn't open
+
+Muxi uses `$EDITOR` by default. Set it in your shell config:
+
+```sh
+export EDITOR=nvim  # or vim, code, etc.
+```
+
+Or override in your `init.lua`:
+
+```lua
+return {
+  editor = { command = "nvim" },
+}
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT
