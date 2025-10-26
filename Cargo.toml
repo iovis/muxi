@@ -1,6 +1,6 @@
 [package]
 name = "muxi"
-version = "4.0.2"
+version = "4.0.3"
 edition = "2024"
 description = "Create bookmarks for your tmux sessions on the fly! 🚀"
 readme = "README.md"
