@@ -1,6 +1,7 @@
 use std::path::Path;
+use std::sync::Arc;
 
-use miette::Diagnostic;
+use miette::{Diagnostic, NamedSource, SourceSpan};
 use mlua::prelude::{Lua, LuaError, LuaSerdeExt, LuaTable};
 use thiserror::Error;
 
@@ -12,14 +13,31 @@ pub enum Error {
     #[diagnostic(code(muxi::lua::not_found))]
     NotFound(#[from] std::io::Error),
 
-    #[error("failed to parse Lua config: {0}")]
-    #[diagnostic(
-        code(muxi::lua::parse_error),
-        help(
-            "Check the syntax in ~/.config/muxi/init.lua\nMake sure it returns a valid configuration table"
-        )
-    )]
-    LuaError(#[from] LuaError),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    LuaParse(#[from] Box<LuaParseDiagnostic>),
+
+    #[error("failed to execute embedded Lua code")]
+    #[diagnostic(code(muxi::lua::runtime_error))]
+    Lua(#[from] LuaError),
+}
+
+#[derive(Debug, Error, Diagnostic)]
+#[error("failed to parse Lua config: {label}")]
+#[diagnostic(
+    code(muxi::lua::parse_error),
+    help(
+        "Check the syntax in ~/.config/muxi/init.lua\nMake sure it returns a valid configuration table"
+    )
+)]
+pub(crate) struct LuaParseDiagnostic {
+    #[source]
+    source: LuaError,
+    #[source_code]
+    src: Arc<NamedSource<String>>,
+    #[label("{label}")]
+    span: Option<SourceSpan>,
+    label: String,
 }
 
 /// Get `muxi::Settings` from muxi/init.lua
@@ -27,10 +45,14 @@ pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Erro
     let lua = lua_init(path, settings)?;
 
     // read user config
-    let code = std::fs::read_to_string(path.join("init.lua"))?;
-    let user_config = lua
-        .load(code)
-        .eval::<Option<LuaTable>>()?
+    let init_path = path.join("init.lua");
+    let code = std::fs::read_to_string(&init_path)?;
+    let chunk = lua
+        .load(&code)
+        .set_name(format!("@{}", init_path.display()));
+    let user_config = chunk
+        .eval::<Option<LuaTable>>()
+        .map_err(|error| enrich_lua_error(error, &code, &init_path))?
         .unwrap_or_else(|| lua.create_table().unwrap());
 
     // merge config defaults with user's
@@ -79,6 +101,75 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
     Ok(lua)
 }
 
+fn enrich_lua_error(error: LuaError, code: &str, path: &Path) -> Error {
+    let fallback_label = error.to_string();
+    let (span, label) = extract_span(&error, code).map_or_else(
+        || (None, fallback_label.clone()),
+        |(span, label)| (Some(span), label),
+    );
+
+    Error::LuaParse(Box::new(LuaParseDiagnostic {
+        source: error,
+        src: Arc::new(NamedSource::new(
+            path.display().to_string(),
+            code.to_string(),
+        )),
+        span,
+        label,
+    }))
+}
+
+fn extract_span(error: &LuaError, code: &str) -> Option<(SourceSpan, String)> {
+    let LuaError::SyntaxError { message, .. } = error else {
+        return None;
+    };
+
+    let line = parse_line_number(message)?;
+    let (offset, len) = line_range(code, line)?;
+    let span: SourceSpan = (offset, len).into();
+
+    Some((span, format!("Lua error at line {line}")))
+}
+
+fn parse_line_number(message: &str) -> Option<usize> {
+    if let Some((_, remainder)) = message.split_once("]:") {
+        let line_part = remainder.split(':').next()?;
+        return line_part.trim().parse().ok();
+    }
+
+    let last_colon = message.rfind(':')?;
+    let before = &message[..last_colon];
+    let second_last_colon = before.rfind(':')?;
+    let line_part = &message[second_last_colon + 1..last_colon];
+
+    line_part.trim().parse().ok()
+}
+
+fn line_range(code: &str, line: usize) -> Option<(usize, usize)> {
+    if line == 0 {
+        return None;
+    }
+
+    if code.is_empty() {
+        return Some((0, 0));
+    }
+
+    let mut offset = 0usize;
+    for (idx, segment) in code.split_inclusive('\n').enumerate() {
+        let current_line = idx + 1;
+        let line_without_newline = segment.trim_end_matches('\n').trim_end_matches('\r');
+        let len = line_without_newline.len();
+
+        if current_line == line {
+            return Some((offset, len));
+        }
+
+        offset += segment.len();
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
@@ -113,6 +204,25 @@ mod tests {
             std::fs::remove_dir_all(&pwd).unwrap();
 
             test(settings);
+        });
+    }
+
+    fn with_config_error<F>(config: &str, test: F)
+    where
+        F: Fn(Error) + std::panic::RefUnwindSafe,
+    {
+        let pwd = temp_dir().join(Uuid::new_v4().to_string());
+        std::fs::create_dir_all(&pwd).unwrap();
+
+        let mut file = std::fs::File::create(pwd.join("init.lua")).unwrap();
+        file.write_all(config.as_bytes()).unwrap();
+
+        temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd.clone()), || {
+            let result = parse_settings(&pwd, &Settings::default());
+
+            std::fs::remove_dir_all(&pwd).unwrap();
+
+            test(result.expect_err("expected parse_settings to fail"));
         });
     }
 
@@ -399,6 +509,31 @@ mod tests {
                     },
                 ]
             );
+        });
+    }
+
+    #[test]
+    fn test_parse_invalid_lua_reports_span() {
+        let config = r#"
+            return {
+                plugins = {
+                    ["a"] =
+                }
+            }
+        "#;
+
+        with_config_error(config, |error| match error {
+            Error::LuaParse(diag) => {
+                let diag = diag.as_ref();
+
+                assert_eq!(diag.label, "Lua error at line 5");
+                let source = diag.src.inner();
+                let lines: Vec<&str> = source.lines().collect();
+                assert_eq!(lines[4], "                }");
+                let span = diag.span.expect("expected span");
+                assert_eq!(span.len(), lines[4].len());
+            }
+            other => panic!("expected LuaParse error, got {other:?}"),
         });
     }
 }
