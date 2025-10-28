@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use miette::{Diagnostic, NamedSource, SourceSpan};
 use mlua::prelude::LuaError;
 use thiserror::Error;
@@ -43,7 +41,7 @@ pub(crate) struct LuaParseDiagnostic {
     #[source]
     pub(super) source: LuaError,
     #[source_code]
-    pub(super) src: Arc<NamedSource<String>>,
+    pub(super) src: NamedSource<String>,
     #[label("{label}")]
     pub(super) span: Option<SourceSpan>,
     pub(super) label: String,

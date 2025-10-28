@@ -1,10 +1,8 @@
-use std::path::Path;
-use std::sync::Arc;
-
 use miette::{NamedSource, SourceSpan};
 use mlua::LuaSerdeExt;
 use mlua::Value as LuaValue;
 use mlua::prelude::{Lua, LuaError, LuaTable};
+use std::path::Path;
 
 use crate::muxi::Settings;
 
@@ -77,10 +75,7 @@ fn enrich_lua_error(error: LuaError, code: &str, path: &Path) -> Error {
 
     Error::LuaParse(Box::new(LuaParseDiagnostic {
         source: error,
-        src: Arc::new(NamedSource::new(
-            path.display().to_string(),
-            code.to_string(),
-        )),
+        src: NamedSource::new(path.display().to_string(), code.to_string()),
         span,
         label,
     }))
@@ -506,8 +501,6 @@ mod tests {
 
         with_config_error(config, |error| match error {
             Error::LuaParse(diag) => {
-                let diag = diag.as_ref();
-
                 assert_eq!(diag.label, "Lua error at line 5");
                 let source = diag.src.inner();
                 let lines: Vec<&str> = source.lines().collect();
