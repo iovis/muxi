@@ -2,7 +2,9 @@ use std::path::Path;
 use std::sync::Arc;
 
 use miette::{Diagnostic, NamedSource, SourceSpan};
-use mlua::prelude::{Lua, LuaError, LuaSerdeExt, LuaTable};
+use mlua::LuaSerdeExt;
+use mlua::Value as LuaValue;
+use mlua::prelude::{Lua, LuaError, LuaTable};
 use thiserror::Error;
 
 use crate::muxi::Settings;
@@ -20,6 +22,18 @@ pub enum Error {
     #[error("failed to execute embedded Lua code")]
     #[diagnostic(code(muxi::lua::runtime_error))]
     Lua(#[from] LuaError),
+
+    #[error("failed to deserialize Lua config at {path}: {message}")]
+    #[diagnostic(
+        code(muxi::lua::deserialize_error),
+        help("Check the value assigned to {path} in ~/.config/muxi/init.lua")
+    )]
+    LuaDeserialize {
+        #[source]
+        source: LuaError,
+        path: String,
+        message: String,
+    },
 }
 
 #[derive(Debug, Error, Diagnostic)]
@@ -61,7 +75,7 @@ pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Erro
         .exec()?;
     let muxi_config = lua.globals().get::<LuaTable>("muxi")?.get("config")?;
 
-    Ok(lua.from_value(muxi_config)?)
+    deserialize_settings(LuaValue::Table(muxi_config)).map_err(enrich_deserialize_error)
 }
 
 fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
@@ -117,6 +131,32 @@ fn enrich_lua_error(error: LuaError, code: &str, path: &Path) -> Error {
         span,
         label,
     }))
+}
+
+fn deserialize_settings(value: LuaValue) -> Result<Settings, serde_path_to_error::Error<LuaError>> {
+    let deserializer = mlua::serde::Deserializer::new(value);
+    serde_path_to_error::deserialize(deserializer)
+}
+
+fn enrich_deserialize_error(error: serde_path_to_error::Error<LuaError>) -> Error {
+    let path_string = error.path().to_string();
+    let source = error.into_inner();
+    let message = match &source {
+        LuaError::FromLuaConversionError {
+            message: Some(msg), ..
+        } => msg.clone(),
+        _ => source.to_string(),
+    };
+
+    Error::LuaDeserialize {
+        source,
+        path: if path_string.is_empty() {
+            "root".into()
+        } else {
+            path_string
+        },
+        message,
+    }
 }
 
 fn extract_span(error: &LuaError, code: &str) -> Option<(SourceSpan, String)> {
@@ -534,6 +574,23 @@ mod tests {
                 assert_eq!(span.len(), lines[4].len());
             }
             other => panic!("expected LuaParse error, got {other:?}"),
+        });
+    }
+
+    #[test]
+    fn test_parse_invalid_type_reports_path() {
+        let config = r#"
+            return {
+                tmux_prefix = "nope"
+            }
+        "#;
+
+        with_config_error(config, |error| match error {
+            Error::LuaDeserialize { path, message, .. } => {
+                assert!(path.ends_with("tmux_prefix"), "unexpected path: {path}");
+                assert!(message.contains("boolean"), "unexpected message: {message}");
+            }
+            other => panic!("expected LuaDeserialize error, got {other:?}"),
         });
     }
 }
