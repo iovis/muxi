@@ -1,75 +1,29 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use miette::{Diagnostic, NamedSource, SourceSpan};
+use miette::{NamedSource, SourceSpan};
 use mlua::LuaSerdeExt;
 use mlua::Value as LuaValue;
 use mlua::prelude::{Lua, LuaError, LuaTable};
-use thiserror::Error;
 
 use crate::muxi::Settings;
 
-#[derive(Debug, Error, Diagnostic)]
-pub enum Error {
-    #[error("{0} not found")]
-    #[diagnostic(code(muxi::lua::not_found))]
-    NotFound(#[from] std::io::Error),
+use super::error::{Error, LuaParseDiagnostic};
 
-    #[error(transparent)]
-    #[diagnostic(transparent)]
-    LuaParse(#[from] Box<LuaParseDiagnostic>),
-
-    #[error("failed to execute embedded Lua code")]
-    #[diagnostic(code(muxi::lua::runtime_error))]
-    Lua(#[from] LuaError),
-
-    #[error("failed to deserialize Lua config at {path}: {message}")]
-    #[diagnostic(
-        code(muxi::lua::deserialize_error),
-        help("Check the value assigned to {path} in ~/.config/muxi/init.lua")
-    )]
-    LuaDeserialize {
-        #[source]
-        source: LuaError,
-        path: String,
-        message: String,
-    },
-}
-
-#[derive(Debug, Error, Diagnostic)]
-#[error("failed to parse Lua config: {label}")]
-#[diagnostic(
-    code(muxi::lua::parse_error),
-    help(
-        "Check the syntax in ~/.config/muxi/init.lua\nMake sure it returns a valid configuration table"
-    )
-)]
-pub(crate) struct LuaParseDiagnostic {
-    #[source]
-    source: LuaError,
-    #[source_code]
-    src: Arc<NamedSource<String>>,
-    #[label("{label}")]
-    span: Option<SourceSpan>,
-    label: String,
-}
-
-/// Get `muxi::Settings` from muxi/init.lua
 pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Error> {
     let lua = lua_init(path, settings)?;
 
-    // read user config
     let init_path = path.join("init.lua");
     let code = std::fs::read_to_string(&init_path)?;
     let chunk = lua
         .load(&code)
         .set_name(format!("@{}", init_path.display()));
+
     let user_config = chunk
         .eval::<Option<LuaTable>>()
         .map_err(|error| enrich_lua_error(error, &code, &init_path))?
         .unwrap_or_else(|| lua.create_table().unwrap());
 
-    // merge config defaults with user's
     lua.globals().set("muxi_user_config", user_config)?;
     lua.load("muxi.merge(muxi.config, muxi_user_config)")
         .exec()?;
@@ -82,10 +36,8 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
     let lua = Lua::new();
 
     {
-        // `globals` is a borrow of `lua`
         let globals = lua.globals();
 
-        // package.path (allow requires)
         let package: mlua::Table = globals.get("package")?;
         let mut package_path: Vec<String> = package
             .get::<String>("path")?
@@ -98,21 +50,22 @@ fn lua_init(path: &Path, settings: &Settings) -> Result<Lua, Error> {
 
         package.set("path", package_path.join(";"))?;
 
-        // Expose muxi settings table to lua
         let muxi_table = lua.create_table_from([
             ("config", lua.to_value(settings)?),
-            ("inspect", lua.load(include_str!("lua/inspect.lua")).eval()?),
-            (
-                "merge",
-                lua.load(include_str!("lua/table_merge.lua")).eval()?,
-            ),
-            ("print", lua.load(include_str!("lua/print.lua")).eval()?),
+            ("inspect", lua.load(include_str!("inspect.lua")).eval()?),
+            ("merge", lua.load(include_str!("table_merge.lua")).eval()?),
+            ("print", lua.load(include_str!("print.lua")).eval()?),
         ])?;
 
         globals.set("muxi", muxi_table)?;
     }
 
     Ok(lua)
+}
+
+fn deserialize_settings(value: LuaValue) -> Result<Settings, serde_path_to_error::Error<LuaError>> {
+    let deserializer = mlua::serde::Deserializer::new(value);
+    serde_path_to_error::deserialize(deserializer)
 }
 
 fn enrich_lua_error(error: LuaError, code: &str, path: &Path) -> Error {
@@ -131,11 +84,6 @@ fn enrich_lua_error(error: LuaError, code: &str, path: &Path) -> Error {
         span,
         label,
     }))
-}
-
-fn deserialize_settings(value: LuaValue) -> Result<Settings, serde_path_to_error::Error<LuaError>> {
-    let deserializer = mlua::serde::Deserializer::new(value);
-    serde_path_to_error::deserialize(deserializer)
 }
 
 fn enrich_deserialize_error(error: serde_path_to_error::Error<LuaError>) -> Error {
@@ -219,28 +167,25 @@ mod tests {
     use url::Url;
     use uuid::Uuid;
 
-    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings, Plugin};
+    use crate::muxi::lua::Error;
+    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings, Plugin, Settings};
     use crate::tmux::Popup;
 
-    use super::*;
+    use super::parse_settings;
 
     fn with_config<F>(config: &str, test: F)
     where
         F: Fn(Settings) + std::panic::RefUnwindSafe,
     {
-        // Create tmp folder
         let pwd = temp_dir().join(Uuid::new_v4().to_string());
         std::fs::create_dir_all(&pwd).unwrap();
 
-        // Create settings file
         let mut file = std::fs::File::create(pwd.join("init.lua")).unwrap();
         file.write_all(config.as_bytes()).unwrap();
 
-        // Set $MUXI_CONFIG_PATH to current folder and load config
         temp_env::with_var("MUXI_CONFIG_PATH", Some(pwd.clone()), || {
             let settings = parse_settings(&pwd, &Settings::default()).unwrap();
 
-            // Cleanup before test, in case of panic
             std::fs::remove_dir_all(&pwd).unwrap();
 
             test(settings);
@@ -268,19 +213,16 @@ mod tests {
 
     #[test]
     fn test_parse_valid_muxi_prefix() {
-        let config = "";
-
-        with_config(config, |settings| {
-            let expected_settings = Settings::default();
-            assert_eq!(settings, expected_settings);
+        with_config("", |settings| {
+            assert_eq!(settings, Settings::default());
         });
     }
 
     #[test]
     fn test_parse_valid_muxi_prefix_root() {
         let config = r#"
-          muxi.config.muxi_prefix = "M-Space"
-          muxi.config.tmux_prefix = false
+            muxi.config.muxi_prefix = "M-Space"
+            muxi.config.tmux_prefix = false
         "#;
 
         with_config(config, |settings| {
@@ -302,9 +244,9 @@ mod tests {
     #[test]
     fn test_parse_valid_fzf_options() {
         let config = r#"
-          muxi.config.fzf.input = false
-          muxi.config.fzf.bind_sessions = true
-          muxi.config.fzf.args = { "--bind", "d:toggle-preview" }
+            muxi.config.fzf.input = false
+            muxi.config.fzf.bind_sessions = true
+            muxi.config.fzf.args = { "--bind", "d:toggle-preview" }
         "#;
 
         with_config(config, |settings| {
@@ -323,12 +265,12 @@ mod tests {
 
     #[test]
     fn test_parse_valid_fzf_options_table() {
-        let config = "
-          muxi.config.fzf = {
-            input = false,
-            bind_sessions = false,
-            args = {},
-          }
+        let config = r"
+            muxi.config.fzf = {
+                input = false,
+                bind_sessions = false,
+                args = {},
+            }
         ";
 
         with_config(config, |settings| {
@@ -392,11 +334,11 @@ mod tests {
     #[test]
     fn test_parse_binding_no_popup() {
         let config = r#"
-          muxi.config.muxi_prefix = "g"
+            muxi.config.muxi_prefix = "g"
 
-          muxi.config.bindings = {
-            j = { command = "tmux switch-client -l" }
-          }
+            muxi.config.bindings = {
+              j = { command = "tmux switch-client -l" }
+            }
         "#;
 
         with_config(config, |settings| {
@@ -421,11 +363,11 @@ mod tests {
     #[test]
     fn test_parse_binding_popup_default_height() {
         let config = r#"
-          muxi.config.muxi_prefix = "g"
+            muxi.config.muxi_prefix = "g"
 
-          muxi.config.bindings = {
-            j = { popup = { width = "60%" }, command = "muxi sessions edit" }
-          }
+            muxi.config.bindings = {
+              j = { popup = { width = "60%" }, command = "muxi sessions edit" }
+            }
         "#;
 
         with_config(config, |settings| {
@@ -454,11 +396,11 @@ mod tests {
     #[test]
     fn test_parse_binding_popup_default_all() {
         let config = r#"
-            muxi.config.muxi_prefix = "g"
+                muxi.config.muxi_prefix = "g"
 
-            muxi.config.bindings = {
-                j = { popup = {}, command = "muxi sessions edit" }
-            }
+                muxi.config.bindings = {
+                    j = { popup = {}, command = "muxi sessions edit" }
+                }
         "#;
 
         with_config(config, |settings| {
@@ -487,15 +429,15 @@ mod tests {
     #[test]
     fn test_parse_binding_popup_struct() {
         let config = r#"
-            muxi.config.muxi_prefix = "g"
-            muxi.config.use_current_pane_path = true
+                muxi.config.muxi_prefix = "g"
+                muxi.config.use_current_pane_path = true
 
-            muxi.config.bindings = {
-                j = {
-                    popup = { title = "my title", width = "75%", height = "60%" },
-                    command = "muxi sessions edit"
+                muxi.config.bindings = {
+                    j = {
+                        popup = { title = "my title", width = "75%", height = "60%" },
+                        command = "muxi sessions edit"
+                    }
                 }
-            }
         "#;
 
         with_config(config, |settings| {
@@ -525,13 +467,13 @@ mod tests {
     #[test]
     fn test_parse_plugins() {
         let config = r#"
-          return {
-            plugins = {
-                "tmux-plugins/tmux-continuum",
-                "tmux-plugins/tmux-resurrect",
-                "https://gitlab.com/user/custom-plugin",
+            return {
+              plugins = {
+                  "tmux-plugins/tmux-continuum",
+                  "tmux-plugins/tmux-resurrect",
+                  "https://gitlab.com/user/custom-plugin",
+              }
             }
-          }
         "#;
 
         with_config(config, |settings| {
@@ -569,7 +511,7 @@ mod tests {
                 assert_eq!(diag.label, "Lua error at line 5");
                 let source = diag.src.inner();
                 let lines: Vec<&str> = source.lines().collect();
-                assert_eq!(lines[4], "                }");
+                assert_eq!(lines[4].trim(), "}");
                 let span = diag.span.expect("expected span");
                 assert_eq!(span.len(), lines[4].len());
             }
