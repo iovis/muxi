@@ -43,6 +43,9 @@ pub enum Command {
         #[arg(last = true)]
         fzf_args: Vec<String>,
     },
+
+    #[clap(hide = true)]
+    FzfKeybindings,
 }
 
 #[derive(Debug, Args)]

@@ -65,5 +65,6 @@ fn main() -> Result<()> {
             Ok(())
         }
         Command::Fzf { fzf_args } => fzf::spawn(&fzf_args),
+        Command::FzfKeybindings => fzf::keybindings::show(),
     }
 }
