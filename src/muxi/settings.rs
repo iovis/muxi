@@ -56,76 +56,82 @@ impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "    {} {}",
-            "muxi_prefix:".green(),
-            self.muxi_prefix.yellow()
+            "{} {}",
+            "muxi_prefix".dimmed(),
+            self.muxi_prefix.bold().green()
+        )?;
+        writeln!(
+            f,
+            "{} {}",
+            "tmux_prefix".dimmed(),
+            self.tmux_prefix.bold().green()
+        )?;
+        writeln!(
+            f,
+            "{} {}",
+            "uppercase_overrides".dimmed(),
+            self.uppercase_overrides.bold().green()
         )?;
 
         writeln!(
             f,
-            "    {} {}",
-            "tmux_prefix:".green(),
-            self.tmux_prefix.blue()
-        )?;
-
-        writeln!(
-            f,
-            "    {} {}",
-            "uppercase_overrides:".green(),
-            self.uppercase_overrides.blue()
-        )?;
-
-        writeln!(
-            f,
-            "    {} {}",
-            "use_current_pane_path:".green(),
-            self.use_current_pane_path.blue()
+            "{} {}",
+            "use_current_pane_path".dimmed(),
+            self.use_current_pane_path.bold().green()
         )?;
 
         // Plugins
-        writeln!(f, "\n{}", "plugins:".yellow())?;
+        writeln!(f, "\n{}", "Plugins:".bold().underline())?;
         for plugin in &self.plugins {
-            writeln!(f, "    {}", plugin.green())?;
+            writeln!(f, "{}", plugin.dimmed())?;
         }
 
         // Editor
-        writeln!(f, "\n{}", "editor:".yellow())?;
+        writeln!(f, "\n{}", "Editor:".bold().underline())?;
         writeln!(
             f,
-            "    {} {}",
-            "command:".green(),
+            "{} {}",
+            "command".dimmed(),
             self.editor
                 .command
                 .clone()
-                .unwrap_or_else(|| "$EDITOR".to_string())
-                .blue()
+                .unwrap_or_else(|| format!(
+                    "{} {}",
+                    std::env::var("EDITOR")
+                        .unwrap_or_else(|_| "vim".to_string())
+                        .bold()
+                        .green(),
+                    "($EDITOR)".dimmed()
+                ))
+                .bold()
+                .green()
         )?;
         writeln!(
             f,
-            "    {} {}",
-            "args:".green(),
-            self.editor.args.join(" ").blue()
+            "{} {}",
+            "args".dimmed(),
+            self.editor.args.join(" ").bold().green()
         )?;
 
         // FZF
-        writeln!(f, "\n{}", "fzf:".yellow())?;
-        writeln!(f, "    {} {}", "input:".green(), self.fzf.input.blue())?;
+        writeln!(f, "\n{}", "FZF:".bold().underline())?;
+        writeln!(f, "{} {}", "input".dimmed(), self.fzf.input.bold().green())?;
         writeln!(
             f,
-            "    {} {}",
-            "bind_sessions:".green(),
-            self.fzf.bind_sessions.blue()
+            "{} {}",
+            "bind_sessions".dimmed(),
+            self.fzf.bind_sessions.bold().green()
         )?;
         writeln!(
             f,
-            "    {} {}",
-            "args:".green(),
-            self.fzf.args.join(" ").blue()
+            "{} {}",
+            "args".dimmed(),
+            self.fzf.args.join(" ").bold().green()
         )?;
 
         // Bindings
         if !self.bindings.is_empty() {
-            writeln!(f, "\n{}", "bindings:".yellow())?;
+            writeln!(f, "\n{}", "Bindings:".bold().underline())?;
 
             let max_width_key = self
                 .bindings
@@ -137,13 +143,13 @@ impl Display for Settings {
             for (key, binding) in &self.bindings {
                 write!(
                     f,
-                    "    {:<max_width_key$}  {}",
-                    key.green(),
-                    binding.command
+                    "{:<max_width_key$} {}",
+                    key.bold().green(),
+                    binding.command.dimmed()
                 )?;
 
                 if binding.popup.is_some() {
-                    write!(f, "{}", " (popup)".yellow())?;
+                    write!(f, "{}", " (popup)".cyan())?;
                 }
 
                 writeln!(f)?;
