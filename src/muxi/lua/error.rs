@@ -8,41 +8,42 @@ pub enum Error {
     #[diagnostic(code(muxi::lua::not_found))]
     NotFound(#[from] std::io::Error),
 
-    #[error(transparent)]
-    #[diagnostic(transparent)]
-    LuaParse(#[from] Box<LuaParseDiagnostic>),
-
     #[error("failed to execute embedded Lua code")]
     #[diagnostic(code(muxi::lua::runtime_error))]
     Lua(#[from] LuaError),
 
-    #[error("failed to deserialize Lua config at {path}: {message}")]
-    #[diagnostic(
-        code(muxi::lua::deserialize_error),
-        help("Check the value assigned to {path} in ~/.config/muxi/init.lua")
-    )]
-    LuaDeserialize {
-        #[source]
-        source: LuaError,
-        path: String,
-        message: String,
-    },
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    LuaParse(#[from] Box<LuaParseDiagnostic>),
+
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    LuaDeserialize(#[from] Box<LuaDeserializeDiagnostic>),
 }
 
 #[derive(Debug, Error, Diagnostic)]
 #[error("failed to parse Lua config: {label}")]
-#[diagnostic(
-    code(muxi::lua::parse_error),
-    help(
-        "Check the syntax in ~/.config/muxi/init.lua\nMake sure it returns a valid configuration table"
-    )
-)]
-pub(crate) struct LuaParseDiagnostic {
+#[diagnostic(code(muxi::lua::parse_error))]
+pub struct LuaParseDiagnostic {
     #[source]
-    pub(super) source: LuaError,
+    pub source: LuaError,
     #[source_code]
-    pub(super) src: NamedSource<String>,
+    pub src: NamedSource<String>,
     #[label("{label}")]
-    pub(super) span: Option<SourceSpan>,
-    pub(super) label: String,
+    pub span: Option<SourceSpan>,
+    pub label: String,
+}
+
+#[derive(Debug, Error, Diagnostic)]
+#[error("failed to deserialize Lua config at {path}")]
+#[diagnostic(
+    code(muxi::lua::deserialize_error),
+    help("Check the value assigned to {path} in {file}")
+)]
+pub struct LuaDeserializeDiagnostic {
+    #[source]
+    pub source: LuaError,
+    pub path: String,
+    pub message: String,
+    pub file: String,
 }

@@ -5,7 +5,9 @@ use mlua::prelude::{Lua, LuaError, LuaTable};
 use std::path::Path;
 
 use crate::muxi::Settings;
+use crate::muxi::path;
 
+use super::error::LuaDeserializeDiagnostic;
 use super::error::{Error, LuaParseDiagnostic};
 
 pub fn parse_settings(path: &Path, settings: &Settings) -> Result<Settings, Error> {
@@ -91,15 +93,16 @@ fn enrich_deserialize_error(error: serde_path_to_error::Error<LuaError>) -> Erro
         _ => source.to_string(),
     };
 
-    Error::LuaDeserialize {
+    Error::LuaDeserialize(Box::new(LuaDeserializeDiagnostic {
         source,
+        message,
+        file: path::settings_file().display().to_string(),
         path: if path_string.is_empty() {
             "root".into()
         } else {
             path_string
         },
-        message,
-    }
+    }))
 }
 
 fn extract_span(error: &LuaError, code: &str) -> Option<(SourceSpan, String)> {
@@ -521,9 +524,22 @@ mod tests {
         "#;
 
         with_config_error(config, |error| match error {
-            Error::LuaDeserialize { path, message, .. } => {
-                assert!(path.ends_with("tmux_prefix"), "unexpected path: {path}");
-                assert!(message.contains("boolean"), "unexpected message: {message}");
+            Error::LuaDeserialize(diag) => {
+                assert!(
+                    diag.path.ends_with("tmux_prefix"),
+                    "unexpected path: {}",
+                    diag.path
+                );
+                assert!(
+                    diag.message.contains("boolean"),
+                    "unexpected message: {}",
+                    diag.message
+                );
+                assert!(
+                    diag.file.contains("init.lua"),
+                    "unexpected file: {}",
+                    diag.file
+                );
             }
             other => panic!("expected LuaDeserialize error, got {other:?}"),
         });
