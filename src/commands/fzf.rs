@@ -15,6 +15,12 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         return Ok(());
     }
 
+    let preview_command = "tmux capture-pane -ep -t '{2}:'";
+    let preview_label = "echo ' {2} '";
+    let preview_transformer = format!(
+        "test $FZF_PREVIEW_LABEL = ' keybindings ' && echo \"change-preview({preview_command})+transform-preview-label({preview_label})\" || echo \"change-preview(muxi --help)+change-preview-label( keybindings )\""
+    );
+
     let mut fzf_command = Command::new("tmux");
 
     fzf_command
@@ -60,12 +66,14 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("ctrl-r:execute(muxi sessions edit)+reload(muxi sessions list)")
         .arg("--bind")
         .arg("ctrl-g:execute(muxi config edit)+reload(muxi sessions list)")
+        .arg("--bind")
+        .arg(format!("?:transform:{preview_transformer}"))
         .arg("--preview")
-        .arg("tmux capture-pane -ep -t '{2}:'")
+        .arg(preview_command)
         .arg("--preview-window")
         .arg("right,60%")
         .arg("--bind")
-        .arg("focus:transform-preview-label:echo ' {2} '")
+        .arg(format!("focus:transform-preview-label:{preview_label}"))
         .arg("--bind")
         .arg("alt-p:toggle-preview")
         .arg("--bind")
