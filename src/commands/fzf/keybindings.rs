@@ -8,11 +8,6 @@ pub fn show() -> Result<()> {
     let sessions = Muxi::new()?.sessions;
     let settings = Settings::from_lua()?;
 
-    if sessions.is_empty() {
-        println!("{}", "No sessions defined!".red());
-        return Ok(());
-    }
-
     let muxi_session_keys = sessions.0.keys().map(Key::to_string).collect::<Vec<_>>();
 
     show_default_keys();
@@ -35,7 +30,7 @@ pub fn show() -> Result<()> {
 }
 
 fn show_default_keys() {
-    println!("{}", "Keybindings:".bold().underline());
+    println!("{}", "Keybindings".bold().underline());
 
     println!(
         "{} {}",
@@ -50,7 +45,7 @@ fn show_default_keys() {
 }
 
 fn show_raw_session_keys(muxi_session_keys: &[String]) {
-    println!("\n{}", "Session Keybindings:".bold().underline());
+    println!("\n{}", "Session Keybindings".bold().underline());
 
     for key in muxi_session_keys {
         println!(
@@ -63,7 +58,7 @@ fn show_raw_session_keys(muxi_session_keys: &[String]) {
 }
 
 fn show_vim_keys() {
-    println!("\n{}", "Vim Keybindings:".bold().underline());
+    println!("\n{}", "Vim Keybindings".bold().underline());
 
     println!("{} {}", "j k".bold().cyan(), "move".dimmed());
     println!("{} {}", "d x".bold().cyan(), "delete session".dimmed());
@@ -76,7 +71,7 @@ fn show_vim_keys() {
 }
 
 fn show_alt_session_keys(muxi_session_keys: &[String]) {
-    println!("\n{}", "Session Keybindings:".bold().underline());
+    println!("\n{}", "Session Keybindings".bold().underline());
 
     for key in muxi_session_keys {
         println!(
@@ -89,7 +84,7 @@ fn show_alt_session_keys(muxi_session_keys: &[String]) {
 }
 
 fn show_session_overrides() {
-    println!("\n{}", "Session Override Keybindings:".bold().underline());
+    println!("\n{}", "Session Override Keybindings".bold().underline());
 
     println!(
         "{} {} {}",

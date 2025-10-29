@@ -81,13 +81,13 @@ impl Display for Settings {
         )?;
 
         // Plugins
-        writeln!(f, "\n{}", "Plugins:".bold().underline())?;
+        writeln!(f, "\n{}", "Plugins".bold().underline())?;
         for plugin in &self.plugins {
             writeln!(f, "{}", plugin.dimmed())?;
         }
 
         // Editor
-        writeln!(f, "\n{}", "Editor:".bold().underline())?;
+        writeln!(f, "\n{}", "Editor".bold().underline())?;
         writeln!(
             f,
             "{} {}",
@@ -114,7 +114,7 @@ impl Display for Settings {
         )?;
 
         // FZF
-        writeln!(f, "\n{}", "FZF:".bold().underline())?;
+        writeln!(f, "\n{}", "FZF".bold().underline())?;
         writeln!(f, "{} {}", "input".dimmed(), self.fzf.input.bold().green())?;
         writeln!(
             f,
@@ -131,7 +131,7 @@ impl Display for Settings {
 
         // Bindings
         if !self.bindings.is_empty() {
-            writeln!(f, "\n{}", "Bindings:".bold().underline())?;
+            writeln!(f, "\n{}", "Bindings".bold().underline())?;
 
             let max_width_key = self
                 .bindings

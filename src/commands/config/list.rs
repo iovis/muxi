@@ -8,7 +8,7 @@ pub fn list() -> Result<()> {
 
     println!(
         "{} {}",
-        "Settings:".bold().underline(),
+        "Settings".bold().underline(),
         path::settings_file().to_string_lossy().dimmed()
     );
 
