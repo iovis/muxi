@@ -200,31 +200,23 @@ This is the file that `muxi` will use to generate your session bindings and keep
 ### Session Commands
 
 ```sh
-# Edit sessions in your $EDITOR
-muxi sessions edit
+# Set a session (create or update)
+muxi sessions set KEY
 
 # List all sessions
 muxi sessions list
 
-# Manage sessions with FZF popup
-# - Enter: switch to session
-# - Ctrl-x: delete session
-# - Ctrl-r: edit sessions
-# - Ctrl-g: edit config
-# - Alt-p: toggle preview
-# - Alt-r: rotate preview
-# - Alt-[key]: switch to session with <key>
-# - Alt-[KEY]: set current session to <key> (uppercase_overrides must be true)
+# Manage sessions with an FZF popup (`?` for a list of shortcuts)
 muxi fzf
 
 # Switch sessions using native tmux menu
 muxi sessions switch --tmux-menu
 
-# Delete a session
-muxi sessions delete <key>
+# Edit sessions in your $EDITOR
+muxi sessions edit
 
-# Set a session (create or update)
-muxi sessions set <key>
+# Delete a session
+muxi sessions delete KEY
 ```
 
 ## Plugins (Experimental)
@@ -247,18 +239,18 @@ return {
 
 ### Commands
 
-```sh
-# Install all configured plugins
-muxi plugins install
+```
+❯ muxi plugins help
+See and manage your tmux plugins
 
-# Update all plugins
-muxi plugins update
+Usage: muxi plugins [COMMAND]
 
-# List plugins with their install status
-muxi plugins list
-
-# Source all installed plugins (call this in tmux.conf)
-muxi plugins init
+Commands:
+  init     Sources all plugins
+  list     Print your current tmux plugins
+  install  Install plugins
+  update   Update plugins
+  help     Print this message or the help of the given subcommand(s)
 ```
 
 ### Sourcing Plugins
@@ -276,7 +268,10 @@ if "type muxi" {
 }
 ```
 
-> **Note**: This feature is experimental and may change in future versions.
+> [!WARNING]
+> This feature is experimental and may change in future versions.
+
+> [!NOTE]
 > `muxi init` and `muxi plugins init` are independent; you can use one without the other.
 
 ## Why Muxi?
