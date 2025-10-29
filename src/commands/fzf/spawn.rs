@@ -29,6 +29,7 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--reverse")
         .arg("--info")
         .arg("inline-right")
+        .arg("--highlight-line")
         .arg("--list-border")
         .arg("--list-label")
         .arg(" muxi sessions ")
