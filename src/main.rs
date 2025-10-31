@@ -19,14 +19,8 @@ fn main() -> Result<()> {
                 SessionCommands::List => sessions::list(),
                 SessionCommands::Delete(options) => sessions::delete(options),
                 SessionCommands::Set(options) => sessions::set(options),
-                SessionCommands::Switch {
-                    key,
-                    interactive,
-                    tmux_menu,
-                } => {
-                    if interactive {
-                        sessions::picker()
-                    } else if tmux_menu {
+                SessionCommands::Switch { key, tmux_menu } => {
+                    if tmux_menu {
                         sessions::tmux_menu()
                     } else {
                         // Clap will validate that key exists

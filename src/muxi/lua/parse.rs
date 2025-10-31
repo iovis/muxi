@@ -166,7 +166,7 @@ mod tests {
     use uuid::Uuid;
 
     use crate::muxi::lua::Error;
-    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings, Plugin, Settings};
+    use crate::muxi::{Binding, Bindings, EditorSettings, FzfSettings, Settings};
     use crate::tmux::Popup;
 
     use super::parse_settings;
@@ -226,7 +226,7 @@ mod tests {
         with_config(config, |settings| {
             let expected_settings = Settings {
                 tmux_prefix: false,
-                muxi_prefix: "M-Space".try_into().unwrap(),
+                muxi_prefix: "M-Space".into(),
                 uppercase_overrides: true,
                 use_current_pane_path: false,
                 plugins: vec![],
@@ -342,7 +342,7 @@ mod tests {
         with_config(config, |settings| {
             let mut bindings: Bindings = BTreeMap::new();
             bindings.insert(
-                "j".try_into().unwrap(),
+                "j".into(),
                 Binding {
                     command: "tmux switch-client -l".into(),
                     popup: None,
@@ -371,7 +371,7 @@ mod tests {
         with_config(config, |settings| {
             let mut bindings: Bindings = BTreeMap::new();
             bindings.insert(
-                "j".try_into().unwrap(),
+                "j".into(),
                 Binding {
                     command: "muxi sessions edit".into(),
                     popup: Some(Popup {
@@ -404,7 +404,7 @@ mod tests {
         with_config(config, |settings| {
             let mut bindings: Bindings = BTreeMap::new();
             bindings.insert(
-                "j".try_into().unwrap(),
+                "j".into(),
                 Binding {
                     command: "muxi sessions edit".into(),
                     popup: Some(Popup {
@@ -441,7 +441,7 @@ mod tests {
         with_config(config, |settings| {
             let mut bindings: Bindings = BTreeMap::new();
             bindings.insert(
-                "j".try_into().unwrap(),
+                "j".into(),
                 Binding {
                     command: "muxi sessions edit".into(),
                     popup: Some(Popup {
@@ -475,20 +475,39 @@ mod tests {
         "#;
 
         with_config(config, |settings| {
+            assert_eq!(settings.plugins.len(), 3);
             assert_eq!(
-                settings.plugins,
-                vec![
-                    Plugin {
-                        url: Url::parse("https://github.com/tmux-plugins/tmux-continuum").unwrap()
-                    },
-                    Plugin {
-                        url: Url::parse("https://github.com/tmux-plugins/tmux-resurrect").unwrap()
-                    },
-                    Plugin {
-                        url: Url::parse("https://gitlab.com/user/custom-plugin").unwrap()
-                    },
-                ]
+                settings.plugins[0].url.as_ref().map(Url::as_str).unwrap(),
+                "https://github.com/tmux-plugins/tmux-continuum"
             );
+            assert_eq!(
+                settings.plugins[1].url.as_ref().map(Url::as_str).unwrap(),
+                "https://github.com/tmux-plugins/tmux-resurrect"
+            );
+            assert_eq!(
+                settings.plugins[2].url.as_ref().map(Url::as_str).unwrap(),
+                "https://gitlab.com/user/custom-plugin"
+            );
+        });
+    }
+
+    #[test]
+    fn test_parse_plugins_table() {
+        let config = r#"
+            return {
+              plugins = {
+                  { url = "tmux-plugins/tmux-yank" },
+                  { path = "/tmp/local-plugin" },
+              }
+            }
+        "#;
+
+        with_config(config, |settings| {
+            assert_eq!(settings.plugins.len(), 2);
+            assert!(settings.plugins[0].url.is_some());
+            assert!(settings.plugins[0].path.is_none());
+            assert!(settings.plugins[1].url.is_none());
+            assert!(settings.plugins[1].path.is_some());
         });
     }
 

@@ -232,7 +232,18 @@ return {
   plugins = {
     "tmux-plugins/tmux-continuum",
     "tmux-plugins/tmux-resurrect",
-    "tmux-plugins/tmux-yank",
+    "https://gitlab.com/username/my-plugin",
+    { path = "~/code/tmux/my-plugin/" },
+    {
+      url = "tmux-plugins/tmux-cpu",
+      opts = {
+        -- will be evaluated as tmux variables
+        -- Ex: set -g @cpu_low_fg_color "#[fg=#51576d]"
+        cpu_low_fg_color = "#[fg=#51576d]",
+        cpu_medium_fg_color = "#[fg=#e5c890]",
+        cpu_high_fg_color = "#[fg=#e78284]",
+      },
+    },
   },
 }
 ```
@@ -258,13 +269,12 @@ Commands:
 To automatically source your plugins in tmux, add this to your `tmux.conf`:
 
 ```tmux
-# Set plugin options before loading!
-set -g @continuum-restore 'on'
+# You can still set plugin options in your tmux.conf
 set -g @continuum-save-interval '5'
 
 if "type muxi" {
   run -b "muxi init"
-  run -b "muxi plugins init"
+  run -b "muxi plugins init || tmux display 'muxi: Failed to init plugins'"
 }
 ```
 

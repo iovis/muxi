@@ -1,6 +1,29 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 
+use crate::muxi::Plugin;
+
+pub fn format_plugin_errors(
+    errors: &[(Plugin, miette::Report)],
+    operation: &str,
+) -> miette::Report {
+    let error_messages = errors
+        .iter()
+        .map(|(plugin, error)| format!("{} {error}", plugin.name.red()))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    miette::miette!("Some plugins failed to {operation}\n{error_messages}")
+}
+
+#[derive(Debug, Clone, Copy)]
+enum PluginSpinnerResult {
+    AlreadyInstalled,
+    Error,
+    Success,
+    UpToDate,
+}
+
 pub struct PluginSpinner {
     pb: ProgressBar,
     finish_style: ProgressStyle,
@@ -29,31 +52,42 @@ impl PluginSpinner {
         }
     }
 
-    pub fn finish_success(&self) {
-        self.pb.set_style(self.finish_style.clone());
-        self.pb.set_prefix(format!("{}", "✔".green().bold()));
-        self.pb.finish_with_message(self.repo_name.clone());
+    pub fn finish_success(&self, detail: Option<&str>) {
+        self.finish_with(PluginSpinnerResult::Success, detail);
     }
 
     pub fn finish_error(&self) {
-        self.pb.set_style(self.finish_style.clone());
-        self.pb.set_prefix(format!("{}", "✗".red().bold()));
-        self.pb.finish_with_message(self.repo_name.clone());
+        self.finish_with(PluginSpinnerResult::Error, None);
     }
 
-    pub fn finish_up_to_date(&self) {
-        self.pb.set_style(self.finish_style.clone());
-        self.pb.set_prefix(format!("{}", "≡".blue().bold()));
-        self.pb.finish_with_message(self.repo_name.clone());
+    pub fn finish_up_to_date(&self, detail: Option<&str>) {
+        self.finish_with(PluginSpinnerResult::UpToDate, detail);
     }
 
     pub fn finish_already_installed(&self) {
+        self.finish_with(
+            PluginSpinnerResult::AlreadyInstalled,
+            Some("already installed"),
+        );
+    }
+
+    fn finish_with(&self, result: PluginSpinnerResult, detail: Option<&str>) {
         self.pb.set_style(self.finish_style.clone());
-        self.pb.set_prefix(format!("{}", "⊙".blue().bold()));
-        self.pb.finish_with_message(format!(
-            "{} {}",
-            self.repo_name,
-            "(already installed)".dimmed()
-        ));
+
+        let prefix = match result {
+            PluginSpinnerResult::AlreadyInstalled => "⊙".blue().bold().to_string(),
+            PluginSpinnerResult::Error => "✗".red().bold().to_string(),
+            PluginSpinnerResult::Success => "✔".green().bold().to_string(),
+            PluginSpinnerResult::UpToDate => "≡".blue().bold().to_string(),
+        };
+
+        self.pb.set_prefix(prefix);
+
+        let message = match detail {
+            Some(detail) => format!("{} {}", self.repo_name, format!("({detail})").dimmed()),
+            None => self.repo_name.clone(),
+        };
+
+        self.pb.finish_with_message(message);
     }
 }

@@ -5,9 +5,8 @@ use indicatif::MultiProgress;
 use miette::Result;
 use owo_colors::OwoColorize;
 
-use super::helpers;
-use super::ui::PluginSpinner;
-use crate::muxi::Settings;
+use super::ui::{self, PluginSpinner};
+use crate::muxi::{PluginUpdateStatus, Settings};
 
 pub fn update() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -23,11 +22,22 @@ pub fn update() -> Result<()> {
     thread::scope(|s| {
         for plugin in plugins {
             s.spawn(|| {
-                let spinner = PluginSpinner::new(&multi, plugin.repo_name());
+                let spinner = PluginSpinner::new(&multi, &plugin.name);
 
                 match plugin.update() {
-                    Ok(true) => spinner.finish_success(),
-                    Ok(false) => spinner.finish_up_to_date(),
+                    Ok(PluginUpdateStatus::Updated { from, to }) => {
+                        let detail = match from {
+                            Some(from) => format!("{from}..{to}"),
+                            None => to,
+                        };
+                        spinner.finish_success(Some(&detail));
+                    }
+                    Ok(PluginUpdateStatus::UpToDate { commit }) => {
+                        spinner.finish_up_to_date(Some(&commit));
+                    }
+                    Ok(PluginUpdateStatus::Local { path }) => {
+                        spinner.finish_up_to_date(Some(&path));
+                    }
                     Err(error) => {
                         spinner.finish_error();
                         errors.lock().unwrap().push((plugin, error));
@@ -37,11 +47,10 @@ pub fn update() -> Result<()> {
         }
     });
 
-    // Report any errors at the end
     let errors = errors.into_inner().unwrap();
-    if !errors.is_empty() {
-        return Err(helpers::format_plugin_errors(&errors, "update"));
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(ui::format_plugin_errors(&errors, "update"))
     }
-
-    Ok(())
 }

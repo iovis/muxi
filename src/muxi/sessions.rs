@@ -103,7 +103,7 @@ mod tests {
 
         let mut expected = BTreeMap::new();
         expected.insert(
-            Key::parse("d").unwrap(),
+            "d".into(),
             Session {
                 name: "dotfiles".into(),
                 path: path::expand_tilde("~/.dotfiles".into()),
@@ -119,14 +119,14 @@ mod tests {
     fn test_display_sessions() {
         let mut sessions_map = BTreeMap::new();
         sessions_map.insert(
-            Key::parse("d").unwrap(),
+            "d".into(),
             Session {
                 name: "dotfiles".into(),
                 path: "/home/user/.dotfiles".into(),
             },
         );
         sessions_map.insert(
-            Key::parse("p").unwrap(),
+            "p".into(),
             Session {
                 name: "project".into(),
                 path: "/home/user/projects/myproject".into(),

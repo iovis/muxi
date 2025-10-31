@@ -40,7 +40,7 @@ impl Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            muxi_prefix: Key::parse("g").unwrap(),
+            muxi_prefix: Key::new("g"),
             tmux_prefix: true,
             uppercase_overrides: true,
             use_current_pane_path: false,
@@ -52,6 +52,7 @@ impl Default for Settings {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
@@ -82,8 +83,23 @@ impl Display for Settings {
 
         // Plugins
         writeln!(f, "\n{}", "Plugins".bold().underline())?;
-        for plugin in &self.plugins {
-            writeln!(f, "{}", plugin.dimmed())?;
+        if self.plugins.is_empty() {
+            writeln!(f, "{}", "(none)".dimmed())?;
+        } else {
+            for plugin in &self.plugins {
+                let source = plugin
+                    .path
+                    .as_ref()
+                    .map(|path| path.display().to_string())
+                    .or_else(|| plugin.url.as_ref().map(ToString::to_string))
+                    .unwrap_or_else(|| "unknown".into());
+
+                writeln!(f, "{} {}", plugin.name.bold().green(), source.dimmed())?;
+
+                if !plugin.options.is_empty() {
+                    writeln!(f, "{}", plugin.options)?;
+                }
+            }
         }
 
         // Editor

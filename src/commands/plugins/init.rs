@@ -1,10 +1,9 @@
 use std::sync::Mutex;
 use std::thread;
 
-use miette::Result;
-
-use super::helpers;
+use super::ui;
 use crate::muxi::Settings;
+use miette::Result;
 
 pub fn init() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -26,9 +25,9 @@ pub fn init() -> Result<()> {
     });
 
     let errors = errors.into_inner().unwrap();
-    if !errors.is_empty() {
-        return Err(helpers::format_plugin_errors(&errors, "source"));
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(ui::format_plugin_errors(&errors, "source"))
     }
-
-    Ok(())
 }

@@ -5,8 +5,7 @@ use indicatif::MultiProgress;
 use miette::Result;
 use owo_colors::OwoColorize;
 
-use super::helpers;
-use super::ui::PluginSpinner;
+use super::ui::{self, PluginSpinner};
 use crate::muxi::Settings;
 
 pub fn install() -> Result<()> {
@@ -23,10 +22,10 @@ pub fn install() -> Result<()> {
     thread::scope(|s| {
         for plugin in plugins {
             s.spawn(|| {
-                let spinner = PluginSpinner::new(&multi, plugin.repo_name());
+                let spinner = PluginSpinner::new(&multi, &plugin.name);
 
                 match plugin.install() {
-                    Ok(true) => spinner.finish_success(),
+                    Ok(true) => spinner.finish_success(None),
                     Ok(false) => spinner.finish_already_installed(),
                     Err(error) => {
                         spinner.finish_error();
@@ -37,11 +36,10 @@ pub fn install() -> Result<()> {
         }
     });
 
-    // Report any errors at the end
     let errors = errors.into_inner().unwrap();
-    if !errors.is_empty() {
-        return Err(helpers::format_plugin_errors(&errors, "install"));
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(ui::format_plugin_errors(&errors, "install"))
     }
-
-    Ok(())
 }

@@ -1,45 +1,17 @@
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
-#[serde(try_from = "String")]
 pub struct Key(String);
 
 impl Key {
-    pub fn parse<T: AsRef<str>>(value: T) -> Result<Self, String> {
-        let value = value.as_ref();
-
-        if is_valid_tmux_key(value) {
-            Ok(Self(value.to_string()))
-        } else {
-            Err(format!("{value} is not a valid tmux binding"))
-        }
+    pub fn new<T: AsRef<str>>(value: T) -> Self {
+        Self(value.as_ref().to_string())
     }
 }
 
-impl TryFrom<String> for Key {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::parse(value)
-    }
-}
-
-impl TryFrom<&str> for Key {
-    type Error = String;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::parse(value)
-    }
-}
-
-// For some reason if I do From<String> it conflicts with something
-impl FromStr for Key {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::parse(s)
+impl From<&str> for Key {
+    fn from(s: &str) -> Self {
+        Key::new(s)
     }
 }
 
@@ -53,8 +25,4 @@ impl AsRef<str> for Key {
     fn as_ref(&self) -> &str {
         &self.0
     }
-}
-
-fn is_valid_tmux_key(_s: &str) -> bool {
-    true
 }

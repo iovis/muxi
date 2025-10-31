@@ -94,12 +94,8 @@ pub enum SessionCommands {
     /// Go to session
     Switch {
         /// Tmux key binding
-        #[arg(required_unless_present_any = ["interactive", "tmux_menu"])]
+        #[arg(required_unless_present_any = ["tmux_menu"])]
         key: Option<Key>,
-
-        /// Choose session from a list
-        #[arg(short, long, exclusive = true)]
-        interactive: bool,
 
         /// Choose session from a native tmux menu (display-menu)
         #[arg(short, long, exclusive = true)]

@@ -104,7 +104,7 @@ pub fn switch_to(session: &Session) -> TmuxResult<()> {
         Ok(())
     } else {
         Err(Error::Switch(
-            session.name.to_string(),
+            session.name.clone(),
             String::from_utf8_lossy(&output.stderr).trim().to_string(),
         ))
     }

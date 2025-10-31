@@ -35,7 +35,7 @@ pub struct LuaParseDiagnostic {
 }
 
 #[derive(Debug, Error, Diagnostic)]
-#[error("failed to deserialize Lua config at {path}")]
+#[error("failed to deserialize Lua config at {path}: {message}")]
 #[diagnostic(
     code(muxi::lua::deserialize_error),
     help("Check the value assigned to {path} in {file}")
