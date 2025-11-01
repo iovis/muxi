@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PluginStatus {
     Remote {
@@ -11,8 +13,19 @@ pub enum PluginStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PluginChange {
+    pub id: String,
+    pub summary: String,
+    pub time: SystemTime,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PluginUpdateStatus {
-    Updated { from: Option<String>, to: String },
+    Updated {
+        from: Option<String>,
+        to: String,
+        changes: Vec<PluginChange>,
+    },
     UpToDate { commit: String },
     Local { path: String },
 }

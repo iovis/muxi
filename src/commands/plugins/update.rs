@@ -1,12 +1,14 @@
 use std::sync::Mutex;
 use std::thread;
+use std::time::{Duration, SystemTime};
 
 use indicatif::MultiProgress;
 use miette::Result;
 use owo_colors::OwoColorize;
+use timeago::Formatter;
 
 use super::ui::{self, PluginSpinner};
-use crate::muxi::{PluginUpdateStatus, Settings};
+use crate::muxi::{PluginChange, PluginUpdateStatus, Settings};
 
 pub fn update() -> Result<()> {
     let plugins = Settings::from_lua()?.plugins;
@@ -18,19 +20,30 @@ pub fn update() -> Result<()> {
 
     let multi = MultiProgress::new();
     let errors = Mutex::new(Vec::new());
+    let change_logs = Mutex::new(Vec::new());
 
     thread::scope(|s| {
-        for plugin in plugins {
-            s.spawn(|| {
-                let spinner = PluginSpinner::new(&multi, &plugin.name);
+        for (index, plugin) in plugins.into_iter().enumerate() {
+            let progress = &multi;
+            let errors_ref = &errors;
+            let change_logs_ref = &change_logs;
+
+            s.spawn(move || {
+                let spinner = PluginSpinner::new(progress, &plugin.name);
+                let plugin_name = plugin.name.clone();
 
                 match plugin.update() {
-                    Ok(PluginUpdateStatus::Updated { from, to }) => {
+                    Ok(PluginUpdateStatus::Updated { from, to, changes }) => {
                         let detail = match from {
                             Some(from) => format!("{from}..{to}"),
                             None => to,
                         };
                         spinner.finish_success(Some(&detail));
+
+                        if !changes.is_empty() {
+                            let log = format_plugin_changes(&plugin_name, &changes);
+                            change_logs_ref.lock().unwrap().push((index, log));
+                        }
                     }
                     Ok(PluginUpdateStatus::UpToDate { commit }) => {
                         spinner.finish_up_to_date(Some(&commit));
@@ -40,12 +53,23 @@ pub fn update() -> Result<()> {
                     }
                     Err(error) => {
                         spinner.finish_error();
-                        errors.lock().unwrap().push((plugin, error));
+                        errors_ref.lock().unwrap().push((plugin.clone(), error));
                     }
                 }
             });
         }
     });
+
+    drop(multi);
+
+    let mut change_logs = change_logs.into_inner().unwrap();
+    change_logs.sort_by_key(|(index, _)| *index);
+    if !change_logs.is_empty() {
+        println!();
+        for (_, log) in change_logs {
+            println!("{log}");
+        }
+    }
 
     let errors = errors.into_inner().unwrap();
     if errors.is_empty() {
@@ -53,4 +77,32 @@ pub fn update() -> Result<()> {
     } else {
         Err(ui::format_plugin_errors(&errors, "update"))
     }
+}
+
+fn format_plugin_changes(plugin_name: &str, changes: &[PluginChange]) -> String {
+    let header = plugin_name.bold().to_string();
+
+    let body = changes
+        .iter()
+        .map(|change| {
+            format!(
+                "  {} {} {}",
+                change.id.green().bold(),
+                change.summary.trim(),
+                format!("({})", format_relative_time(change.time)).dimmed()
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    format!("{header}\n{body}")
+}
+
+fn format_relative_time(time: SystemTime) -> String {
+    let now = SystemTime::now();
+    let duration = now
+        .duration_since(time)
+        .unwrap_or_else(|_| Duration::from_secs(0));
+
+    Formatter::new().convert(duration)
 }
