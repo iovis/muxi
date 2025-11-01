@@ -1,8 +1,9 @@
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::{Duration, SystemTime};
 
-use git2::{BranchType, Oid, Repository};
+use git2::{BranchType, Oid, Repository, Sort};
 use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use serde::de::IgnoredAny;
@@ -11,7 +12,7 @@ use url::Url;
 
 use crate::muxi::path;
 
-use super::{PluginOptions, PluginStatus, PluginUpdateStatus};
+use super::{PluginChange, PluginOptions, PluginStatus, PluginUpdateStatus};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Plugin {
@@ -222,6 +223,8 @@ impl Plugin {
             .head()
             .map_err(|e| miette::miette!("Failed to get HEAD: {}", e.dimmed()))?;
 
+        let commit_base_url = self.commit_base_url();
+
         if !head.is_branch() {
             let commit = head
                 .peel_to_commit()
@@ -230,6 +233,8 @@ impl Plugin {
             return Ok(PluginUpdateStatus::Updated {
                 from: None,
                 to: short_id(commit.id()),
+                changes: Vec::new(),
+                range_url: None,
             });
         }
 
@@ -247,6 +252,8 @@ impl Plugin {
             return Ok(PluginUpdateStatus::Updated {
                 from: None,
                 to: short_id(local_commit),
+                changes: Vec::new(),
+                range_url: None,
             });
         }
 
@@ -286,6 +293,9 @@ impl Plugin {
             });
         }
 
+        let changes =
+            collect_changes(&repo, Some(local_commit), upstream_commit, commit_base_url.as_deref())?;
+
         let mut reference = branch.into_reference();
         reference
             .set_target(upstream_commit, "fast-forward")
@@ -299,6 +309,8 @@ impl Plugin {
         Ok(PluginUpdateStatus::Updated {
             from: Some(short_id(local_commit)),
             to: short_id(upstream_commit),
+            changes,
+            range_url: self.compare_url(local_commit, upstream_commit),
         })
     }
 
@@ -309,6 +321,43 @@ impl Plugin {
         } else {
             path::plugins_dir().join(&self.name)
         }
+    }
+
+    fn commit_base_url(&self) -> Option<String> {
+        let mut base = self.url.as_ref()?.to_string();
+
+        if base.len() >= 4 && base[base.len() - 4..].eq_ignore_ascii_case(".git") {
+            base.truncate(base.len() - 4);
+        }
+
+        if !base.ends_with('/') {
+            base.push('/');
+        }
+
+        base.push_str("commit/");
+        Some(base)
+    }
+
+    fn compare_url(&self, from: Oid, to: Oid) -> Option<String> {
+        let url = self.url.as_ref()?;
+        let host = url.host_str()?.to_ascii_lowercase();
+
+        let mut base = url.to_string();
+        if base.len() >= 4 && base[base.len() - 4..].eq_ignore_ascii_case(".git") {
+            base.truncate(base.len() - 4);
+        }
+        if !base.ends_with('/') {
+            base.push('/');
+        }
+
+        let suffix = match host.as_str() {
+            "github.com" | "www.github.com" => "compare/",
+            "gitlab.com" | "www.gitlab.com" => "-/compare/",
+            _ => return None,
+        };
+
+        base.push_str(suffix);
+        Some(format!("{base}{from}...{to}"))
     }
 
     fn create_plugins_dir(&self) -> Result<()> {
@@ -444,7 +493,7 @@ fn extract_repo_name(url: &Url) -> String {
 
 fn short_id(oid: Oid) -> String {
     let id = oid.to_string();
-    id.chars().take(12).collect()
+    id.chars().take(7).collect()
 }
 
 fn display_path(path: &Path) -> String {
@@ -465,6 +514,75 @@ fn ensure_exists(path: &Path) -> Result<()> {
             "Plugin path {} does not exist",
             display_path(path)
         ))
+    }
+}
+
+fn collect_changes(
+    repo: &Repository,
+    from: Option<Oid>,
+    to: Oid,
+    commit_base_url: Option<&str>,
+) -> Result<Vec<PluginChange>> {
+    let Some(from) = from else {
+        return Ok(Vec::new());
+    };
+
+    if from == to {
+        return Ok(Vec::new());
+    }
+
+    let mut revwalk = repo
+        .revwalk()
+        .map_err(|e| miette::miette!("Failed to create revwalk: {}", e.dimmed()))?;
+    revwalk
+        .set_sorting(Sort::TOPOLOGICAL | Sort::TIME)
+        .map_err(|e| miette::miette!("Failed to configure revwalk: {}", e.dimmed()))?;
+    revwalk
+        .push(to)
+        .map_err(|e| miette::miette!("Failed to add target commit: {}", e.dimmed()))?;
+    revwalk
+        .hide(from)
+        .map_err(|e| miette::miette!("Failed to hide previous commit: {}", e.dimmed()))?;
+
+    let mut changes = Vec::new();
+
+    for oid in revwalk {
+        let oid = oid.map_err(|e| miette::miette!("Failed to walk commits: {}", e.dimmed()))?;
+        let commit = repo
+            .find_commit(oid)
+            .map_err(|e| miette::miette!("Failed to read commit {oid}: {}", e.dimmed()))?;
+
+        let summary = commit
+            .summary()
+            .map_or_else(|| "(no commit message)".to_string(), ToString::to_string);
+
+        let full_id = commit.id().to_string();
+        let short = short_id(commit.id());
+        let url = commit_base_url.map(|base| format!("{base}{full_id}"));
+
+        changes.push(PluginChange {
+            id: short,
+            full_id,
+            summary,
+            time: commit_time(&commit),
+            url,
+        });
+    }
+
+    Ok(changes)
+}
+
+fn commit_time(commit: &git2::Commit<'_>) -> SystemTime {
+    let seconds = commit.time().seconds();
+
+    if seconds >= 0 {
+        let secs = u64::try_from(seconds).unwrap_or(0);
+        SystemTime::UNIX_EPOCH + Duration::from_secs(secs)
+    } else {
+        let seconds = u64::try_from(seconds.saturating_neg()).unwrap_or(0);
+        SystemTime::UNIX_EPOCH
+            .checked_sub(Duration::from_secs(seconds))
+            .unwrap_or(SystemTime::UNIX_EPOCH)
     }
 }
 

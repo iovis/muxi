@@ -27,6 +27,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_path_to_error = "0.1.16"
 thiserror = "2.0.17"
 toml_edit = { version = "0.23.7", features = ["serde"] }
+timeago = "0.4"
 url = "2.5.7"
 
 [dev-dependencies]
