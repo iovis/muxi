@@ -16,6 +16,14 @@ pub fn format_plugin_errors(
     miette::miette!("Some plugins failed to {operation}\n{error_messages}")
 }
 
+const OSC8_PREFIX: &str = "\u{1b}]8;;";
+const OSC8_SUFFIX: &str = "\u{1b}]8;;\u{1b}\\";
+
+/// Wraps `message` in an OSC 8 hyperlink sequence pointing to `url`.
+pub fn hyperlink(message: &str, url: &str) -> String {
+    format!("{OSC8_PREFIX}{url}\u{1b}\\{message}{OSC8_SUFFIX}")
+}
+
 #[derive(Debug, Clone, Copy)]
 enum PluginSpinnerResult {
     AlreadyInstalled,
@@ -89,5 +97,27 @@ impl PluginSpinner {
         };
 
         self.pb.finish_with_message(message);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hyperlink_wraps_message_with_osc8_sequence() {
+        let message = "hash";
+        let url = "https://example.com/commit";
+        let expected = format!("{OSC8_PREFIX}{url}\u{1b}\\{message}{OSC8_SUFFIX}");
+
+        assert_eq!(hyperlink(message, url), expected);
+    }
+
+    #[test]
+    fn hyperlink_allows_empty_message() {
+        let url = "https://example.com";
+        let expected = format!("{OSC8_PREFIX}{url}\u{1b}\\{OSC8_SUFFIX}");
+
+        assert_eq!(hyperlink("", url), expected);
     }
 }

@@ -223,6 +223,8 @@ impl Plugin {
             .head()
             .map_err(|e| miette::miette!("Failed to get HEAD: {}", e.dimmed()))?;
 
+        let commit_base_url = self.commit_base_url();
+
         if !head.is_branch() {
             let commit = head
                 .peel_to_commit()
@@ -289,7 +291,8 @@ impl Plugin {
             });
         }
 
-        let changes = collect_changes(&repo, Some(local_commit), upstream_commit)?;
+        let changes =
+            collect_changes(&repo, Some(local_commit), upstream_commit, commit_base_url.as_deref())?;
 
         let mut reference = branch.into_reference();
         reference
@@ -315,6 +318,21 @@ impl Plugin {
         } else {
             path::plugins_dir().join(&self.name)
         }
+    }
+
+    fn commit_base_url(&self) -> Option<String> {
+        let mut base = self.url.as_ref()?.to_string();
+
+        if base.len() >= 4 && base[base.len() - 4..].eq_ignore_ascii_case(".git") {
+            base.truncate(base.len() - 4);
+        }
+
+        if !base.ends_with('/') {
+            base.push('/');
+        }
+
+        base.push_str("commit/");
+        Some(base)
     }
 
     fn create_plugins_dir(&self) -> Result<()> {
@@ -474,7 +492,12 @@ fn ensure_exists(path: &Path) -> Result<()> {
     }
 }
 
-fn collect_changes(repo: &Repository, from: Option<Oid>, to: Oid) -> Result<Vec<PluginChange>> {
+fn collect_changes(
+    repo: &Repository,
+    from: Option<Oid>,
+    to: Oid,
+    commit_base_url: Option<&str>,
+) -> Result<Vec<PluginChange>> {
     let Some(from) = from else {
         return Ok(Vec::new());
     };
@@ -508,10 +531,16 @@ fn collect_changes(repo: &Repository, from: Option<Oid>, to: Oid) -> Result<Vec<
             .summary()
             .map_or_else(|| "(no commit message)".to_string(), ToString::to_string);
 
+        let full_id = commit.id().to_string();
+        let short = short_id(commit.id());
+        let url = commit_base_url.map(|base| format!("{base}{full_id}"));
+
         changes.push(PluginChange {
-            id: short_id(commit.id()),
+            id: short,
+            full_id,
             summary,
             time: commit_time(&commit),
+            url,
         });
     }
 

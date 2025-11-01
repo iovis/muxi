@@ -85,9 +85,15 @@ fn format_plugin_changes(plugin_name: &str, changes: &[PluginChange]) -> String 
     let body = changes
         .iter()
         .map(|change| {
+            let id_colored = change.id.green().bold().to_string();
+            let id_formatted = change
+                .url
+                .as_ref()
+                .map_or_else(|| id_colored.clone(), |url| ui::hyperlink(&id_colored, url));
+
             format!(
                 "  {} {} {}",
-                change.id.green().bold(),
+                id_formatted,
                 change.summary.trim(),
                 format!("({})", format_relative_time(change.time)).dimmed()
             )

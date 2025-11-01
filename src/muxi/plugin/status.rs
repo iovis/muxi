@@ -15,8 +15,10 @@ pub enum PluginStatus {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PluginChange {
     pub id: String,
+    pub full_id: String,
     pub summary: String,
     pub time: SystemTime,
+    pub url: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
