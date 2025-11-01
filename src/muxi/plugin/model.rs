@@ -234,6 +234,7 @@ impl Plugin {
                 from: None,
                 to: short_id(commit.id()),
                 changes: Vec::new(),
+                range_url: None,
             });
         }
 
@@ -252,6 +253,7 @@ impl Plugin {
                 from: None,
                 to: short_id(local_commit),
                 changes: Vec::new(),
+                range_url: None,
             });
         }
 
@@ -308,6 +310,7 @@ impl Plugin {
             from: Some(short_id(local_commit)),
             to: short_id(upstream_commit),
             changes,
+            range_url: self.compare_url(local_commit, upstream_commit),
         })
     }
 
@@ -333,6 +336,28 @@ impl Plugin {
 
         base.push_str("commit/");
         Some(base)
+    }
+
+    fn compare_url(&self, from: Oid, to: Oid) -> Option<String> {
+        let url = self.url.as_ref()?;
+        let host = url.host_str()?.to_ascii_lowercase();
+
+        let mut base = url.to_string();
+        if base.len() >= 4 && base[base.len() - 4..].eq_ignore_ascii_case(".git") {
+            base.truncate(base.len() - 4);
+        }
+        if !base.ends_with('/') {
+            base.push('/');
+        }
+
+        let suffix = match host.as_str() {
+            "github.com" | "www.github.com" => "compare/",
+            "gitlab.com" | "www.gitlab.com" => "-/compare/",
+            _ => return None,
+        };
+
+        base.push_str(suffix);
+        Some(format!("{base}{from}...{to}"))
     }
 
     fn create_plugins_dir(&self) -> Result<()> {

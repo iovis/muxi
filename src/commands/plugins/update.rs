@@ -33,10 +33,20 @@ pub fn update() -> Result<()> {
                 let plugin_name = plugin.name.clone();
 
                 match plugin.update() {
-                    Ok(PluginUpdateStatus::Updated { from, to, changes }) => {
-                        let detail = match from {
+                    Ok(PluginUpdateStatus::Updated {
+                        from,
+                        to,
+                        changes,
+                        range_url,
+                    }) => {
+                        let display = match from {
                             Some(from) => format!("{from}..{to}"),
                             None => to,
+                        };
+                        let detail = if let Some(url) = range_url.as_ref() {
+                            ui::hyperlink(&display, url)
+                        } else {
+                            display
                         };
                         spinner.finish_success(Some(&detail));
 

@@ -27,6 +27,7 @@ pub enum PluginUpdateStatus {
         from: Option<String>,
         to: String,
         changes: Vec<PluginChange>,
+        range_url: Option<String>,
     },
     UpToDate { commit: String },
     Local { path: String },
