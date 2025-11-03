@@ -293,8 +293,12 @@ impl Plugin {
             });
         }
 
-        let changes =
-            collect_changes(&repo, Some(local_commit), upstream_commit, commit_base_url.as_deref())?;
+        let changes = collect_changes(
+            &repo,
+            Some(local_commit),
+            upstream_commit,
+            commit_base_url.as_deref(),
+        )?;
 
         let mut reference = branch.into_reference();
         reference
@@ -589,6 +593,7 @@ fn commit_time(commit: &git2::Commit<'_>) -> SystemTime {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use git2::Oid;
     use mlua::{Lua, LuaSerdeExt, Value as LuaValue};
 
     #[test]
@@ -730,5 +735,42 @@ mod tests {
         }
 
         std::fs::remove_dir_all(&temp).unwrap();
+    }
+
+    #[test]
+    fn test_compare_url_github() {
+        let plugin = Plugin::parse("tmux-plugins/tmux-continuum").unwrap();
+        let from = Oid::from_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").unwrap();
+        let to = Oid::from_str("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").unwrap();
+
+        let url = plugin.compare_url(from, to).expect("expected github url");
+
+        assert_eq!(
+            url,
+            "https://github.com/tmux-plugins/tmux-continuum/compare/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        );
+    }
+
+    #[test]
+    fn test_compare_url_gitlab() {
+        let plugin = Plugin::parse("https://gitlab.com/user/repo").unwrap();
+        let from = Oid::from_str("1234567890abcdef1234567890abcdef12345678").unwrap();
+        let to = Oid::from_str("87654321fedcba0987654321fedcba0987654321").unwrap();
+
+        let url = plugin.compare_url(from, to).expect("expected gitlab url");
+
+        assert_eq!(
+            url,
+            "https://gitlab.com/user/repo/-/compare/1234567890abcdef1234567890abcdef12345678...87654321fedcba0987654321fedcba0987654321"
+        );
+    }
+
+    #[test]
+    fn test_compare_url_unknown_host_returns_none() {
+        let plugin = Plugin::parse("https://example.com/user/repo").unwrap();
+        let from = Oid::from_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").unwrap();
+        let to = Oid::from_str("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").unwrap();
+
+        assert!(plugin.compare_url(from, to).is_none());
     }
 }
