@@ -37,8 +37,9 @@ open:
     gh repo view --web
 
 # Open an evcxr console
-@console:
-    evcxr
+console:
+    # Use `:dep .` to load current crate
+    @evcxr
 
 # Upgrade dependencies
 upgrade:
