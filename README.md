@@ -9,7 +9,7 @@ Stop wasting time navigating between tmux sessions. Muxi lets you create keyboar
 - 🚀 **Dynamic session bookmarks** - Create keyboard shortcuts for any tmux session
 - ⚡ **FZF integration** - Fuzzy-find and switch sessions instantly
 - 🎯 **Lua configuration** - Flexible, programmable config with sensible defaults
-- 🔌 **Plugin management** - Install and update tmux plugins (experimental)
+- 🔌 **Plugin management** - Install and update tmux plugins
 - 🎨 **Multiple workflows** - Native tmux menu, FZF popup, or custom bindings
 - 📝 **Simple session file** - Edit your sessions in TOML with your favorite editor
 
@@ -107,7 +107,7 @@ return {
     args = { "+ZenMode", "-c", "nmap q <cmd>silent wqa<cr>" }, -- (default: {})
   },
 
-  -- Optional: Define tmux plugins (EXPERIMENTAL)
+  -- Optional: Define tmux plugins
   plugins = {
     "tmux-plugins/tmux-continuum",
     "tmux-plugins/tmux-resurrect",
@@ -219,9 +219,9 @@ muxi sessions edit
 muxi sessions delete KEY
 ```
 
-## Plugins (Experimental)
+## Plugins
 
-Muxi provides experimental support for managing tmux plugins. Plugins are cloned from GitHub and stored in `$XDG_DATA_HOME/muxi/plugins/` (or `~/.local/share/muxi/plugins/`).
+Muxi provides support for managing tmux plugins. Plugins are cloned from GitHub and stored in `$XDG_DATA_HOME/muxi/plugins/` (or `~/.local/share/muxi/plugins/`).
 
 ### Configuration
 
@@ -277,9 +277,6 @@ if "type muxi" {
   run -b "muxi plugins init || tmux display 'muxi: Failed to init plugins'"
 }
 ```
-
-> [!WARNING]
-> This feature is experimental and may change in future versions.
 
 > [!NOTE]
 > `muxi init` and `muxi plugins init` are independent; you can use one without the other.
