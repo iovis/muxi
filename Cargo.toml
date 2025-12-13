@@ -1,6 +1,6 @@
 [package]
 name = "muxi"
-version = "4.1.0"
+version = "4.1.1"
 edition = "2024"
 description = "Create bookmarks for your tmux sessions on the fly! 🚀"
 readme = "README.md"
@@ -26,19 +26,19 @@ owo-colors = { version = "4.2.3", features = ["supports-colors"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_path_to_error = "0.1.20"
 thiserror = "2.0.17"
-toml_edit = { version = "0.23.9", features = ["serde"] }
 timeago = "0.5"
+toml_edit = { version = "0.23.9", features = ["serde"] }
 url = "2.5.7"
 
 [dev-dependencies]
 temp-env = "0.3.6"
 uuid = { version = "1.19.0", features = ["serde", "v4"] }
 
-[profile.profiling]
-inherits = "release"
-debug = true
-
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+[profile.profiling]
+inherits = "release"
+debug = true
