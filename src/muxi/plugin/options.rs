@@ -65,12 +65,13 @@ impl Display for PluginOptions {
             } else {
                 "├──"
             };
+
             write!(
                 f,
                 "{} {} {}",
                 connector.dimmed(),
-                format!("@{key}").bold(),
-                value
+                format!("@{key}").dimmed(),
+                value.green().bold()
             )?;
         }
 

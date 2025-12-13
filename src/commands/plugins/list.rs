@@ -32,7 +32,7 @@ fn print_plugin_status(plugin: &crate::muxi::Plugin) -> Result<()> {
         } => println!(
             "{} {} {}",
             "✔".green().bold(),
-            plugin.name,
+            plugin.name.bold(),
             format!("({commit})").dimmed()
         ),
         PluginStatus::Remote {
