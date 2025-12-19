@@ -20,13 +20,13 @@ pub fn update() -> Result<()> {
 
     let multi = MultiProgress::new();
     let errors = Mutex::new(Vec::new());
-    let change_logs = Mutex::new(Vec::new());
+    let changelogs = Mutex::new(Vec::new());
 
     thread::scope(|s| {
         for (index, plugin) in plugins.into_iter().enumerate() {
             let progress = &multi;
             let errors_ref = &errors;
-            let change_logs_ref = &change_logs;
+            let changelogs = &changelogs;
 
             s.spawn(move || {
                 let spinner = PluginSpinner::new(progress, &plugin.name);
@@ -52,7 +52,7 @@ pub fn update() -> Result<()> {
 
                         if !changes.is_empty() {
                             let log = format_plugin_changes(&plugin_name, &changes);
-                            change_logs_ref.lock().unwrap().push((index, log));
+                            changelogs.lock().unwrap().push((index, log));
                         }
                     }
                     Ok(PluginUpdateStatus::UpToDate { commit }) => {
@@ -72,11 +72,13 @@ pub fn update() -> Result<()> {
 
     drop(multi);
 
-    let mut change_logs = change_logs.into_inner().unwrap();
-    change_logs.sort_by_key(|(index, _)| *index);
-    if !change_logs.is_empty() {
-        println!();
-        for (_, log) in change_logs {
+    println!();
+
+    let mut changelogs = changelogs.into_inner().unwrap();
+    changelogs.sort_by_key(|(index, _)| *index);
+
+    if !changelogs.is_empty() {
+        for (_, log) in changelogs {
             println!("{log}");
         }
     }
