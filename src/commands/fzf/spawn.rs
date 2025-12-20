@@ -63,7 +63,7 @@ pub fn spawn(fzf_args: &[String]) -> Result<()> {
         .arg("--bind")
         .arg("focus:change-preview(tmux capture-pane -ep -t '{2}:')+transform-preview-label(echo ' {2} ')")
         .arg("--preview-window")
-        .arg("right,60%")
+        .arg("right,60%,<60(down,60%)")
         .arg("--bind")
         .arg("?:change-preview(muxi fzf-keybindings)+change-preview-label( keybindings )+show-preview")
         .arg("--bind")
