@@ -82,28 +82,28 @@ mod tests {
         Sessions(
             vec![
                 (
-                    "d".try_into().unwrap(),
+                    "d".into(),
                     Session {
                         name: "dotfiles".into(),
                         path: path::expand_tilde("~/.dotfiles".into()),
                     },
                 ),
                 (
-                    "k".try_into().unwrap(),
+                    "k".into(),
                     Session {
                         name: "muxi".into(),
                         path: path::expand_tilde("/home/user/muxi/".into()),
                     },
                 ),
                 (
-                    "Space".try_into().unwrap(),
+                    "Space".into(),
                     Session {
                         name: "tmux".into(),
                         path: path::expand_tilde("~/Sites/tmux/".into()),
                     },
                 ),
                 (
-                    "M-n".try_into().unwrap(),
+                    "M-n".into(),
                     Session {
                         name: "notes".into(),
                         path: path::expand_tilde(

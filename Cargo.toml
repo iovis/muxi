@@ -10,13 +10,13 @@ keywords = ["cli", "tmux"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-clap = { version = "4.5.53", features = ["derive"] }
-clap_complete = "4.5.62"
+clap = { version = "4.5.56", features = ["derive"] }
+clap_complete = "4.5.65"
 dirs = "6.0.0"
 git2 = { version = "0.20.3", features = ["vendored-openssl"] }
 indicatif = "0.18.3"
 miette = { version = "7.6.0", features = ["fancy"] }
-mlua = { version = "0.11.5", features = [
+mlua = { version = "0.11.6", features = [
   "luajit",
   "send",
   "serialize",
@@ -25,14 +25,14 @@ mlua = { version = "0.11.5", features = [
 owo-colors = { version = "4.2.3", features = ["supports-colors"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_path_to_error = "0.1.20"
-thiserror = "2.0.17"
+thiserror = "2.0.18"
 timeago = "0.5"
 toml_edit = { version = "0.24.0", features = ["serde"] }
-url = "2.5.7"
+url = { version = "2.5.8", features = ["serde"] }
 
 [dev-dependencies]
 temp-env = "0.3.6"
-uuid = { version = "1.19.0", features = ["serde", "v4"] }
+uuid = { version = "1.20.0", features = ["serde", "v4"] }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
