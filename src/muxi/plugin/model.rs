@@ -1,11 +1,9 @@
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::time::{Duration, SystemTime};
 
-use git2::{BranchType, Oid, Repository, Sort};
 use miette::{IntoDiagnostic, Result};
-use owo_colors::OwoColorize;
 use serde::de::IgnoredAny;
 use serde::{Deserialize, Deserializer, Serialize};
 use url::Url;
@@ -86,17 +84,11 @@ impl Plugin {
             });
         }
 
-        let repo = Repository::open(self.install_path())
-            .map_err(|e| miette::miette!("Failed to open repository: {}", e.dimmed()))?;
-
-        let commit = repo
-            .head()
-            .and_then(|h| h.peel_to_commit())
-            .map_err(|e| miette::miette!("Failed to read commit: {}", e.dimmed()))?;
+        let commit = git(&["rev-parse", "--short", "HEAD"], &self.install_path())?;
 
         Ok(PluginStatus::Remote {
             installed: true,
-            commit: Some(short_id(commit.id())),
+            commit: Some(commit),
         })
     }
 
@@ -191,11 +183,20 @@ impl Plugin {
             .url
             .as_ref()
             .expect("remote plugin must have url")
-            .as_str()
-            .to_string();
+            .as_str();
         let target = self.install_path();
-        Repository::clone(&url, target)
-            .map_err(|e| miette::miette!("Failed to clone repository: {}", e.dimmed()))?;
+        let target_str = target.to_string_lossy();
+
+        let status = Command::new("git")
+            .args(["clone", url, &target_str])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .into_diagnostic()?;
+
+        if !status.success() {
+            return Err(miette::miette!("Failed to clone repository"));
+        }
 
         Ok(true)
     }
@@ -209,112 +210,49 @@ impl Plugin {
             });
         }
 
-        let freshly_installed = if self.is_installed() {
-            false
-        } else {
+        if !self.is_installed() {
             self.install()?;
-            true
-        };
-
-        let repo = Repository::open(self.install_path())
-            .map_err(|e| miette::miette!("Failed to open repository: {}", e.dimmed()))?;
-
-        let head = repo
-            .head()
-            .map_err(|e| miette::miette!("Failed to get HEAD: {}", e.dimmed()))?;
-
-        let commit_base_url = self.commit_base_url();
-
-        if !head.is_branch() {
-            let commit = head
-                .peel_to_commit()
-                .map_err(|e| miette::miette!("Failed to read commit: {}", e.dimmed()))?;
-
+            let dir = self.install_path();
+            let to = git(&["rev-parse", "--short", "HEAD"], &dir)?;
             return Ok(PluginUpdateStatus::Updated {
                 from: None,
-                to: short_id(commit.id()),
+                to,
                 changes: Vec::new(),
                 range_url: None,
             });
         }
 
-        let branch_name = head
-            .shorthand()
-            .ok_or_else(|| miette::miette!("Could not determine current branch"))?
-            .to_string();
+        let dir = self.install_path();
 
-        let local_commit = head
-            .peel_to_commit()
-            .map_err(|e| miette::miette!("Failed to read commit: {}", e.dimmed()))?
-            .id();
+        // Snapshot before pulling
+        let before_short = git(&["rev-parse", "--short", "HEAD"], &dir)?;
+        let before_full = git(&["rev-parse", "HEAD"], &dir)?;
 
-        if freshly_installed {
-            return Ok(PluginUpdateStatus::Updated {
-                from: None,
-                to: short_id(local_commit),
-                changes: Vec::new(),
-                range_url: None,
-            });
-        }
+        // Pull
+        git(&["pull", "--ff-only"], &dir)?;
 
-        let mut remote = repo
-            .find_remote("origin")
-            .map_err(|e| miette::miette!("Failed to find remote 'origin': {}", e.dimmed()))?;
-        let remote_name = remote.name().unwrap_or("origin").to_string();
+        // Snapshot after pulling
+        let after_short = git(&["rev-parse", "--short", "HEAD"], &dir)?;
+        let after_full = git(&["rev-parse", "HEAD"], &dir)?;
 
-        remote
-            .fetch::<&str>(&[], None, None)
-            .map_err(|e| miette::miette!("Failed to fetch from remote: {}", e.dimmed()))?;
-
-        let branch = repo
-            .find_branch(&branch_name, BranchType::Local)
-            .map_err(|e| miette::miette!("Failed to open branch {branch_name}: {}", e.dimmed()))?;
-        let branch_ref = branch
-            .get()
-            .name()
-            .map_or_else(|| format!("refs/heads/{branch_name}"), ToString::to_string);
-
-        let upstream_commit = match branch.upstream() {
-            Ok(upstream) => upstream
-                .get()
-                .peel_to_commit()
-                .map_err(|e| miette::miette!("Failed to read upstream commit: {}", e.dimmed()))?
-                .id(),
-            Err(_) => repo
-                .find_reference(&format!("refs/remotes/{remote_name}/{branch_name}"))
-                .and_then(|r| r.peel_to_commit())
-                .map_err(|e| miette::miette!("Failed to read remote commit: {}", e.dimmed()))?
-                .id(),
-        };
-
-        if upstream_commit == local_commit {
+        if before_full == after_full {
             return Ok(PluginUpdateStatus::UpToDate {
-                commit: short_id(local_commit),
+                commit: before_short,
             });
         }
 
         let changes = collect_changes(
-            &repo,
-            Some(local_commit),
-            upstream_commit,
-            commit_base_url.as_deref(),
+            &dir,
+            &before_full,
+            &after_full,
+            self.commit_base_url().as_deref(),
         )?;
 
-        let mut reference = branch.into_reference();
-        reference
-            .set_target(upstream_commit, "fast-forward")
-            .map_err(|e| miette::miette!("Failed to update branch: {}", e.dimmed()))?;
-
-        repo.set_head(&branch_ref)
-            .map_err(|e| miette::miette!("Failed to set HEAD: {}", e.dimmed()))?;
-        repo.checkout_head(Some(git2::build::CheckoutBuilder::default().force()))
-            .map_err(|e| miette::miette!("Failed to checkout: {}", e.dimmed()))?;
-
         Ok(PluginUpdateStatus::Updated {
-            from: Some(short_id(local_commit)),
-            to: short_id(upstream_commit),
+            from: Some(before_short),
+            to: after_short,
             changes,
-            range_url: self.compare_url(local_commit, upstream_commit),
+            range_url: self.compare_url(&before_full, &after_full),
         })
     }
 
@@ -342,7 +280,7 @@ impl Plugin {
         Some(base)
     }
 
-    fn compare_url(&self, from: Oid, to: Oid) -> Option<String> {
+    fn compare_url(&self, from: &str, to: &str) -> Option<String> {
         let url = self.url.as_ref()?;
         let host = url.host_str()?.to_ascii_lowercase();
 
@@ -495,9 +433,21 @@ fn extract_repo_name(url: &Url) -> String {
         .to_string()
 }
 
-fn short_id(oid: Oid) -> String {
-    let id = oid.to_string();
-    id.chars().take(7).collect()
+fn git(args: &[&str], dir: &Path) -> Result<String> {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(dir)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .into_diagnostic()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(miette::miette!("git {} failed: {}", args[0], stderr.trim()));
+    }
+
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
 fn display_path(path: &Path) -> String {
@@ -522,78 +472,53 @@ fn ensure_exists(path: &Path) -> Result<()> {
 }
 
 fn collect_changes(
-    repo: &Repository,
-    from: Option<Oid>,
-    to: Oid,
+    dir: &Path,
+    from: &str,
+    to: &str,
     commit_base_url: Option<&str>,
 ) -> Result<Vec<PluginChange>> {
-    let Some(from) = from else {
-        return Ok(Vec::new());
-    };
-
     if from == to {
         return Ok(Vec::new());
     }
 
-    let mut revwalk = repo
-        .revwalk()
-        .map_err(|e| miette::miette!("Failed to create revwalk: {}", e.dimmed()))?;
-    revwalk
-        .set_sorting(Sort::TOPOLOGICAL | Sort::TIME)
-        .map_err(|e| miette::miette!("Failed to configure revwalk: {}", e.dimmed()))?;
-    revwalk
-        .push(to)
-        .map_err(|e| miette::miette!("Failed to add target commit: {}", e.dimmed()))?;
-    revwalk
-        .hide(from)
-        .map_err(|e| miette::miette!("Failed to hide previous commit: {}", e.dimmed()))?;
+    let range = format!("{from}..{to}");
+    let output = git(&["log", "--format=%H%x00%h%x00%s%x00%at", &range], dir)?;
 
-    let mut changes = Vec::new();
-
-    for oid in revwalk {
-        let oid = oid.map_err(|e| miette::miette!("Failed to walk commits: {}", e.dimmed()))?;
-        let commit = repo
-            .find_commit(oid)
-            .map_err(|e| miette::miette!("Failed to read commit {oid}: {}", e.dimmed()))?;
-
-        let summary = commit
-            .summary()
-            .map_or_else(|| "(no commit message)".to_string(), ToString::to_string);
-
-        let full_id = commit.id().to_string();
-        let short = short_id(commit.id());
-        let url = commit_base_url.map(|base| format!("{base}{full_id}"));
-
-        changes.push(PluginChange {
-            id: short,
-            full_id,
-            summary,
-            time: commit_time(&commit),
-            url,
-        });
+    if output.is_empty() {
+        return Ok(Vec::new());
     }
 
-    Ok(changes)
-}
+    output
+        .lines()
+        .map(|line| {
+            let parts: Vec<&str> = line.splitn(4, '\0').collect();
+            if parts.len() < 4 {
+                return Err(miette::miette!("Failed to parse git log output: {line}"));
+            }
 
-fn commit_time(commit: &git2::Commit<'_>) -> SystemTime {
-    let seconds = commit.time().seconds();
+            let full_id = parts[0].to_string();
+            let id = parts[1].to_string();
+            let summary = parts[2].to_string();
+            let timestamp: u64 = parts[3]
+                .parse()
+                .map_err(|_| miette::miette!("Failed to parse commit timestamp: {}", parts[3]))?;
 
-    if seconds >= 0 {
-        let secs = u64::try_from(seconds).unwrap_or(0);
-        SystemTime::UNIX_EPOCH + Duration::from_secs(secs)
-    } else {
-        let seconds = u64::try_from(seconds.saturating_neg()).unwrap_or(0);
-        SystemTime::UNIX_EPOCH
-            .checked_sub(Duration::from_secs(seconds))
-            .unwrap_or(SystemTime::UNIX_EPOCH)
-    }
+            let url = commit_base_url.map(|base| format!("{base}{full_id}"));
+
+            Ok(PluginChange {
+                id,
+                full_id,
+                summary,
+                time: SystemTime::UNIX_EPOCH + Duration::from_secs(timestamp),
+                url,
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use git2::Oid;
     use mlua::{Lua, LuaSerdeExt, Value as LuaValue};
 
     #[test]
@@ -740,8 +665,8 @@ mod tests {
     #[test]
     fn test_compare_url_github() {
         let plugin = Plugin::parse("tmux-plugins/tmux-continuum").unwrap();
-        let from = Oid::from_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").unwrap();
-        let to = Oid::from_str("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").unwrap();
+        let from = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let to = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
         let url = plugin.compare_url(from, to).expect("expected github url");
 
@@ -754,8 +679,8 @@ mod tests {
     #[test]
     fn test_compare_url_gitlab() {
         let plugin = Plugin::parse("https://gitlab.com/user/repo").unwrap();
-        let from = Oid::from_str("1234567890abcdef1234567890abcdef12345678").unwrap();
-        let to = Oid::from_str("87654321fedcba0987654321fedcba0987654321").unwrap();
+        let from = "1234567890abcdef1234567890abcdef12345678";
+        let to = "87654321fedcba0987654321fedcba0987654321";
 
         let url = plugin.compare_url(from, to).expect("expected gitlab url");
 
@@ -768,8 +693,8 @@ mod tests {
     #[test]
     fn test_compare_url_unknown_host_returns_none() {
         let plugin = Plugin::parse("https://example.com/user/repo").unwrap();
-        let from = Oid::from_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").unwrap();
-        let to = Oid::from_str("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").unwrap();
+        let from = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let to = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
         assert!(plugin.compare_url(from, to).is_none());
     }
