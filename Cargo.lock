@@ -745,7 +745,7 @@ dependencies = [
 
 [[package]]
 name = "muxi"
-version = "4.1.4"
+version = "4.1.5"
 dependencies = [
  "clap",
  "clap_complete",
