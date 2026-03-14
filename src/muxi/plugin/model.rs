@@ -117,11 +117,9 @@ impl Plugin {
 
             // Execute all "*.tmux" files in the plugin directory
             if path.extension().is_some_and(|ext| ext == "tmux") {
-                let status = Command::new("tmux")
-                    .arg("run")
-                    .arg(&path)
-                    .stdout(std::process::Stdio::null())
-                    .stderr(std::process::Stdio::null())
+                let status = Command::new(&path)
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
                     .status()
                     .into_diagnostic()?;
 

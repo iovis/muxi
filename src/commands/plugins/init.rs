@@ -1,3 +1,6 @@
+use std::sync::Mutex;
+use std::thread;
+
 use super::ui;
 use crate::muxi::Settings;
 use miette::Result;
@@ -9,14 +12,19 @@ pub fn init() -> Result<()> {
         return Ok(());
     }
 
-    let mut errors = Vec::new();
+    let errors = Mutex::new(Vec::new());
 
-    for plugin in plugins {
-        if let Err(error) = plugin.source() {
-            errors.push((plugin, error));
+    thread::scope(|s| {
+        for plugin in plugins {
+            s.spawn(|| {
+                if let Err(error) = plugin.source() {
+                    errors.lock().unwrap().push((plugin, error));
+                }
+            });
         }
-    }
+    });
 
+    let errors = errors.into_inner().unwrap();
     if errors.is_empty() {
         Ok(())
     } else {
