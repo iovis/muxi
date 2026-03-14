@@ -135,11 +135,14 @@ pub enum PluginCommands {
     Init,
 
     /// Print your current tmux plugins
+    #[clap(visible_alias = "ls")]
     List,
 
     /// Install plugins
+    #[clap(visible_alias = "i")]
     Install,
 
     /// Update plugins
+    #[clap(visible_alias = "up")]
     Update,
 }
