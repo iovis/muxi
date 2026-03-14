@@ -128,20 +128,6 @@ pub fn sessions_menu(sessions: &Sessions) -> TmuxResult<()> {
             .arg(format!("run -b 'muxi sessions switch {key}'"));
     }
 
-    // TODO: Deletion shorcuts, could be behind a config flag?
-    if false {
-        // tmux menu separator (just an empty string)
-        tmux_command.arg("");
-
-        // Quick delete items
-        for (key, session) in &sessions.0 {
-            tmux_command
-                .arg(format!("#[fg=red]{}", &session.name))
-                .arg(key.as_ref().to_uppercase())
-                .arg(format!("run -b 'muxi sessions delete {key}'"));
-        }
-    }
-
     let output = tmux_command.output()?;
 
     if output.status.success() {
