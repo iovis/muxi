@@ -117,7 +117,7 @@ return {
   -- Optional: FZF integration
   -- Use <alt-x> to navigate directly to session `x`
   fzf = {
-    input = false,  -- Use --no-input (default: false)
+    input = true,  -- If false, hide fuzzy finder with `--no-input` (default: true)
     bind_sessions = false,  -- Bind the key of the session to switch to it (default: false)
     args = { "--color=input-border:black" }, -- Extra arguments for FZF (default: {})
   },
@@ -139,9 +139,6 @@ return {
       },
       command = "muxi config edit -- -c 'nmap <silent> q :wqa<cr>'",
     },
-
-    -- <prefix>gs => session switcher
-    s = { popup = { title = " muxi " }, command = "muxi sessions switch --interactive" },
 
     -- <prefix>g/ => FZF integration
     ["/"] = { command = "muxi fzf" },
@@ -258,9 +255,9 @@ Usage: muxi plugins [COMMAND]
 
 Commands:
   init     Sources all plugins
-  list     Print your current tmux plugins
-  install  Install plugins
-  update   Update plugins
+  list     Print your current tmux plugins [aliases: ls]
+  install  Install plugins [aliases: i]
+  update   Update plugins [aliases: up]
   help     Print this message or the help of the given subcommand(s)
 ```
 
