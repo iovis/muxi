@@ -25,7 +25,14 @@ pub fn set(SessionSetArgs { key, name, path }: SessionSetArgs) -> Result<()> {
 
     // Update sessions.toml
     let mut sessions = Muxi::new()?.sessions;
-    sessions.0.insert(key, Session { name, path });
+    sessions.0.insert(
+        key,
+        Session {
+            name,
+            path,
+            on_create: Vec::new(),
+        },
+    );
     sessions.save()?;
 
     // Reload

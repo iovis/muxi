@@ -13,7 +13,7 @@ pub fn switch(key: &tmux::Key) -> Result<()> {
     };
 
     if !tmux::has_session(session) {
-        tmux::create_session(session);
+        tmux::create_session(session)?;
     }
 
     tmux::switch_to(session)?;

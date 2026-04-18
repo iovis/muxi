@@ -30,6 +30,14 @@ pub enum Error {
     #[diagnostic(code(muxi::tmux::switch_failed))]
     Switch(String, String),
 
+    #[error("failed to create session {0}: `{1}`")]
+    #[diagnostic(code(muxi::tmux::create_failed))]
+    Create(String, String),
+
+    #[error("failed to create tmux window for session {0}: `{1}`")]
+    #[diagnostic(code(muxi::tmux::new_window_failed))]
+    NewWindow(String, String),
+
     #[error("failed to generate tmux menu: `{0}`")]
     #[diagnostic(code(muxi::tmux::menu_failed))]
     DisplayMenu(String),
