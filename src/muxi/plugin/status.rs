@@ -1,4 +1,8 @@
-use std::time::SystemTime;
+use miette::Result;
+
+use super::Plugin;
+use super::install::install_path;
+use super::shared::{display_path, git};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PluginStatus {
@@ -12,27 +16,28 @@ pub enum PluginStatus {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PluginChange {
-    pub id: String,
-    pub full_id: String,
-    pub summary: String,
-    pub time: SystemTime,
-    pub url: Option<String>,
-}
+impl Plugin {
+    pub fn status(&self) -> Result<PluginStatus> {
+        if let Some(path) = &self.path {
+            let exists = path.exists();
+            return Ok(PluginStatus::Local {
+                exists,
+                path: display_path(path),
+            });
+        }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PluginUpdateStatus {
-    Updated {
-        from: Option<String>,
-        to: String,
-        changes: Vec<PluginChange>,
-        range_url: Option<String>,
-    },
-    UpToDate {
-        commit: String,
-    },
-    Local {
-        path: String,
-    },
+        if !self.is_installed() {
+            return Ok(PluginStatus::Remote {
+                installed: false,
+                commit: None,
+            });
+        }
+
+        let commit = git(&["rev-parse", "--short", "HEAD"], &install_path(self))?;
+
+        Ok(PluginStatus::Remote {
+            installed: true,
+            commit: Some(commit),
+        })
+    }
 }
