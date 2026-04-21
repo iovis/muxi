@@ -2,7 +2,7 @@ use std::process::Command;
 
 use crate::muxi::{Sessions, Settings};
 
-use super::{Error, Popup, TmuxResult};
+use super::{Error, Popup, TmuxResult, switch_session_command};
 
 /// Checks if it's run within a tmux session
 #[inline]
@@ -115,21 +115,18 @@ fn bind_settings(tmux_command: &mut Command, settings: &Settings) {
 }
 
 /// Generates bindings for all the muxi sessions
-/// Equivalent to: `tmux bind -T muxi <session_key> new-session -A -s <name> -c "<path>"`
+/// Equivalent to: `tmux bind -T muxi <session_key> run -b 'muxi sessions switch <session_key>'`
 #[inline]
 fn bind_sessions(tmux_command: &mut Command, sessions: &Sessions) {
-    for (key, session) in &sessions.0 {
+    for key in sessions.0.keys() {
         tmux_command
             .arg("bind")
             .arg("-T")
             .arg("muxi")
             .arg(key.as_ref())
-            .arg("new-session")
-            .arg("-A")
-            .arg("-s")
-            .arg(&session.name)
-            .arg("-c")
-            .arg(&session.path)
+            .arg("run")
+            .arg("-b")
+            .arg(switch_session_command(key.as_ref()))
             .arg(";");
     }
 }

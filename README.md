@@ -188,11 +188,29 @@ Running `muxi sessions edit` will open your `sessions.toml` file, which should l
 ```toml
 # <key> = { name = <session_name>, path = <session_path> }
 d = { name = "dotfiles", path = "~/.dotfiles" }
-m = { name = "muxi", path = "~/Sites/rust/muxi/" }
-n = { name = "notes", path = "~/Library/Mobile Documents/com~apple~CloudDocs/notes" }
+m = { name = "muxi", path = "~/code/rust/muxi/" }
+q = { name = "qmk", path = "~/code/qmk_userspace", on_create = [
+  { new_window = { path = "../qmk_firmware", name = "firmware" } },
+] }
 ```
 
 This is the file that `muxi` will use to generate your session bindings and keep state. After exiting your editor, `muxi` will re-sync the sessions (same with your configuration!)
+
+`on_create` is optional and only runs when muxi needs to create the tmux session. If the session already exists, muxi will just switch to it. Paths inside `on_create` are resolved relative to the session `path`, so `../qmk_firmware` works naturally for layouts like a QMK userspace plus firmware checkout.
+
+You can also start a window with a command:
+
+```toml
+q = { name = "qmk", path = "~/code/qmk_userspace", on_create = [
+  { new_window = { name = "firmware", path = "../qmk_firmware", command = "nvim" } },
+] }
+```
+
+One tmux detail worth knowing: if a window is created with a command, tmux treats that shell as the window's process. If the command exits immediately, or fails because of a typo, the window may close right away depending on your tmux `remain-on-exit` setting. If you want failed or short-lived commands to stay visible for debugging, you can enable that in your `tmux.conf`:
+
+```tmux
+set -g remain-on-exit on
+```
 
 ### Session Commands
 

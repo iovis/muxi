@@ -16,7 +16,7 @@ pub enum Error {
     #[diagnostic(
         code(muxi::sessions::parse_error),
         help(
-            "Check the TOML syntax in ~/.config/muxi/sessions.toml\nExample format:\nd = {{ name = \"dotfiles\", path = \"~/.dotfiles\" }}"
+            "Check the TOML syntax in ~/.config/muxi/sessions.toml\nExample format:\nd = {{ name = \"dotfiles\", path = \"~/.dotfiles\" }}\nq = {{ name = \"qmk\", path = \"~/qmk_userspace\", on_create = [{{ new_window = {{ path = \"../qmk_firmware\" }} }}] }}"
         )
     )]
     ParseError(#[from] toml_edit::de::Error),
@@ -47,10 +47,11 @@ impl Muxi {
 mod tests {
     use std::env::temp_dir;
     use std::io::Write;
+    use std::path::PathBuf;
 
     use uuid::Uuid;
 
-    use crate::muxi::Session;
+    use crate::muxi::{NewWindow, OnCreateAction, Session};
 
     use super::*;
 
@@ -86,6 +87,7 @@ mod tests {
                     Session {
                         name: "dotfiles".into(),
                         path: path::expand_tilde("~/.dotfiles".into()),
+                        on_create: Vec::new(),
                     },
                 ),
                 (
@@ -93,6 +95,7 @@ mod tests {
                     Session {
                         name: "muxi".into(),
                         path: path::expand_tilde("/home/user/muxi/".into()),
+                        on_create: Vec::new(),
                     },
                 ),
                 (
@@ -100,6 +103,7 @@ mod tests {
                     Session {
                         name: "tmux".into(),
                         path: path::expand_tilde("~/Sites/tmux/".into()),
+                        on_create: Vec::new(),
                     },
                 ),
                 (
@@ -109,6 +113,7 @@ mod tests {
                         path: path::expand_tilde(
                             "~/Library/Mobile Documents/com~apple~CloudDocs/notes".into(),
                         ),
+                        on_create: Vec::new(),
                     },
                 ),
             ]
@@ -127,6 +132,36 @@ mod tests {
         "#;
 
         let expected_sessions = expected_sessions();
+
+        with_config(config, |sessions| {
+            assert_eq!(sessions, expected_sessions);
+        });
+    }
+
+    #[test]
+    fn test_sessions_with_on_create() {
+        let config = r#"
+            q = { name = "qmk", path = "~/qmk_userspace", on_create = [
+                { new_window = { path = "../qmk_firmware", name = "firmware" } }
+            ] }
+        "#;
+
+        let expected_sessions = Sessions(
+            vec![(
+                "q".into(),
+                Session {
+                    name: "qmk".into(),
+                    path: path::expand_tilde("~/qmk_userspace".into()),
+                    on_create: vec![OnCreateAction::NewWindow(NewWindow {
+                        path: Some(PathBuf::from("../qmk_firmware")),
+                        name: Some("firmware".into()),
+                        command: None,
+                    })],
+                },
+            )]
+            .into_iter()
+            .collect(),
+        );
 
         with_config(config, |sessions| {
             assert_eq!(sessions, expected_sessions);

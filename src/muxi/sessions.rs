@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt;
+use std::path::Path;
 use std::path::PathBuf;
 
 use miette::{IntoDiagnostic, Result};
@@ -15,6 +16,8 @@ pub struct Session {
     pub name: String,
     #[serde(deserialize_with = "expand_tilde")]
     pub path: PathBuf,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub on_create: Vec<OnCreateAction>,
 }
 
 impl Session {
@@ -28,6 +31,38 @@ impl Session {
 
         self.path.display().to_string()
     }
+
+    pub fn resolve_path(&self, path: &Path) -> PathBuf {
+        if path.is_relative() {
+            self.path.join(path)
+        } else {
+            path.to_path_buf()
+        }
+    }
+
+    pub fn on_create_path(&self, path: Option<&Path>) -> PathBuf {
+        path.map_or_else(|| self.path.clone(), |path| self.resolve_path(path))
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum OnCreateAction {
+    NewWindow(NewWindow),
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone, Default)]
+pub struct NewWindow {
+    #[serde(
+        default,
+        deserialize_with = "expand_tilde_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub path: Option<PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub command: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -91,6 +126,14 @@ where
     Ok(path::expand_tilde(s.into()))
 }
 
+fn expand_tilde_option<'de, D>(deserializer: D) -> Result<Option<PathBuf>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let path = Option::<PathBuf>::deserialize(deserializer)?;
+    Ok(path.map(path::expand_tilde))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -107,6 +150,7 @@ mod tests {
             Session {
                 name: "dotfiles".into(),
                 path: path::expand_tilde("~/.dotfiles".into()),
+                on_create: Vec::new(),
             },
         );
 
@@ -123,6 +167,7 @@ mod tests {
             Session {
                 name: "dotfiles".into(),
                 path: "/home/user/.dotfiles".into(),
+                on_create: Vec::new(),
             },
         );
         sessions_map.insert(
@@ -130,6 +175,7 @@ mod tests {
             Session {
                 name: "project".into(),
                 path: "/home/user/projects/myproject".into(),
+                on_create: Vec::new(),
             },
         );
 
@@ -156,5 +202,60 @@ mod tests {
         let output = format!("{sessions}");
 
         assert_eq!(output, "");
+    }
+
+    #[test]
+    fn test_valid_session_with_on_create() {
+        let toml_string = r#"
+            q = { name = "qmk", path = "~/qmk_userspace", on_create = [
+                { new_window = { path = "../qmk_firmware", name = "firmware" } }
+            ] }
+        "#;
+
+        let mut expected = BTreeMap::new();
+        expected.insert(
+            "q".into(),
+            Session {
+                name: "qmk".into(),
+                path: path::expand_tilde("~/qmk_userspace".into()),
+                on_create: vec![OnCreateAction::NewWindow(NewWindow {
+                    path: Some(PathBuf::from("../qmk_firmware")),
+                    name: Some("firmware".into()),
+                    command: None,
+                })],
+            },
+        );
+
+        let session = Sessions(toml_edit::de::from_str(toml_string).unwrap());
+
+        assert_eq!(session, Sessions(expected));
+    }
+
+    #[test]
+    fn test_resolve_relative_on_create_path() {
+        let session = Session {
+            name: "qmk".into(),
+            path: PathBuf::from("/tmp/qmk_userspace"),
+            on_create: Vec::new(),
+        };
+
+        assert_eq!(
+            session.resolve_path(&PathBuf::from("../qmk_firmware")),
+            PathBuf::from("/tmp/qmk_userspace/../qmk_firmware")
+        );
+    }
+
+    #[test]
+    fn test_on_create_path_defaults_to_session_path() {
+        let session = Session {
+            name: "qmk".into(),
+            path: PathBuf::from("/tmp/qmk_userspace"),
+            on_create: Vec::new(),
+        };
+
+        assert_eq!(
+            session.on_create_path(None),
+            PathBuf::from("/tmp/qmk_userspace")
+        );
     }
 }
