@@ -32,6 +32,18 @@ pub fn settings_file() -> PathBuf {
     muxi_dir().join("init.lua")
 }
 
+pub fn luarc_file() -> PathBuf {
+    muxi_dir().join(".luarc.json")
+}
+
+pub fn lua_ls_dir() -> PathBuf {
+    muxi_dir().join(".lua_ls")
+}
+
+pub fn lua_ls_file() -> PathBuf {
+    lua_ls_dir().join("muxi.lua")
+}
+
 pub fn sessions_file() -> PathBuf {
     muxi_dir().join("sessions.toml")
 }
@@ -95,6 +107,17 @@ mod tests {
         let expanded_path = expand_tilde(path);
 
         assert_eq!(expanded_path, home_dir.join("some/path"));
+    }
+
+    #[test]
+    fn test_config_language_server_paths() {
+        temp_env::with_var("MUXI_CONFIG_PATH", Some("~/my/path"), || {
+            let muxi_dir = dirs::home_dir().unwrap().join("my/path");
+
+            assert_eq!(luarc_file(), muxi_dir.join(".luarc.json"));
+            assert_eq!(lua_ls_dir(), muxi_dir.join(".lua_ls"));
+            assert_eq!(lua_ls_file(), muxi_dir.join(".lua_ls/muxi.lua"));
+        });
     }
 
     #[test]

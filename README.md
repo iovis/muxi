@@ -85,9 +85,16 @@ You can provide an `init.lua` in one of the following locations:
 - `$XDG_CONFIG_HOME/muxi/init.lua`
 - `~/.config/muxi/init.lua`
 
-Or run `muxi config edit` to open it in your favorite `$EDITOR`
+To create a starter config and optional Lua language server metadata, run:
+
+```sh
+muxi config init
+```
+
+Or run `muxi config edit` to open the config file in your favorite `$EDITOR`.
 
 ```lua
+---@type muxi.Config
 return {
   -- Optional: Use tmux <prefix> to define muxi's table (default: true)
   tmux_prefix = true

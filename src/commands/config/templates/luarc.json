@@ -1,0 +1,9 @@
+{
+  "runtime.version": "LuaJIT",
+  "workspace.library": [
+    ".lua_ls"
+  ],
+  "diagnostics.globals": [
+    "muxi"
+  ]
+}

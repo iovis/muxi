@@ -56,6 +56,9 @@ pub struct Config {
 
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommands {
+    /// Initialize muxi config files and optional Lua language server metadata
+    Init,
+
     /// Open your editor to change your settings
     Edit {
         /// Args forwarded to your $EDITOR

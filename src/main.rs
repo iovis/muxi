@@ -1,5 +1,4 @@
 use clap::{CommandFactory, Parser};
-use clap_complete::generate;
 use miette::Result;
 use muxi::cli::{Cli, Command, ConfigCommands, PluginCommands, SessionCommands};
 use muxi::commands::{self, config, fzf, plugins, sessions};
@@ -45,17 +44,19 @@ fn main() -> Result<()> {
             let command = config_command.command.unwrap_or(ConfigCommands::List);
 
             match command {
+                ConfigCommands::Init => config::init(),
                 ConfigCommands::List => config::list(),
                 ConfigCommands::Edit { editor_args } => config::edit(&editor_args),
             }
         }
         Command::Completions { shell } => {
-            generate(
+            clap_complete::generate(
                 shell,
                 &mut Cli::command(),
                 "muxi",
                 &mut std::io::stdout().lock(),
             );
+
             Ok(())
         }
         Command::Fzf { fzf_args } => fzf::spawn(&fzf_args),
