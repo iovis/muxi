@@ -52,5 +52,6 @@ profile *args:
 
 # Debug with rust-lldb
 debug *args:
+    @# b muxi::commands::sessions::list::list
     cargo build
     rust-lldb -Q -- target/debug/{{ bin }} {{ args }}
