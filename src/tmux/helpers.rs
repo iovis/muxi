@@ -57,12 +57,12 @@ pub fn current_pane_path() -> Option<PathBuf> {
 }
 
 /// Check if a tmux session exists
-/// Equivalent to: `tmux has-session -t <session_name>`
+/// Equivalent to: `tmux has-session -t <session_name>:`
 pub fn has_session(session: &Session) -> bool {
     let output = Command::new("tmux")
         .arg("has-session")
         .arg("-t")
-        .arg(&session.name)
+        .arg(session_target(&session.name))
         .output();
 
     if let Ok(output) = output {
@@ -96,12 +96,12 @@ pub fn create_session(session: &Session) -> TmuxResult<()> {
 }
 
 /// Switch to tmux session
-/// Equivalent to: `tmux switch-client -t <session_name>`
+/// Equivalent to: `tmux switch-client -t <session_name>:`
 pub fn switch_to(session: &Session) -> TmuxResult<()> {
     let output = Command::new("tmux")
         .arg("switch-client")
         .arg("-t")
-        .arg(&session.name)
+        .arg(session_target(&session.name))
         .output()?;
 
     if output.status.success() {
@@ -147,6 +147,10 @@ pub fn switch_session_command(key: &str) -> String {
     format!("muxi sessions switch {key}")
 }
 
+fn session_target(name: &str) -> String {
+    format!("{name}:")
+}
+
 fn run_on_create(session: &Session) -> TmuxResult<()> {
     for action in &session.on_create {
         match action {
@@ -163,7 +167,7 @@ fn create_window(session: &Session, new_window: &NewWindow) -> TmuxResult<()> {
         .arg("new-window")
         .arg("-d")
         .arg("-t")
-        .arg(format!("{}:", session.name));
+        .arg(session_target(&session.name));
 
     if let Some(name) = &new_window.name {
         command.arg("-n").arg(name);
@@ -186,5 +190,15 @@ fn create_window(session: &Session, new_window: &NewWindow) -> TmuxResult<()> {
             session.name.clone(),
             String::from_utf8_lossy(&output.stderr).trim().to_string(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn session_target_disambiguates_dotted_session_names() {
+        assert_eq!(session_target("project.with.dots"), "project.with.dots:");
     }
 }
