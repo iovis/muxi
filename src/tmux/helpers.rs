@@ -127,7 +127,7 @@ pub fn sessions_menu(sessions: &Sessions) -> TmuxResult<()> {
     // Ex: "#[blue]dotfiles" "d" "run -b 'muxi sessions switch d'"
     for (key, session) in &sessions.0 {
         tmux_command
-            .arg(format!("#[fg=blue]{}", &session.name))
+            .arg(format!("#[fg=blue]{}", session.name))
             .arg(key.as_ref())
             .arg(format!("run -b '{}'", switch_session_command(key.as_ref())));
     }

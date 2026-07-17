@@ -5,7 +5,6 @@ use std::time::{Duration, SystemTime};
 use indicatif::MultiProgress;
 use miette::Result;
 use owo_colors::OwoColorize;
-use timeago::Formatter;
 
 use super::ui::{self, PluginSpinner};
 use crate::muxi::{PluginChange, PluginUpdateStatus, Settings};
@@ -122,5 +121,5 @@ fn format_relative_time(time: SystemTime) -> String {
         .duration_since(time)
         .unwrap_or_else(|_| Duration::from_secs(0));
 
-    Formatter::new().convert(duration)
+    timeago::Formatter::new().convert(duration)
 }
