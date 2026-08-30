@@ -5,6 +5,7 @@
 ---@field tmux_prefix? boolean
 ---@field uppercase_overrides? boolean
 ---@field use_current_pane_path? boolean
+---@field parallel_plugin_loading? boolean
 ---@field editor? muxi.EditorSettings
 ---@field fzf? muxi.FzfSettings
 ---@field plugins? muxi.Plugin[]

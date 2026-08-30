@@ -229,6 +229,7 @@ mod tests {
                 muxi_prefix: "M-Space".into(),
                 uppercase_overrides: true,
                 use_current_pane_path: false,
+                parallel_plugin_loading: false,
                 plugins: vec![],
                 editor: EditorSettings::default(),
                 fzf: FzfSettings::default(),
@@ -236,6 +237,19 @@ mod tests {
             };
 
             assert_eq!(settings, expected_settings);
+        });
+    }
+
+    #[test]
+    fn test_parse_parallel_plugin_loading() {
+        let config = r#"
+            return {
+                parallel_plugin_loading = true,
+            }
+        "#;
+
+        with_config(config, |settings| {
+            assert!(settings.parallel_plugin_loading);
         });
     }
 
@@ -558,6 +572,31 @@ mod tests {
                     diag.file.contains("init.lua"),
                     "unexpected file: {}",
                     diag.file
+                );
+            }
+            other => panic!("expected LuaDeserialize error, got {other:?}"),
+        });
+    }
+
+    #[test]
+    fn test_parse_parallel_plugin_loading_rejects_invalid_type() {
+        let config = r#"
+            return {
+                parallel_plugin_loading = "yes"
+            }
+        "#;
+
+        with_config_error(config, |error| match error {
+            Error::LuaDeserialize(diag) => {
+                assert!(
+                    diag.path.ends_with("parallel_plugin_loading"),
+                    "unexpected path: {}",
+                    diag.path
+                );
+                assert!(
+                    diag.message.contains("boolean"),
+                    "unexpected message: {}",
+                    diag.message
                 );
             }
             other => panic!("expected LuaDeserialize error, got {other:?}"),

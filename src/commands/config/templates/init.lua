@@ -4,6 +4,7 @@ return {
   -- tmux_prefix = true,
   -- uppercase_overrides = true,
   -- use_current_pane_path = false,
+  -- parallel_plugin_loading = false,
 
   plugins = {
     -- "tmux-plugins/tmux-resurrect",

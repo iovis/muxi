@@ -217,6 +217,7 @@ mod tests {
         assert!(LUA_LS_MUXI.contains("---@class (exact) muxi.FzfSettings"));
         assert!(LUA_LS_MUXI.contains("---@class (exact) muxi.PluginSpec"));
         assert!(LUA_LS_MUXI.contains("---@field plugins? muxi.Plugin[]"));
+        assert!(LUA_LS_MUXI.contains("---@field parallel_plugin_loading? boolean"));
         assert!(LUA_LS_MUXI.contains("---@alias muxi.Plugin string|muxi.PluginSpec"));
         assert!(LUA_LS_MUXI.contains("---@type muxi.Api"));
         assert!(LUA_LS_MUXI.contains("muxi = muxi"));

@@ -108,6 +108,9 @@ return {
   -- Optional: Set current session path to current pane's path (default: false)
   use_current_pane_path = false
 
+  -- Optional: Source plugins concurrently without ordering guarantees (default: false)
+  parallel_plugin_loading = false
+
   -- Optional: open editor with certain arguments
   editor = {
     command = "nvim", -- (default: $EDITOR or "vi")
@@ -116,8 +119,8 @@ return {
 
   -- Optional: Define tmux plugins
   plugins = {
-    "tmux-plugins/tmux-continuum",
     "tmux-plugins/tmux-resurrect",
+    "tmux-plugins/tmux-continuum",
     "tmux-plugins/tmux-yank",
   },
 
@@ -251,9 +254,12 @@ Define plugins in your `init.lua`:
 
 ```lua
 return {
+  -- Plugins load sequentially in the order below by default.
+  -- Set this to true only when plugins do not mutate shared tmux state.
+  parallel_plugin_loading = false,
   plugins = {
-    "tmux-plugins/tmux-continuum",
     "tmux-plugins/tmux-resurrect",
+    "tmux-plugins/tmux-continuum",
     "https://gitlab.com/username/my-plugin",
     { path = "~/code/tmux/my-plugin/" },
     {
@@ -269,6 +275,11 @@ return {
   },
 }
 ```
+
+Sequential loading prevents plugins that perform read/modify/write operations on
+shared tmux options, such as `status-right`, from overwriting each other's
+changes. Parallel loading can reduce initialization time, but does not preserve
+plugin order and may be unsafe for plugins that mutate the same tmux state.
 
 ### Commands
 

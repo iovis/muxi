@@ -9,12 +9,15 @@ use crate::tmux::{Key, Popup};
 
 use super::{Plugin, lua};
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Settings {
     pub muxi_prefix: Key,
     pub tmux_prefix: bool,
     pub uppercase_overrides: bool,
     pub use_current_pane_path: bool,
+    #[serde(default)]
+    pub parallel_plugin_loading: bool,
     pub plugins: Vec<Plugin>,
     pub editor: EditorSettings,
     pub fzf: FzfSettings,
@@ -44,6 +47,7 @@ impl Default for Settings {
             tmux_prefix: true,
             uppercase_overrides: true,
             use_current_pane_path: false,
+            parallel_plugin_loading: false,
             plugins: vec![],
             editor: EditorSettings::default(),
             fzf: FzfSettings::default(),
@@ -79,6 +83,12 @@ impl Display for Settings {
             "{} {}",
             "use_current_pane_path".dimmed(),
             self.use_current_pane_path.bold().green()
+        )?;
+        writeln!(
+            f,
+            "{} {}",
+            "parallel_plugin_loading".dimmed(),
+            self.parallel_plugin_loading.bold().green()
         )?;
 
         // Plugins
